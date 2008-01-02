@@ -485,7 +485,8 @@ namespace DataClassFileBuilder
 				//read or create
 				if(File.Exists(path)) 
 				{
-					doc.Load(path);
+					using (StreamReader sr = new StreamReader(path, System.Text.Encoding.Default, true))
+						doc.Load(sr);
 				}
 				else
 				{
