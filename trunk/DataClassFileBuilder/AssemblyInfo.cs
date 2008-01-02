@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyTitle("DataClassFileBuilder")]
 [assembly: AssemblyDescription("Builds CS classes from data sources")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("HexaD")]
 [assembly: AssemblyProduct("")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
