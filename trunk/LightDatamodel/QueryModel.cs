@@ -299,15 +299,26 @@ namespace System.Data.LightDatamodel.QueryModel
 			return retval;
 		}
 
+	}
+
+	/// <summary>
+	/// Class that holds all parser related code
+	/// </summary>
+	public class Parser
+	{
+		private static System.Globalization.CultureInfo CI = System.Globalization.CultureInfo.InvariantCulture;
+
 		private static Hashtable WhiteSpace = null;
 		private static Hashtable OperatorList = null;
 		private static Hashtable Pairwise = null;
+		private static Hashtable OperatorPrecedence = null;
 
 		private static void InitializeFilters()
 		{
 			WhiteSpace = new Hashtable();
 			OperatorList = new Hashtable();
 			Pairwise = new Hashtable();
+			OperatorPrecedence = new Hashtable();
 
 			WhiteSpace.Add(" ", null);
 			WhiteSpace.Add(",", null);
@@ -333,8 +344,27 @@ namespace System.Data.LightDatamodel.QueryModel
 			Pairwise.Add("{", "}");
 			Pairwise.Add("'", "'");
 			Pairwise.Add("\"", "\"");
+
+			OperatorPrecedence.Add(Operators.Equal, 4);
+			OperatorPrecedence.Add(Operators.LessThan, 4);
+			OperatorPrecedence.Add(Operators.GreaterThan, 4);
+			OperatorPrecedence.Add(Operators.LessThanOrEqual, 4);
+			OperatorPrecedence.Add(Operators.GreaterThanOrEqual, 4);
+			OperatorPrecedence.Add(Operators.NotEqual, 4);
+
+			OperatorPrecedence.Add(Operators.Xor, 5);
+			OperatorPrecedence.Add(Operators.Not, 6);
+			OperatorPrecedence.Add(Operators.And, 7);
+			OperatorPrecedence.Add(Operators.Or, 8);
+			OperatorPrecedence.Add(Operators.In, 8);
+			OperatorPrecedence.Add(Operators.Like, 8);
 		}
 
+		/// <summary>
+		/// Parses an SQL string into an OperationOrParameter statement
+		/// </summary>
+		/// <param name="query">The SQL Query to parse</param>
+		/// <returns>The equvalent query structure</returns>
 		public static OperationOrParameter ParseQuery(string query)
 		{
 			if (WhiteSpace == null)
@@ -360,9 +390,8 @@ namespace System.Data.LightDatamodel.QueryModel
 					{
 						if (curpair != null)
 						{
-							if (curpair[0] == query[i])
-								paircount++;
-							else if (((string)Pairwise[curpair])[0] == query[i])
+							
+							if (((string)Pairwise[curpair])[0] == query[i])
 							{
 								paircount--;
 								if (paircount == 0)
@@ -372,9 +401,10 @@ namespace System.Data.LightDatamodel.QueryModel
 									tokenstart = i + 1;
 								}
 							}
+							else if (curpair[0] == query[i])
+								paircount++;
 						}
-
-						if (Pairwise.ContainsKey(query[i].ToString()))
+						else if (Pairwise.ContainsKey(query[i].ToString()))
 						{
 							tokenstart = i + 1;
 							curpair = query[i].ToString();
@@ -407,72 +437,114 @@ namespace System.Data.LightDatamodel.QueryModel
 			if (paircount != 0)
 				throw new Exception("Failed to find closing match for " + curpair);
 
-			ArrayList ops = new ArrayList();
-			OperationOrParameter prevToken = null;
-			//Misses operator precedence...
+			//Stage 2, build tree
 
+			//Sort out operator precedence, the arraylist makes sure we have right-to-left associativity for all operators
+			SortedList operators = new SortedList();
+			ArrayList parsed = new ArrayList();
+			int pix = 0;
 			while(tokens.Count > 0)
 			{
 				string opr = (string)tokens.Dequeue();
 				if (OperatorList.ContainsKey(opr.ToUpper()))
 				{
 					Operators op = (Operators)OperatorList[opr.ToUpper()];
+					int precedence = 10;
+					if (OperatorPrecedence.ContainsKey(op))
+						precedence = (int)OperatorPrecedence[op];
+					if (!operators.ContainsKey(precedence))
+						operators.Add(precedence, new ArrayList()); //Adjust with queue or stack, if we want switching between left and right associative
+					((ArrayList)operators[precedence]).Add(pix);
+					parsed.Add(op);
+				}
+				else
+					parsed.Add(TokenAsParameter(opr));
+				pix++;
+			}
+
+			if (operators.Count == 0)
+				throw new Exception("No operators in statement");
+
+			//Build tree, bind the top binding operators first
+			foreach(DictionaryEntry de in operators)
+				for(int i = 0; i < ((ArrayList)de.Value).Count; i++)
+				{
+					int pos = (int)((ArrayList)de.Value)[i];
+					Operators op = (Operators)parsed[pos];
+					OperationOrParameter opm;
+
+					int rm = pos - 1;
+					int rc = 3; 
+
 					switch(op)
 					{
 						case Operators.Not:
-							if (prevToken != null)
-								throw new Exception("Cannot have preceeding token for the Not operator");
-							prevToken = new Operation(op, TokenAsParameter(tokens.Dequeue()));
+							if (pos >= parsed.Count)
+								throw new Exception("No parameters for the not operator");
+							opm = new Operation(op, (OperationOrParameter)parsed[pos + 1]);
+							parsed.RemoveRange(pos, 2);
+							parsed.Insert(pos, opm);
+							rc = 2;
+							rm = pos;
 							break;
 						case Operators.IIF:
-							if (prevToken != null)
-								throw new Exception("Cannot have preceeding token for the IIF operator");
-							prevToken = new Operation(op, new OperationOrParameter[] { TokenAsParameter(tokens.Dequeue()), TokenAsParameter(tokens.Dequeue()), TokenAsParameter(tokens.Dequeue())} );
-							break;
-						case Operators.In:
-							if (prevToken == null)
-								throw new Exception("Must have preceeding token for the In operator");
-							prevToken = new Operation(op, prevToken, TokenAsParameter(tokens.Dequeue()));
+							if (pos + 3 >= parsed.Count)
+								throw new Exception("Not enough parameters for the IIF operator");
+							opm = new Operation(op, new OperationOrParameter[] { (OperationOrParameter)parsed[pos + 1], (OperationOrParameter)parsed[pos + 2], (OperationOrParameter)parsed[pos + 3]} );
+							rc = 4;
+							rm = pos;
 							break;
 						default:
-							if (prevToken == null)
-								throw new Exception("Must have preceeding token for the " + op.ToString() + " operator");
-							prevToken = new Operation(op, prevToken ,TokenAsParameter(tokens.Dequeue()));
+							if (pos == 0 || pos + 1 >= parsed.Count)
+								throw new Exception("Must have preceeding and succeding token for the " + op.ToString() + " operator");
+							opm = new Operation(op, (OperationOrParameter)parsed[pos - 1], (OperationOrParameter)parsed[pos + 1]);
 							break;
 					}
-				}
-				else if (prevToken == null)
-				{
-					prevToken = TokenAsParameter(opr);
-				}
-				else 
-					throw new Exception("Parse error");
-			}
 
-			return prevToken;
-		}
+					parsed.RemoveRange(rm, rc);
+					parsed.Insert(rm, opm);
 
-		/// <summary>
-		/// Helper to remove annoying typecasting
-		/// </summary>
-		/// <param name="query"></param>
-		/// <returns></returns>
-		private static OperationOrParameter TokenAsParameter(object query)
-		{
-			return TokenAsParameter((string)query);
+					//TODO: This adjustment REALLY sucks
+					foreach(DictionaryEntry dex in operators)
+						for(int j = 0; j < ((ArrayList)dex.Value).Count; j++)
+						{
+							if (((int)((ArrayList)dex.Value)[j]) > rm)
+								((ArrayList)dex.Value)[j] =  ((int)((ArrayList)dex.Value)[j]) - (rc - 1);
+						}
+
+				}
+
+			if (parsed.Count != 1)
+				throw new Exception("To many operations left");
+
+			return (OperationOrParameter)parsed[0];
 		}
 
 		private static OperationOrParameter TokenAsParameter(string query)
 		{
+			//TODO: This will not recognize lists, thus IIF and IN does not work
 			double v;
-			if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Any, null, out v))
+
+			if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Integer, CI, out v))
+				return new Parameter((long)v, false);
+			if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Any, CI, out v))
 				return new Parameter(v, false);
+			else if (query.Trim().StartsWith("\"") || query.Trim().StartsWith("'"))
+			{
+				string vs = query.Trim();
+				vs = vs.Substring(1, vs.Length - 2);
+				int ix = vs.IndexOf("\\");
+				while(ix >= 0)
+				{
+					vs = vs.Substring(0, ix) + vs.Substring(ix, vs.Length - ix - 1);
+					ix = vs.IndexOf("\\", ix);
+				}
+				return new Parameter(vs, false);
+			}			
 			else if (query.Trim().IndexOf(" ") < 0 && query.Trim().IndexOf(",") < 0)
 				return new Parameter(query.Trim(), true);
 			else
 				return ParseQuery(query);
 		}
-
-
 	}
 }
