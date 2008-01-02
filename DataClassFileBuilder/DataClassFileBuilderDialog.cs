@@ -485,6 +485,7 @@ namespace DataClassFileBuilder
 				//read or create
 				if(File.Exists(path)) 
 				{
+					 //one wonders why the default .Net encoding is not set to default...
 					using (StreamReader sr = new StreamReader(path, System.Text.Encoding.Default, true))
 						doc.Load(sr);
 				}
@@ -610,7 +611,7 @@ namespace DataClassFileBuilder
 					}
 				}
 
-				//save
+				//save, one wonders why the default .Net encoding is not set to default...
 				using(System.IO.StreamWriter sw = new StreamWriter(path, false, System.Text.Encoding.Default))
 					sw.Write(doc.OuterXml);
 			}
