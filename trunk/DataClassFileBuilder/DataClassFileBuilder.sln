@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataClassFileBuilder", "DataClassFileBuilder.csproj", "{AB3F95B7-8161-4DE7-A294-1A9A053D60F3}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightDatamodel", "..\LightDatamodel\LightDatamodel.csproj", "{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "InstallDataClassFileBuilder", "..\InstallDataClassFileBuilder\InstallDataClassFileBuilder.vdproj", "{27CC7B8F-075B-46A0-81AD-B5C120BA18BE}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{AB3F95B7-8161-4DE7-A294-1A9A053D60F3}.Debug.ActiveCfg = Debug|.NET
+		{AB3F95B7-8161-4DE7-A294-1A9A053D60F3}.Debug.Build.0 = Debug|.NET
+		{AB3F95B7-8161-4DE7-A294-1A9A053D60F3}.Release.ActiveCfg = Release|.NET
+		{AB3F95B7-8161-4DE7-A294-1A9A053D60F3}.Release.Build.0 = Release|.NET
+		{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}.Debug.ActiveCfg = Debug|.NET
+		{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}.Debug.Build.0 = Debug|.NET
+		{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}.Release.ActiveCfg = Release|.NET
+		{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}.Release.Build.0 = Release|.NET
+		{27CC7B8F-075B-46A0-81AD-B5C120BA18BE}.Debug.ActiveCfg = Debug
+		{27CC7B8F-075B-46A0-81AD-B5C120BA18BE}.Release.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
