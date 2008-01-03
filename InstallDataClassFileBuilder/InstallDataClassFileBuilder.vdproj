@@ -21,31 +21,31 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_36EA3D2FDAAF416098C6F7DF0D91A404"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_74A7C6D80E4F4B429F485E6E4894BDA5"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_81A57ACFEE954516BF6825D964126026"
+        "MsmKey" = "8:_849757A1F94D406AA6EB5519A55CB63F"
         "OwnerKey" = "8:_74A7C6D80E4F4B429F485E6E4894BDA5"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_81A57ACFEE954516BF6825D964126026"
+        "MsmKey" = "8:_849757A1F94D406AA6EB5519A55CB63F"
         "OwnerKey" = "8:_336A18A4ABB4DA39DF6BE38EC2223D1E"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_AFD561CB411446B4AE3EF172823FEDDB"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D0489A4C7D684A24B5933ECB39DBEABA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -145,10 +145,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{A582A373-4685-4296-BEFE-614B80A702C3}:_AFD561CB411446B4AE3EF172823FEDDB"
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_36EA3D2FDAAF416098C6F7DF0D91A404"
             {
-            "SourcePath" = "8:..\\DataClassFileBuilder\\App.ico"
-            "TargetName" = "8:App.ico"
+            "SourcePath" = "8:..\\DataClassFileBuilder\\LightDatamodel.snk"
+            "TargetName" = "8:LightDatamodel.snk"
             "Tag" = "8:"
             "Folder" = "8:_6D7C1AF9273F4B06A7FD2E6FE0EEA66F"
             "Condition" = "8:"
@@ -165,10 +165,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{A582A373-4685-4296-BEFE-614B80A702C3}:_D0489A4C7D684A24B5933ECB39DBEABA"
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_AFD561CB411446B4AE3EF172823FEDDB"
             {
-            "SourcePath" = "8:..\\DataClassFileBuilder\\GEOGRAF.snk"
-            "TargetName" = "8:GEOGRAF.snk"
+            "SourcePath" = "8:..\\DataClassFileBuilder\\App.ico"
+            "TargetName" = "8:App.ico"
             "Tag" = "8:"
             "Folder" = "8:_6D7C1AF9273F4B06A7FD2E6FE0EEA66F"
             "Condition" = "8:"
@@ -738,7 +738,7 @@
         }
         "MergeModule"
         {
-            "{35A69C6E-5BA4-440D-803D-762B59A45393}:_81A57ACFEE954516BF6825D964126026"
+            "{35A69C6E-5BA4-440D-803D-762B59A45393}:_849757A1F94D406AA6EB5519A55CB63F"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"

@@ -113,7 +113,7 @@ namespace System.Data.LightDatamodel
 
 	public class DataFetcher : IDataFetcher
 	{
-		private SortedList m_tables = new SortedList();
+		private SortedList m_cache = new SortedList();
 		private ArrayList m_newobjects = new ArrayList();
 		private ArrayList m_deletedobjects = new ArrayList();
 		private IDataProvider m_provider;
@@ -131,7 +131,7 @@ namespace System.Data.LightDatamodel
 				if ((m_newobjects.Count > 0) || (m_deletedobjects.Count > 0))
 					return true;
 
-				foreach(SortedList table in m_tables.Values)
+				foreach(SortedList table in m_cache.Values)
 					foreach(DataClassBase obj in table.Values)
 						if(obj.IsDirty) 
 							return true;
@@ -149,7 +149,7 @@ namespace System.Data.LightDatamodel
 
 		public virtual void CommitAll()
 		{
-			foreach(SortedList table in m_tables.Values)
+			foreach(SortedList table in m_cache.Values)
 				foreach(DataClassBase obj in table.Values)
 					if(obj.IsDirty) 
 						obj.Commit();
@@ -167,9 +167,9 @@ namespace System.Data.LightDatamodel
 			string tablename = obj.GetType().Name;
 			obj.BeforeDataWrite += new System.Data.LightDatamodel.DataClassBase.DataWriteEventHandler(obj_BeforeDataWrite);
 			obj.AfterDataWrite += new System.Data.LightDatamodel.DataClassBase.DataWriteEventHandler(obj_AfterDataWrite);
-			if(!m_tables.ContainsKey(tablename)) m_tables.Add(tablename, new SortedList());
-			if(((SortedList)m_tables[tablename]).ContainsKey(obj.UniqueValue)) ((SortedList)m_tables[tablename]).Remove(obj.UniqueValue);
-			((SortedList)m_tables[tablename]).Add(obj.UniqueValue, obj);
+			if(!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList());
+			if(((SortedList)m_cache[tablename]).ContainsKey(obj.UniqueValue)) ((SortedList)m_cache[tablename]).Remove(obj.UniqueValue);
+			((SortedList)m_cache[tablename]).Add(obj.UniqueValue, obj);
 		}
 
 		protected virtual bool IsDataClassBase(Type type)
@@ -196,7 +196,7 @@ namespace System.Data.LightDatamodel
 
 		/// <summary>
 		/// This will load a list of arbitary objects
-		/// If the given object is a DataClassBase it will be hook into the DataFetcher
+		/// If the given object is a DataClassBase it will be hooked into the DataFetcher
 		/// DataCustomClassBase will also have it's values filled
 		/// All others will just be filled with the data
 		/// </summary>
@@ -230,9 +230,9 @@ namespace System.Data.LightDatamodel
 				m_knownTypes.Add(tablename, type);
 
 #if !SMARTASS_REDUCE_DB_LOAD
-			QueryModel.Parameter[] p = new QueryModel.Parameter[((SortedList)m_tables[tablename]).Count + 1];
+			QueryModel.Parameter[] p = new QueryModel.Parameter[((SortedList)m_cache[tablename]).Count + 1];
 			int i = 1;
-			foreach(object o in ((SortedList)m_tables[tablename]).Keys)
+			foreach(object o in ((SortedList)m_cache[tablename]).Keys)
 				p[i++] = new QueryModel.Parameter(o, false);
 
 			p[0] = new QueryModel.Parameter(((DataClassBase)Activator.CreateInstance(type)).UniqueColumn, true);
@@ -245,7 +245,7 @@ namespace System.Data.LightDatamodel
 			Data[][] data = m_provider.SelectRows(tablename, operation);
 #endif
 			object[] items = InsertObjectsInCache(type, data);
-			return operation.EvaluateList(((SortedList)m_tables[tablename]).Values);
+			return operation.EvaluateList(((SortedList)m_cache[tablename]).Values);
 		}
 
 
@@ -258,13 +258,13 @@ namespace System.Data.LightDatamodel
 				string tablename = type.Name;
 				if (!m_knownTypes.ContainsKey(tablename))
 					m_knownTypes.Add(tablename, type);
-				if(!m_tables.ContainsKey(tablename)) m_tables.Add(tablename, new SortedList());
+				if(!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList());
 
 				for(int i = 0; i < ret.Length; i++)
 				{
 					DataClassBase newobj = (DataClassBase)Activator.CreateInstance(type);
 					PopulateDataClass(newobj, data[i]);
-					if(!((SortedList)m_tables[tablename]).ContainsKey(newobj.UniqueValue))
+					if(!((SortedList)m_cache[tablename]).ContainsKey(newobj.UniqueValue))
 					{
 
 						newobj.m_dataparent = this;
@@ -277,7 +277,7 @@ namespace System.Data.LightDatamodel
 						if(AfterDataFetch != null) AfterDataFetch(newobj, DataActions.Fetch);
 					}
 					else
-						ret[i] = ((SortedList)m_tables[tablename])[newobj.UniqueValue];
+						ret[i] = ((SortedList)m_cache[tablename])[newobj.UniqueValue];
 				}
 			}
 			else if(IsDataCustomClassBase(type))
@@ -328,8 +328,8 @@ namespace System.Data.LightDatamodel
 
 			if(!IsDataClassBase(type)) throw new Exception("This object cannot be fetched by primary key. Use GetObjects instead");
 
-			if(!m_tables.ContainsKey(tablename)) m_tables.Add(tablename, new SortedList());
-			if(!((SortedList)m_tables[tablename]).ContainsKey(id))
+			if(!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList());
+			if(!((SortedList)m_cache[tablename]).ContainsKey(id))
 			{
 				//Fetch From Data source
 				DataClassBase newobj = (DataClassBase)Activator.CreateInstance(type);
@@ -343,7 +343,7 @@ namespace System.Data.LightDatamodel
 				if(AfterDataFetch != null) AfterDataFetch(newobj, DataActions.Fetch);
 			}
 					
-			return ((SortedList)m_tables[tablename])[id];
+			return ((SortedList)m_cache[tablename])[id];
 		}
 
 		public virtual void Remove(DataClassBase obj)
@@ -358,8 +358,8 @@ namespace System.Data.LightDatamodel
 			}
 			else
 			{
-				if(!m_tables.ContainsKey(tablename)) m_tables.Add(tablename, new SortedList());
-				((SortedList)m_tables[tablename]).Remove(obj.UniqueValue);
+				if(!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList());
+				((SortedList)m_cache[tablename]).Remove(obj.UniqueValue);
 				m_deletedobjects.Add(obj);
 				obj.m_state = ObjectStates.Deleted;
 			}
@@ -419,8 +419,8 @@ namespace System.Data.LightDatamodel
 				if(BeforeDataCommit != null) BeforeDataCommit(obj, DataActions.Insert);
 				m_provider.InsertRow(tablename, data);
 				m_newobjects.Remove(obj);
-				if(!m_tables.ContainsKey(tablename)) m_tables.Add(tablename, new SortedList());
-				((SortedList)m_tables[tablename]).Add(obj.UniqueValue, obj);
+				if(!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList());
+				((SortedList)m_cache[tablename]).Add(obj.UniqueValue, obj);
 				if(AfterDataCommit != null) AfterDataCommit(obj, DataActions.Insert);
 			}
 			else if(obj.ObjectState == ObjectStates.Deleted)
