@@ -208,10 +208,12 @@ namespace System.Data.LightDatamodel
 			string tablename = type.Name;
 			if (!m_knownTypes.ContainsKey(tablename))
 				m_knownTypes.Add(tablename, type);
-
+#if REDUCE_DB_LOAD
+			return GetObjects(type, QueryModel.Parser.ParseQuery(filter));
+#else
 			Data[][] data = m_provider.SelectRows(tablename, filter);
-
 			return InsertObjectsInCache(type, data);
+#endif
 		}
 
 		/// <summary>
@@ -229,7 +231,7 @@ namespace System.Data.LightDatamodel
 			if (!m_knownTypes.ContainsKey(tablename))
 				m_knownTypes.Add(tablename, type);
 
-#if !SMARTASS_REDUCE_DB_LOAD
+#if REDUCE_DB_LOAD
 			QueryModel.Parameter[] p = new QueryModel.Parameter[((SortedList)m_cache[tablename]).Count + 1];
 			int i = 1;
 			foreach(object o in ((SortedList)m_cache[tablename]).Keys)
@@ -241,11 +243,12 @@ namespace System.Data.LightDatamodel
 			op = new QueryModel.Operation(QueryModel.Operators.And, new QueryModel.OperationOrParameter[] {op, operation});
 
 			Data[][] data = m_provider.SelectRows(tablename, op);
+			InsertObjectsInCache(type, data);
+			return operation.EvaluateList(((SortedList)m_tables[tablename]).Values);
 #else
 			Data[][] data = m_provider.SelectRows(tablename, operation);
+			return InsertObjectsInCache(type, data);
 #endif
-			object[] items = InsertObjectsInCache(type, data);
-			return operation.EvaluateList(((SortedList)m_cache[tablename]).Values);
 		}
 
 
@@ -485,6 +488,10 @@ namespace System.Data.LightDatamodel
 		}
 	}
 
+	/// <summary>
+	/// Nested data provider, reads data from an existing DataFetcher.
+	/// Use this class to perform in-memory transactions that can be easily undone.
+	/// </summary>
 	public class NestedDataProvider : IDataProvider
 	{
 		public NestedDataProvider(IDataFetcher parent)
@@ -555,10 +562,10 @@ namespace System.Data.LightDatamodel
 
 		public Data[][] SelectRows(string tablename, string filter, object[] values)
 		{
-			if (filter == null || filter.Trim().Length == 0)
-				return SelectRows(tablename, new QueryModel.Operation(QueryModel.Operators.Not, new QueryModel.Parameter(false, false)));
-			//TODO: Implement basic SQL parser
-			throw new MissingMethodException();
+			if (values != null && values.Length != 0)
+				throw new MissingMethodException("Cannot pass on values from nested datafetcher into dataprovider");
+				
+			return SelectRows(tablename, QueryModel.Parser.ParseQuery(filter));
 		}
 
 		public void UpdateRow(string tablename, string primarycolumnname, object primaryvalue, params Data[] values)
@@ -589,11 +596,6 @@ namespace System.Data.LightDatamodel
 		public Data[] GetTableStructure(string tablename)
 		{
 			return m_provider.GetTableStructure(tablename);
-		}
-
-		public string FormatValue(object value)
-		{
-			return m_provider.FormatValue(value);
 		}
 
 		public void Close()
@@ -637,7 +639,6 @@ namespace System.Data.LightDatamodel
 		string[] GetTablenames();
 		Data[] GetStructure(string sql);
 		Data[] GetTableStructure(string tablename);
-		string FormatValue(object value);
 		void Close();
 		string ConnectionString{get;set;}
 		object GetNullValue(Type type);
