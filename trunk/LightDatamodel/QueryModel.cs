@@ -64,6 +64,9 @@ namespace System.Data.LightDatamodel.QueryModel
 
 		public Operation(Operators @operator, params OperationOrParameter[] parameters)
 		{
+			if (parameters == null)
+				parameters = new OperationOrParameter[] {};
+
 			switch(@operator)
 			{
 				case Operators.Not:
@@ -83,8 +86,6 @@ namespace System.Data.LightDatamodel.QueryModel
 						throw new Exception("The " + @operator.ToString()  + " operator must have exactly two parameters");
 					break;
 			}
-
-			//TODO: Validate that only booleans are allowed for and, or, not, xor
 
 			m_operator = @operator;
 			m_parameters = parameters;
@@ -143,51 +144,17 @@ namespace System.Data.LightDatamodel.QueryModel
 				case Operators.Not:
 					return !ResAsBool(res[0].Result);
 				case Operators.Equal:
-					if (res[0].Result == null && res[1].Result == null)
-						return true;
-					else if (res[0].Result == null || res[1].Result == null)
-						return false;
-					else
-						return res[0].Result.Equals(res[1].Result);
+					return CompareTo(res[0].Result, res[1].Result) == 0;
 				case Operators.NotEqual:
-					if (res[0].Result == null && res[1].Result == null)
-						return false;
-					else if (res[0].Result == null || res[1].Result == null)
-						return true;
-					else
-						return !res[0].Result.Equals(res[1].Result);
+					return CompareTo(res[0].Result, res[1].Result) != 0;
 				case Operators.GreaterThan:
-					if (res[0].Result == null || res[1].Result == null)
-						return false;
-					else if (res[0].Result as IComparable == null || res[1].Result as IComparable == null)
-						throw new Exception("Unable to compare: " + res[0].Result.GetType() + " with " + res[1].Result.GetType());
-					else 
-						return ((IComparable)res[0].Result).CompareTo((IComparable)res[1].Result) > 0;
+					return CompareTo(res[0].Result, res[1].Result) > 0;
 				case Operators.LessThan:
-					if (res[0].Result == null || res[1].Result == null)
-						return false;
-					else if (res[0].Result as IComparable == null || res[1].Result as IComparable == null)
-						throw new Exception("Unable to compare: " + res[0].Result.GetType() + " with " + res[1].Result.GetType());
-					else 
-						return ((IComparable)res[0].Result).CompareTo((IComparable)res[1].Result) < 0;
+					return CompareTo(res[0].Result, res[1].Result) < 0;
 				case Operators.LessThanOrEqual:
-					if (res[0].Result == null && res[1].Result == null)
-						return true;
-					else if (res[0].Result == null || res[1].Result == null)
-						return false;
-					else if (res[0].Result as IComparable == null || res[1].Result as IComparable == null)
-						throw new Exception("Unable to compare: " + res[0].Result.GetType() + " with " + res[1].Result.GetType());
-					else 
-						return ((IComparable)res[0].Result).CompareTo((IComparable)res[1].Result) <= 0;
+					return CompareTo(res[0].Result, res[1].Result) <= 0;
 				case Operators.GreaterThanOrEqual:
-					if (res[0].Result == null && res[1].Result == null)
-						return true;
-					else if (res[0].Result == null || res[1].Result == null)
-						return false;
-					else if (res[0].Result as IComparable == null || res[1].Result as IComparable == null)
-						throw new Exception("Unable to compare: " + res[0].Result.GetType() + " with " + res[1].Result.GetType());
-					else 
-						return ((IComparable)res[0].Result).CompareTo((IComparable)res[1].Result) >= 0;
+					return CompareTo(res[0].Result, res[1].Result) >= 0;
 				case Operators.Like:
 					if (res[0].Result == null && res[1].Result == null)
 						return true;
@@ -205,16 +172,48 @@ namespace System.Data.LightDatamodel.QueryModel
 					return ResAsBool(res[0].Result) ? res[1].Result : res[2].Result;
 				case Operators.In:
 					for(int i = 1; i < res.Length; i++)
-						if (res[0].Result == null && res[i].Result == null)
+						if (CompareTo(res[0].Result, res[1].Result) == 0)
 							return true;
-						else if (res[0].Result != null && res[i].Result != null && (res[0].Result.Equals(res[i].Result)))
-							return true;
-						
 					return false;
 				default:
 					throw new Exception("Bad operator: " + m_operator.ToString());
 
 			}
+		}
+
+		private int CompareTo(object op1, object op2)
+		{
+			if (op1 == null && op2 == null)
+				return 0;
+			else if (op1 == null)
+				return -1;
+			else if (op2 == null)
+				return -2;
+			else if (op1 as IComparable == null || op2 as IComparable == null)
+				throw new Exception("Unable to compare: " + op1.GetType() + " with " + op2.GetType());
+			else if (op1.GetType().IsPrimitive && op2.GetType().IsPrimitive && op1.GetType() != op2.GetType())
+			{
+				if (op1.GetType() == typeof(double) || op1.GetType() == typeof(float) || op1.GetType() == typeof(decimal) &&
+					(op2.GetType() == typeof(double) || op2.GetType() == typeof(float) || op2.GetType() == typeof(decimal)))
+					return CompareTo(Convert.ChangeType(op1, typeof(double)), Convert.ChangeType(op2, typeof(double)));
+				else if (op1.GetType() == typeof(long) || op1.GetType() == typeof(int) || op1.GetType() == typeof(byte) || op1.GetType() == typeof(short) || op1.GetType() == typeof(byte) &&
+					(op2.GetType() == typeof(long) || op2.GetType() == typeof(int) || op1.GetType() == typeof(byte) || op2.GetType() == typeof(short) || op2.GetType() == typeof(byte)))
+					return CompareTo(Convert.ChangeType(op1, typeof(long)), Convert.ChangeType(op2, typeof(long)));
+				else if (op1.GetType() == typeof(ulong) || op1.GetType() == typeof(uint) || op1.GetType() == typeof(ushort) &&
+					(op2.GetType() == typeof(ulong) || op2.GetType() == typeof(uint) || op2.GetType() == typeof(ushort)))
+					return CompareTo(Convert.ChangeType(op1, typeof(ulong)), Convert.ChangeType(op2, typeof(ulong)));
+				else 
+					throw new Exception("Could not find suitable comparision for type " + op1.GetType().FullName + " and " + op2.GetType().FullName);
+			}
+			else if (op1.GetType() == typeof(string) || op2.GetType() == typeof(string))
+			{
+				return op1.ToString().CompareTo(op2.ToString());
+			}
+			else
+			{
+				return ((IComparable)op1).CompareTo((IComparable)op2);
+			}
+
 		}
 
 		/// <summary>
@@ -289,16 +288,22 @@ namespace System.Data.LightDatamodel.QueryModel
 			{
 				System.Reflection.PropertyInfo pi = retval.GetType().GetProperty(parts[i]);
 				if (pi == null)
-					throw new Exception("Invalid parameter: " + parts + " (" + (string)m_value + ")" + " on type: " + retval.GetType());
+				{
+					System.Reflection.MethodInfo mi = retval.GetType().GetMethod(parts[i]);
+					if (mi == null)
+						throw new Exception("Invalid parameter: " + parts + " (" + (string)m_value + ")" + " on type: " + retval.GetType());
 				
-                retval = pi.GetValue(retval, null);
+					retval = mi.Invoke(retval, null);
+				}
+				else
+					retval = pi.GetValue(retval, null);
+
 				if (retval == null)
 					return null;
 			}
 
 			return retval;
 		}
-
 	}
 
 	/// <summary>
@@ -312,6 +317,7 @@ namespace System.Data.LightDatamodel.QueryModel
 		private static Hashtable OperatorList = null;
 		private static Hashtable Pairwise = null;
 		private static Hashtable OperatorPrecedence = null;
+		private static Hashtable OperatorSeperators = null;
 
 		private static void InitializeFilters()
 		{
@@ -319,9 +325,19 @@ namespace System.Data.LightDatamodel.QueryModel
 			OperatorList = new Hashtable();
 			Pairwise = new Hashtable();
 			OperatorPrecedence = new Hashtable();
+			OperatorSeperators = new Hashtable();
 
 			WhiteSpace.Add(" ", null);
 			WhiteSpace.Add(",", null);
+
+			OperatorSeperators.Add("=", null);
+			OperatorSeperators.Add("<", null);
+			OperatorSeperators.Add(">", null);
+			OperatorSeperators.Add("<=", null);
+			OperatorSeperators.Add(">=", null);
+			OperatorSeperators.Add("<>", null);
+			OperatorSeperators.Add("!=", null);
+			OperatorSeperators.Add("!", null);
 
 			OperatorList.Add("=", Operators.Equal);
 			OperatorList.Add("<", Operators.LessThan);
@@ -345,6 +361,8 @@ namespace System.Data.LightDatamodel.QueryModel
 			Pairwise.Add("'", "'");
 			Pairwise.Add("\"", "\"");
 
+			OperatorPrecedence.Add(Operators.IIF, 1);
+
 			OperatorPrecedence.Add(Operators.Equal, 4);
 			OperatorPrecedence.Add(Operators.LessThan, 4);
 			OperatorPrecedence.Add(Operators.GreaterThan, 4);
@@ -361,11 +379,30 @@ namespace System.Data.LightDatamodel.QueryModel
 		}
 
 		/// <summary>
+		/// Parses an SQL string into an Operation statement
+		/// </summary>
+		/// <param name="query">The SQL Query to parse</param>
+		/// <returns>The equvalent query structure</returns>
+		public static Operation ParseQuery(string query)
+		{
+			//TODO: Add a NOP operation
+			if (query == null || query.Trim().Length == 0)
+				return new Operation(Operators.Not, new Parameter(false, false));
+
+			OperationOrParameter[] op = InternalParseQuery(query);
+			if (op.Length != 1)
+				throw new Exception("Failed to parse the query into a meaningfull representation");
+			else if (!op[0].IsOperation)
+				throw new Exception("Query does not produce a valid statement");
+			return (Operation)op[0];
+		}
+
+		/// <summary>
 		/// Parses an SQL string into an OperationOrParameter statement
 		/// </summary>
 		/// <param name="query">The SQL Query to parse</param>
 		/// <returns>The equvalent query structure</returns>
-		public static OperationOrParameter ParseQuery(string query)
+		private static OperationOrParameter[] InternalParseQuery(string query)
 		{
 			if (WhiteSpace == null)
 				InitializeFilters();
@@ -390,14 +427,14 @@ namespace System.Data.LightDatamodel.QueryModel
 					{
 						if (curpair != null)
 						{
-							
+							//Do we have a matching group character?
 							if (((string)Pairwise[curpair])[0] == query[i])
 							{
 								paircount--;
 								if (paircount == 0)
 								{
 									curpair = null;
-									tokens.Enqueue(query.Substring(tokenstart, i - tokenstart).Trim());
+									tokens.Enqueue(query.Substring(tokenstart, (i - tokenstart) + 1).Trim());
 									tokenstart = i + 1;
 								}
 							}
@@ -406,30 +443,44 @@ namespace System.Data.LightDatamodel.QueryModel
 						}
 						else if (Pairwise.ContainsKey(query[i].ToString()))
 						{
-							tokenstart = i + 1;
+							//Do not add the seperator as a token, but rather save it for addition when the match occurs
+							string f = query.Substring(tokenstart, i - tokenstart).Trim();
+							if (f.Length > 0)
+								tokens.Enqueue(f);
+
+							tokenstart = i;
 							curpair = query[i].ToString();
 							paircount = 1;
 						}
 						else
 						{
-							if (WhiteSpace.ContainsKey(query[i].ToString()))
+							//Operators (=, <, >, <=, >=, !, <>, !=) are both seperators and tokens
+							if (OperatorList.ContainsKey(query[i].ToString()) && (i == query.Length - 1 || !HasExtraSeperators(query , i)))
+							{
+								int operatorLength = HasExtraSeperators(query, i) ? 2 : 1;
+
+								string f = query.Substring(tokenstart, (i - tokenstart) + 1).Trim();
+								string right = f.Substring(0, f.Length - operatorLength).Trim();
+								if (right.Length > 0)
+									tokens.Enqueue(right);
+								tokens.Enqueue(f.Substring(f.Length - operatorLength).Trim());
+								tokenstart = i + 1;
+							}
+							else if (WhiteSpace.ContainsKey(query[i].ToString())) 
 							{
 								string f = query.Substring(tokenstart, i - tokenstart).Trim();
 								if (f.Length > 0)
-								{
 									tokens.Enqueue(f);
-									tokenstart = i + 1;
-								}
+								tokenstart = i + 1;
 							}
 						}
-						
 					}
 				}
 			}
 
-			query = query.Substring(tokenstart).Trim();
-			if (query.Length > 0)
-				tokens.Enqueue(query);
+			string remainder = query.Substring(tokenstart).Trim();
+			if (remainder.Length > 0)
+				tokens.Enqueue(remainder);
 
 			if (isEscaped)
 				throw new Exception("Statement cannot end with \"\\\"");
@@ -458,12 +509,15 @@ namespace System.Data.LightDatamodel.QueryModel
 					parsed.Add(op);
 				}
 				else
-					parsed.Add(TokenAsParameter(opr));
+				{
+					OperationOrParameter[] opm = TokenAsParameter(opr);
+					if (opm.Length == 1)
+						parsed.Add(opm[0]);
+					else
+						parsed.Add(opm);
+				}
 				pix++;
 			}
-
-			if (operators.Count == 0)
-				throw new Exception("No operators in statement");
 
 			//Build tree, bind the top binding operators first
 			foreach(DictionaryEntry de in operators)
@@ -472,6 +526,8 @@ namespace System.Data.LightDatamodel.QueryModel
 					int pos = (int)((ArrayList)de.Value)[i];
 					Operators op = (Operators)parsed[pos];
 					OperationOrParameter opm;
+					ArrayList lm;
+
 
 					int rm = pos - 1;
 					int rc = 3; 
@@ -488,15 +544,30 @@ namespace System.Data.LightDatamodel.QueryModel
 							rm = pos;
 							break;
 						case Operators.IIF:
-							if (pos + 3 >= parsed.Count)
+							if (pos + 1 >= parsed.Count)
 								throw new Exception("Not enough parameters for the IIF operator");
-							opm = new Operation(op, new OperationOrParameter[] { (OperationOrParameter)parsed[pos + 1], (OperationOrParameter)parsed[pos + 2], (OperationOrParameter)parsed[pos + 3]} );
-							rc = 4;
+							if (parsed[pos + 1] as OperationOrParameter[] == null)
+								throw new Exception("The IIF operator must have a single list operand");
+							opm = new Operation(op, (OperationOrParameter[])parsed[pos + 1]);
+							rc = 2;
 							rm = pos;
+							break;
+						case Operators.In:
+							if (pos == 0 || pos + 1 >= parsed.Count)
+								throw new Exception("Not enough parameters for the IN operator");
+							if (parsed[pos - 1] as OperationOrParameter == null || parsed[pos + 1] as OperationOrParameter[] == null)
+								throw new Exception("The IN operator must have a single regular operand and a list operand");
+							lm = new ArrayList();
+							lm.Add(parsed[pos - 1]);
+							lm.AddRange((OperationOrParameter[])parsed[pos + 1]);
+							opm = new Operation(op, (OperationOrParameter[])lm.ToArray(typeof(OperationOrParameter)));
+							rc = 3;
 							break;
 						default:
 							if (pos == 0 || pos + 1 >= parsed.Count)
 								throw new Exception("Must have preceeding and succeding token for the " + op.ToString() + " operator");
+							if (parsed[pos - 1] as OperationOrParameter == null || parsed[pos + 1] as OperationOrParameter == null)
+								throw new Exception("List values can only be used with the IN or IIF operator");
 							opm = new Operation(op, (OperationOrParameter)parsed[pos - 1], (OperationOrParameter)parsed[pos + 1]);
 							break;
 					}
@@ -514,21 +585,25 @@ namespace System.Data.LightDatamodel.QueryModel
 
 				}
 
-			if (parsed.Count != 1)
-				throw new Exception("To many operations left");
-
-			return (OperationOrParameter)parsed[0];
+			if (parsed.Count == 0)
+				return new OperationOrParameter[] {};
+			else if (parsed.Count == 1 && parsed[0] as Operation != null)
+				return new OperationOrParameter[] { (OperationOrParameter)parsed[0] };
+			else 
+				return (OperationOrParameter[])parsed.ToArray(typeof(OperationOrParameter));
 		}
 
-		private static OperationOrParameter TokenAsParameter(string query)
+		private static OperationOrParameter[] TokenAsParameter(string query)
 		{
 			//TODO: This will not recognize lists, thus IIF and IN does not work
 			double v;
 
 			if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Integer, CI, out v))
-				return new Parameter((long)v, false);
-			if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Any, CI, out v))
-				return new Parameter(v, false);
+				return new OperationOrParameter[] { new Parameter((long)v, false) };
+			else if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Float, CI, out v))
+				return new OperationOrParameter[] { new Parameter(v, false) };
+			else if (query.Trim().ToLower().Equals("true") || query.Trim().ToLower().Equals("false"))
+				return new OperationOrParameter[] { new Parameter(bool.Parse(query.Trim()), false) };
 			else if (query.Trim().StartsWith("\"") || query.Trim().StartsWith("'"))
 			{
 				string vs = query.Trim();
@@ -539,12 +614,40 @@ namespace System.Data.LightDatamodel.QueryModel
 					vs = vs.Substring(0, ix) + vs.Substring(ix, vs.Length - ix - 1);
 					ix = vs.IndexOf("\\", ix);
 				}
-				return new Parameter(vs, false);
+				return new OperationOrParameter[] { new Parameter(vs, false) };
 			}			
-			else if (query.Trim().IndexOf(" ") < 0 && query.Trim().IndexOf(",") < 0)
-				return new Parameter(query.Trim(), true);
+			else if (!HasSeperators(query))
+				return new OperationOrParameter[] { new Parameter(query.Trim(), true) };
+			else if (Pairwise.ContainsKey(query.Trim().Substring(0, 1)))
+			{
+				query = query.Trim();
+				return InternalParseQuery(query.Substring(1, query.Length - 2));
+			}
 			else
-				return ParseQuery(query);
+				return InternalParseQuery(query);
+		}
+
+		private static bool HasSeperators(string query)
+		{
+			query = query.Trim();
+			foreach(string s in WhiteSpace.Keys)
+				if (query.IndexOf(s) >= 0)
+					return true;
+
+			foreach(string s in OperatorSeperators.Keys)
+				if (query.IndexOf(s) >= 0)
+					return true;
+
+			return false;
+		}
+
+		private static bool HasExtraSeperators(string query, int index)
+		{
+			foreach(string s in OperatorSeperators.Keys)
+				if (s.Length > 1 && query.Substring(index, Math.Min(query.Length - index, s.Length)) == s)
+					return true;
+			return false;
+
 		}
 	}
 }
