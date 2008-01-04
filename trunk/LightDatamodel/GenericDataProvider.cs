@@ -29,9 +29,15 @@ namespace System.Data.LightDatamodel
 
 		#region IDataProvider Members
 
+		/// <summary>
+		/// This will return the corresponding DBNull value. Eg. a date dbnull could be the classic date 1-1-1
+		/// DBNull will be eliminated from the code. There's no such thing as a secondary meaning/use of a field. 
+		/// If you need the implicit information on whether the field has been sat or not, add a boolean to the model!
+		/// </summary>
+		/// <param name="type"></param>
+		/// <returns></returns>
 		public virtual object GetNullValue(Type type)
 		{
-			//in case of DBNULL
 			if(type == typeof(int))
 				return int.MinValue;
 			else if(type == typeof(short))
@@ -52,7 +58,9 @@ namespace System.Data.LightDatamodel
 			return null;
 		}
 
-
+		/// <summary>
+		/// Will get or set the connection string. All DBs I've meet is able to connect throug the use a single connection string. Even Oracle! (It can be rather huge though)
+		/// </summary>
 		public virtual string ConnectionString
 		{
 			get{return m_connection.ConnectionString;}
@@ -67,6 +75,12 @@ namespace System.Data.LightDatamodel
 			return "?";
 		}
 
+		/// <summary>
+		/// Will delete a specified row from the DB. Will throw an exception if non or more than 1 are updated
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="primarycolumnname"></param>
+		/// <param name="primaryvalue"></param>
 		public virtual void DeleteRow(string tablename, string primarycolumnname, object primaryvalue)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
@@ -85,7 +99,14 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
-		public virtual  Data[] SelectRow(string tablename, string primarycolumnname, object primaryvalue)
+		/// <summary>
+		/// Will return a single row from the DB
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="primarycolumnname"></param>
+		/// <param name="primaryvalue"></param>
+		/// <returns></returns>
+		public virtual Data[] SelectRow(string tablename, string primarycolumnname, object primaryvalue)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
 			IDbCommand cmd = m_connection.CreateCommand();
@@ -107,6 +128,12 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
+		/// <summary>
+		/// Will select multiple rows from the DB through the use of QueryModel
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="operation"></param>
+		/// <returns></returns>
 		public virtual Data[][] SelectRows(string tablename, QueryModel.Operation operation)
 		{
 			ArrayList values = new ArrayList();
@@ -183,6 +210,13 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
+		/// <summary>
+		/// Will select multiple rows from the DB
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="filter"></param>
+		/// <param name="values">Used if the filter is parametized. Eg. ... MyCol = ? AND YourCol = ? ...</param>
+		/// <returns></returns>
 		public virtual Data[][] SelectRows(string tablename, string filter, object[] values)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
@@ -220,11 +254,24 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
+		/// <summary>
+		/// Selects multiple rows from DB. 
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="filter">Non parametized. Eg. MyCol = "Cheese" AND ...</param>
+		/// <returns></returns>
 		public virtual Data[][] SelectRows(string tablename, string filter)
 		{
 			return SelectRows(tablename, filter, null);
 		}
 
+		/// <summary>
+		/// Will update a given row in the DB. Will throw an exception if non or more than 1 are updated
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="primarycolumnname"></param>
+		/// <param name="primaryvalue"></param>
+		/// <param name="values"></param>
 		public virtual void UpdateRow(string tablename, string primarycolumnname, object primaryvalue, params Data[] values)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
@@ -248,6 +295,11 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
+		/// <summary>
+		/// Will insert a new row in the DB
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="values"></param>
 		public virtual void InsertRow(string tablename, params Data[] values)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
@@ -293,7 +345,7 @@ namespace System.Data.LightDatamodel
 
 		public virtual Data[] GetTableStructure(string tablename)
 		{
-			return GetStructure("SELECT * FROM [" + tablename + "] WHERE 1 = 0");
+			return GetStructure("SELECT * FROM " + QuoteTablename(tablename) + " WHERE 1 = 0");
 		}
 
 		public virtual void Close()
