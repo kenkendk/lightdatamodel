@@ -1,0 +1,67 @@
+#summary Simple SQL parser
+
+= Introduction =
+
+This page describes how the SQL parser is implemented and can be used.
+
+
+= Details =
+
+As with all things in the LightDataModel, the SQL parser is designed to be simple and self contained. This means that it is not the traditional lexer/parser with a [http://en.wikipedia.org/wiki/Deterministic_finite_state_machine Deterministic Finite Automata]. It is a ad-hoc tokenizer, prioritizer and evaluator. It only supports the WHERE part of a SQL statement.
+
+The parsing is done in three simple steps:
+  # Tokenize (split into seperate items)
+  # Priotitize (find operators and group them according to precedence)
+  # Build query tree
+
+To go from a SQL string to an evaluation tree, call:
+{{{
+LightDataModel.QueryModel.Operation op = LightDataModel.QueryModel.Parser.ParseQuery("ID = 5 or Prop = 7");
+}}}
+
+The query tree contains two elements: Operation and Parameter. The operation is an operation like `AND` and contains the appropriate number of parameters (2 for the AND operator).
+The Parameter, is either a column/property name or a constant.
+
+Any operation can be evaluated by calling:
+{{{
+op.Evaluate(obj);
+}}}
+The object can be any object, as long as it has the properties mentioned in the operations parameters. The result is true, if the object satifies the operation, and false otherwise. There is also a list filtering operation:
+{{{
+class A { public int PropA { get { return 7; } };
+class B { public int PropB { get { return 7; } };
+
+LightDataModel.QueryModel.Operation op = LightDataModel.QueryModel.Parser.ParseQuery("GetType.Fullname = 'A' AND PropA = 7");
+object[] lst = new object[] { new A(), new B() };
+object[] filtered = op.EvaluateList(lst);
+//filtered now contains the first object
+}}}
+There are three important things to notice:
+  * Evaluation is lazy, thus when object 2 does not satify the requirements for the class name, it does not evaluate the other side of the operation.
+  * Properties can be named in nested levels, seperated with a "."
+  * If no properties are found, a method with that name and no arguments is tried
+
+When evaluating sub properties, if a property returns null, the entire parameter evaluation returns null.
+
+The SQLParser and Evaluator can be used on any object list, and will only throw exceptions if the objects do no have the named property.
+
+Currently the following operators are supported:
+  * =
+  * !=
+  * >
+  * <
+  * <=
+  * >=
+  * LIKE
+  * AND
+  * OR
+  * XOR
+  * NOT
+  * !
+  * IIF
+  * IN
+
+The parser also supports grouped queries:
+{{{
+LightDataModel.QueryModel.Operation op = LightDataModel.QueryModel.Parser.ParseQuery("ID IN (1,4,5,6,7) AND (P1 = '4' OR P5 = '2')");
+}}}
