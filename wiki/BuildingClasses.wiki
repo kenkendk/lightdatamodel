@@ -1,0 +1,12 @@
+#summary How to manually construct class
+= Introduction =
+
+This page will describe how you can manually construct classes for use with the LightDataModel.
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
