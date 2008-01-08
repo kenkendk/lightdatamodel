@@ -65,3 +65,6 @@ The parser also supports grouped queries:
 {{{
 LightDataModel.QueryModel.Operation op = LightDataModel.QueryModel.Parser.ParseQuery("ID IN (1,4,5,6,7) AND (P1 = '4' OR P5 = '2')");
 }}}
+
+To avoid having to convert variables into strings, you can use values.
+See the page on [SqlParserValues using Sql Parser with values].
