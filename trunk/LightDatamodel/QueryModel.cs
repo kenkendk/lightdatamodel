@@ -49,8 +49,18 @@ namespace System.Data.LightDatamodel.QueryModel
 	/// </summary>
 	public abstract class OperationOrParameter
 	{
+		/// <summary>
+		/// Gets a value indicating the column is an operation
+		/// </summary>
 		public abstract bool IsOperation { get; }
-		public abstract object Evaluate(object item);
+
+		/// <summary>
+		/// Evaluates a parameter or operation
+		/// </summary>
+		/// <param name="item">The item to evaluate</param>
+		/// <param name="parameters">The (optional) unbound parameters</param>
+		/// <returns>The resulting value</returns>
+		public abstract object Evaluate(object item, object[] parameters);
 	}
 
 	/// <summary>
@@ -62,6 +72,11 @@ namespace System.Data.LightDatamodel.QueryModel
 		private Operators m_operator;
 		public override bool IsOperation { get { return true; } }
 
+		/// <summary>
+		/// Constructs a new operation
+		/// </summary>
+		/// <param name="operator">The operation to represent</param>
+		/// <param name="parameters">The parameters the operation handles</param>
 		public Operation(Operators @operator, params OperationOrParameter[] parameters)
 		{
 			if (parameters == null)
@@ -99,24 +114,34 @@ namespace System.Data.LightDatamodel.QueryModel
 		{
 			private object m_result;
 			private bool m_evaluated;
+			private object[] m_parameters;
 			public OperationOrParameter Op;
 			public object Item;
 
-			public LazyEvaluator(OperationOrParameter op, object item)
+			/// <summary>
+			/// Constructs a lazy evaluator for the given operation or parameter
+			/// </summary>
+			/// <param name="op">The operation or parameter to lazy evaluate</param>
+			/// <param name="item">The object the evaluation is bound to</param>
+			public LazyEvaluator(OperationOrParameter op, object item, object[] parameters)
 			{
 				m_result = null;
 				m_evaluated = false;
+				m_parameters = parameters;
 				Op = op;
 				Item = item;
 			}
 
+			/// <summary>
+			/// Gets the result of the evaluation
+			/// </summary>
 			public object Result 
 			{
 				get 
 				{
 					if (!m_evaluated)
 					{
-						m_result = Op.Evaluate(Item);
+						m_result = Op.Evaluate(Item, m_parameters);
 						m_evaluated = true;
 					}
 					return m_result;
@@ -131,13 +156,14 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// Evaluates an object with the current query
 		/// </summary>
 		/// <param name="item">The item to evaluate</param>
+		/// <param name="parameters">The (optional) parameters to evaluate with</param>
 		/// <returns>True if the object satisfies the query, false otherwise</returns>
-		public override object Evaluate(object item)
+		public override object Evaluate(object item, object[] parameters)
 		{
 			LazyEvaluator[] res = new LazyEvaluator[m_parameters.Length];
 
 			for(int i = 0; i < res.Length; i++)
-				res[i] = new LazyEvaluator(m_parameters[i], item);
+				res[i] = new LazyEvaluator(m_parameters[i], item, parameters);
 
 			switch(m_operator)
 			{
@@ -172,7 +198,13 @@ namespace System.Data.LightDatamodel.QueryModel
 					return ResAsBool(res[0].Result) ? res[1].Result : res[2].Result;
 				case Operators.In:
 					for(int i = 1; i < res.Length; i++)
-						if (CompareTo(res[0].Result, res[1].Result) == 0)
+						if (res[1].Result as ICollection != null)
+						{
+							foreach(object ox in res[1].Result as ICollection)
+								if (CompareTo(res[0].Result, ox) == 0)
+									return true;
+						}
+						else if (CompareTo(res[0].Result, res[1].Result) == 0)
 							return true;
 					return false;
 				default:
@@ -181,6 +213,12 @@ namespace System.Data.LightDatamodel.QueryModel
 			}
 		}
 
+		/// <summary>
+		/// Compares one operand to another. Deals with te various odd conversions that .Net imposes for boxed variables
+		/// </summary>
+		/// <param name="op1">Operand 1 (usually left hand argument)</param>
+		/// <param name="op2">Operand 2 (usually right hand argument)</param>
+		/// <returns>0 if the operands are considered equal, negative if the op1 is less than op2 and positive otherwise. May throw an exception if the two operands cannot be compared.</returns>
 		private int CompareTo(object op1, object op2)
 		{
 			if (op1 == null && op2 == null)
@@ -188,7 +226,7 @@ namespace System.Data.LightDatamodel.QueryModel
 			else if (op1 == null)
 				return -1;
 			else if (op2 == null)
-				return -2;
+				return 1;
 			else if (op1 as IComparable == null || op2 as IComparable == null)
 				throw new Exception("Unable to compare: " + op1.GetType() + " with " + op2.GetType());
 			else if (op1.GetType().IsPrimitive && op2.GetType().IsPrimitive && op1.GetType() != op2.GetType())
@@ -221,11 +259,11 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// </summary>
 		/// <param name="items">The items to filter</param>
 		/// <returns>A filtered list with only the matching items</returns>
-		public object[] EvaluateList(IEnumerable items)
+		public object[] EvaluateList(IEnumerable items, params object[] parameters)
 		{
 			ArrayList lst = new ArrayList();
 			foreach(object o in items)
-				if (ResAsBool(this.Evaluate(o)))
+				if (ResAsBool(this.Evaluate(o, parameters)))
 					lst.Add(o);
 			return (object[])lst.ToArray(typeof(object));
 		}
@@ -255,8 +293,29 @@ namespace System.Data.LightDatamodel.QueryModel
 	{
 		private bool m_isColumn;
 		private object m_value;
+		private int m_boundIndex = -1;
 		public override bool IsOperation { get { return false; } }
 
+		/// <summary>
+		/// Constructs a new ubound parameter that may be bound at construction time
+		/// </summary>
+		/// <param name="values">The (optional) values to bind with at constrution time</param>
+		/// <param name="bindIndex">The index into the parameter list</param>
+		public Parameter(object[] values, int bindIndex)
+		{
+			m_isColumn = false;
+			
+			if (values == null || bindIndex >= values.Length)
+				m_boundIndex = bindIndex - (values == null ? 0 : values.Length);
+			else
+				m_value = values[bindIndex];
+		}
+
+		/// <summary>
+		/// Constructs a new parameter, that is either a constant value or a column
+		/// </summary>
+		/// <param name="value">The value or column name</param>
+		/// <param name="isColumn">True if the parameter is a column name</param>
 		public Parameter(object value, bool isColumn)
 		{
 			if (isColumn)
@@ -271,11 +330,29 @@ namespace System.Data.LightDatamodel.QueryModel
 			m_value = value;
 		}
 
-		public bool IsColumn { get { return m_isColumn; } }
-		public object Value { get { return m_value; } }
+		/// <summary>
+		/// Returns true if the parameter represents a column
+		/// </summary>
+		public virtual bool IsColumn { get { return m_isColumn; } }
+		/// <summary>
+		/// Returns the value of the parameter. The value is the column name if the property is a column. Call evaluate to get the column value.
+		/// </summary>
+		public virtual object Value { get { return m_value; } }
 
-		public override object Evaluate(object item)
+		/// <summary>
+		/// Returns the current value of this parameter
+		/// </summary>
+		/// <param name="item">The object being evaluated</param>
+		/// <param name="parameters">A list of unbound parameters</param>
+		/// <returns>The value of the parameter, given the object and parameters</returns>
+		public override object Evaluate(object item, object[] parameters)
 		{
+			if (m_boundIndex >= 0)
+				if (parameters == null || m_boundIndex >= parameters.Length)
+					throw new Exception("Failed to evaluate expression, because there were not enough parameters given");
+				else
+					return parameters[m_boundIndex];
+
 			if (!m_isColumn)
 				return m_value;
 			
@@ -383,13 +460,15 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// </summary>
 		/// <param name="query">The SQL Query to parse</param>
 		/// <returns>The equvalent query structure</returns>
-		public static Operation ParseQuery(string query)
+		public static Operation ParseQuery(string query, params object[] values)
 		{
 			//TODO: Add a NOP operation
 			if (query == null || query.Trim().Length == 0)
 				return new Operation(Operators.Not, new Parameter(false, false));
 
-			OperationOrParameter[] op = InternalParseQuery(query);
+			int bindIndex = 0;
+
+			OperationOrParameter[] op = InternalParseQuery(query, values, ref bindIndex);
 			if (op.Length != 1)
 				throw new Exception("Failed to parse the query into a meaningfull representation");
 			else if (!op[0].IsOperation)
@@ -402,7 +481,7 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// </summary>
 		/// <param name="query">The SQL Query to parse</param>
 		/// <returns>The equvalent query structure</returns>
-		private static OperationOrParameter[] InternalParseQuery(string query)
+		private static OperationOrParameter[] InternalParseQuery(string query, object[] parameters, ref int bindIndex)
 		{
 			if (WhiteSpace == null)
 				InitializeFilters();
@@ -510,7 +589,7 @@ namespace System.Data.LightDatamodel.QueryModel
 				}
 				else
 				{
-					OperationOrParameter[] opm = TokenAsParameter(opr);
+					OperationOrParameter[] opm = TokenAsParameter(opr, parameters, ref bindIndex);
 					if (opm.Length == 1)
 						parsed.Add(opm[0]);
 					else
@@ -555,12 +634,21 @@ namespace System.Data.LightDatamodel.QueryModel
 						case Operators.In:
 							if (pos == 0 || pos + 1 >= parsed.Count)
 								throw new Exception("Not enough parameters for the IN operator");
-							if (parsed[pos - 1] as OperationOrParameter == null || parsed[pos + 1] as OperationOrParameter[] == null)
-								throw new Exception("The IN operator must have a single regular operand and a list operand");
-							lm = new ArrayList();
-							lm.Add(parsed[pos - 1]);
-							lm.AddRange((OperationOrParameter[])parsed[pos + 1]);
-							opm = new Operation(op, (OperationOrParameter[])lm.ToArray(typeof(OperationOrParameter)));
+							if (parsed[pos - 1] as OperationOrParameter == null)
+								throw new Exception("The IN operator must have a single regular operand and a list or regular operand");
+							if (parsed[pos + 1] as OperationOrParameter[] == null && parsed[pos + 1] as OperationOrParameter == null)
+								throw new Exception("The IN operator must have a single regular operand and a list or regular operand");
+							
+							if (parsed[pos + 1] as OperationOrParameter[] != null)
+							{
+								lm = new ArrayList();
+								lm.Add(parsed[pos - 1]);
+								lm.AddRange((OperationOrParameter[])parsed[pos + 1]);
+								opm = new Operation(op, (OperationOrParameter[])lm.ToArray(typeof(OperationOrParameter)));
+							}
+							else
+								opm = new Operation(op, (OperationOrParameter)parsed[pos - 1], (OperationOrParameter)parsed[pos + 1]);
+
 							rc = 3;
 							break;
 						default:
@@ -593,12 +681,14 @@ namespace System.Data.LightDatamodel.QueryModel
 				return (OperationOrParameter[])parsed.ToArray(typeof(OperationOrParameter));
 		}
 
-		private static OperationOrParameter[] TokenAsParameter(string query)
+		private static OperationOrParameter[] TokenAsParameter(string query, object[] parameters, ref int bindIndex)
 		{
 			//TODO: This will not recognize lists, thus IIF and IN does not work
 			double v;
 
-			if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Integer, CI, out v))
+			if (query.Trim() == "?")
+				return new OperationOrParameter[] { new Parameter(parameters, bindIndex++) };
+			else if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Integer, CI, out v))
 				return new OperationOrParameter[] { new Parameter((long)v, false) };
 			else if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Float, CI, out v))
 				return new OperationOrParameter[] { new Parameter(v, false) };
@@ -616,15 +706,15 @@ namespace System.Data.LightDatamodel.QueryModel
 				}
 				return new OperationOrParameter[] { new Parameter(vs, false) };
 			}			
-			else if (!HasSeperators(query))
-				return new OperationOrParameter[] { new Parameter(query.Trim(), true) };
 			else if (Pairwise.ContainsKey(query.Trim().Substring(0, 1)))
 			{
 				query = query.Trim();
-				return InternalParseQuery(query.Substring(1, query.Length - 2));
+				return InternalParseQuery(query.Substring(1, query.Length - 2), parameters, ref bindIndex);
 			}
+			else if (!HasSeperators(query))
+				return new OperationOrParameter[] { new Parameter(query.Trim(), true) };
 			else
-				return InternalParseQuery(query);
+				return InternalParseQuery(query, parameters, ref bindIndex);
 		}
 
 		private static bool HasSeperators(string query)
