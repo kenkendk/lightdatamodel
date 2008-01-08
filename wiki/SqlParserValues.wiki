@@ -1,0 +1,83 @@
+#summary Using SQL Parser with values
+
+= Introduction =
+
+This page describes how to use values with the Sql parser.
+For more basic operations, refer to the page [SqlParser Simple SQL Parser]
+
+= Details =
+
+If you want to compare complex objects that are not easily converted into a string you can insert placeholders for values into your SQL statement. The value holder is the "?" character (just as with the regular IDbCommand).
+
+You can choose to supply the values at parse time, or at evaluation time. You can even mix the two ways to some extent.
+
+For the remainder of this page, we will use the following variables:
+{{{
+using System.Collections;
+using System.Data.LightDataModel.QueryModel;
+class A {
+  public int ID;
+  public string PropA;
+  public A(int id) { this.ID = id; }
+}
+
+ArrayList objects = new ArrayList();
+objects.Add(new A(1));
+objects.Add(new A(2));
+objects.Add(new A(3));
+
+ArrayList ids = new ArrayList();
+ids.Add(2);
+
+Operation op;
+}}}
+
+For the first use of the value placeholder, we supply the value at parse time:
+{{{
+op = Parser.ParseQuery("ID = ?", 1);
+Console.WriteLine(op.EvaluateList(objects)); //Writes "1"
+}}}
+
+Another way, would be to supply the value at evaluation time:
+{{{
+op = Parser.ParseQuery("ID = ?"); //Notice the missing values
+// ** This will now throw an exception: Console.WriteLine(op.EvaluateList(objects)); 
+Console.WriteLine(op.EvaluateList(objects, 1)); //Writes "1"
+Console.WriteLine(op.EvaluateList(objects, 2)); //Writes "1"
+}}}
+Notice that since the value is not supplied until evaluation, we can freely change the value.
+
+A special case is the IN operator and everything that is derived from ICollection:
+{{{
+op = Parser.ParseQuery("ID IN (?)", ids);
+Console.WriteLine(op.EvaluateList(objects)); //Writes "1"
+ids.Clear();
+Console.WriteLine(op.EvaluateList(objects)); //Writes "0"
+ids.Add(2);
+Console.WriteLine(op.EvaluateList(objects)); //Writes "1"
+}}}
+
+It is even possible to use many lists (I reuse the list, but the list may be unrelated):
+{{{
+op = Parser.ParseQuery("ID IN (?,?,?)", ids, ids, ids);
+Console.WriteLine(op.EvaluateList(objects)); //Writes "1"
+}}}
+
+The IN operator also supports mixed ICollection and regular values:
+{{{
+op = Parser.ParseQuery("ID IN (?,?,?)", ids, 1, 3);
+Console.WriteLine(op.EvaluateList(objects)); //Writes "3"
+}}}
+
+It is also possible to mix the use of parse time values and evaluation time values:
+{{{
+op = Parser.ParseQuery("ID IN (?) OR ID = ? OR ID = 3", ids);
+Console.WriteLine(op.EvaluateList(objects, 1)); //Writes "3"
+}}}
+Because the values bind from left to right, the second "?" is not supplied until the evaluation. Due to this restriction, all values bound at parse time must be placed *before* the values supplied at evaluation time. In this simple case, it would be sufficient to swap the occurence of the two statements:
+{{{
+op = Parser.ParseQuery("ID = 3 OR ID = ? OR ID IN (?)", 1);
+Console.WriteLine(op.EvaluateList(objects, ids)); //Writes "3"
+}}}
+
+Since list evaluations are slower than a regular comparision, any tricks to avoid them should be used. In the last example, the list evaluation is only performed for the second object. As the evaluation is lazy, and the two other operations are true for the other objects, the last example will run faster in this simple example.
