@@ -569,7 +569,7 @@ namespace System.Data.LightDatamodel.QueryModel
 
 			//Stage 2, build tree
 
-			//Sort out operator precedence, the arraylist makes sure we have right-to-left associativity for all operators
+			//Sort out operator precedence
 			SortedList operators = new SortedList();
 			ArrayList parsed = new ArrayList();
 			int pix = 0;
@@ -583,7 +583,7 @@ namespace System.Data.LightDatamodel.QueryModel
 					if (OperatorPrecedence.ContainsKey(op))
 						precedence = (int)OperatorPrecedence[op];
 					if (!operators.ContainsKey(precedence))
-						operators.Add(precedence, new ArrayList()); //Adjust with queue or stack, if we want switching between left and right associative
+						operators.Add(precedence, new ArrayList());
 					((ArrayList)operators[precedence]).Add(pix);
 					parsed.Add(op);
 				}
@@ -600,7 +600,9 @@ namespace System.Data.LightDatamodel.QueryModel
 
 			//Build tree, bind the top binding operators first
 			foreach(DictionaryEntry de in operators)
-				for(int i = 0; i < ((ArrayList)de.Value).Count; i++)
+				//Running the list backwards, ensures that items to the left are closer to the root
+				//than items on the right, aka. left-to-right association
+				for(int i = ((ArrayList)de.Value).Count - 1; i >= 0; i--)
 				{
 					int pos = (int)((ArrayList)de.Value)[i];
 					Operators op = (Operators)parsed[pos];
