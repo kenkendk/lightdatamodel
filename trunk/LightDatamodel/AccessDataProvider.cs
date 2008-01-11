@@ -22,6 +22,7 @@ using System.Data;
 using System.Data.OleDb;
 using System.Data.LightDatamodel;
 using System.Collections;
+using System.IO;
 
 namespace System.Data.LightDatamodel
 {
@@ -108,8 +109,46 @@ namespace System.Data.LightDatamodel
 			return "SELECT @@IDENTITY";
 		}
 
+	}
 
+	public class SQLiteDataProviderConfiguration : IConfigureAbleDataProvider
+	{
+		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
+		{
+			System.Windows.Forms.OpenFileDialog dlg = new System.Windows.Forms.OpenFileDialog();
+			dlg.Filter = "Access database (*.mdb;*.mde)|*.mdb;*.mde|Alle filer (*.*)|*.*";
 
+			if(dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+			{
+				ConfigureProperties prop = new ConfigureProperties();
+				prop.Connectionstring = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + dlg.FileName + ";";
+				prop.DestinationDir = Path.GetDirectoryName(dlg.FileName);
+				prop.Namespace = "Datamodel." + Path.GetFileNameWithoutExtension(dlg.FileName);
+				return prop;
+			}
+			else
+				return previousConnectionProperties;
+		}
 
+		public string FriendlyName { get { return "Access database"; } }
+
+		public ConfigureProperties AutoConfigure(string[] args)
+		{
+			if(args.Length > 0 && File.Exists(args[0]) && (Path.GetExtension(args[0]).ToLower() == ".mdb" || Path.GetExtension(args[0]).ToLower() == ".mde"))
+			{
+				ConfigureProperties prop = new ConfigureProperties();
+				prop.Connectionstring = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + args[0] + ";";
+				prop.DestinationDir = Path.GetDirectoryName(args[0]);
+				prop.Namespace = "Datamodel." + Path.GetFileNameWithoutExtension(args[0]);
+				return prop;
+			}
+
+			return null;
+		}
+
+		public IDataProvider GetProvider(string connectionstring)
+		{
+			return new AccessDataProvider(connectionstring);
+		}
 	}
 }

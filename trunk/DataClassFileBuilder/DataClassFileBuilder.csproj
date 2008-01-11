@@ -1,7 +1,7 @@
 <VisualStudioProject>
     <CSHARP
         ProjectType = "Local"
-        ProductVersion = "7.10.3077"
+        ProductVersion = "7.10.6030"
         SchemaVersion = "2.0"
         ProjectGuid = "{AB3F95B7-8161-4DE7-A294-1A9A053D60F3}"
     >
@@ -94,6 +94,11 @@
                     Project = "{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}"
                     Package = "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"
                 />
+                <Reference
+                    Name = "SQLite.NET"
+                    AssemblyName = "SQLite.NET"
+                    HintPath = "..\SQLite\SQLite.Net 1.1\SQLite.NET.dll"
+                />
             </References>
         </Build>
         <Files>
@@ -119,6 +124,10 @@
                 />
                 <File
                     RelPath = "TemplateAssemblyInfo.txt"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "TemplateTypedCollection.txt"
                     BuildAction = "EmbeddedResource"
                 />
             </Include>

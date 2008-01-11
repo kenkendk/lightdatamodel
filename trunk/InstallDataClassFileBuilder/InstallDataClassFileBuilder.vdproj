@@ -15,8 +15,32 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_336A18A4ABB4DA39DF6BE38EC2223D1E"
+        "MsmKey" = "8:_11EBBE9957B3466191614D2D22372998"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_141459722923499190969557899CB6C2"
+        "OwnerKey" = "8:_375E1C37A0231245F6ACE0C274220FCE"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_141459722923499190969557899CB6C2"
+        "OwnerKey" = "8:_24876BB454B64FC0AA64DA72E6E1A0F9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_141459722923499190969557899CB6C2"
         "OwnerKey" = "8:_74A7C6D80E4F4B429F485E6E4894BDA5"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_24876BB454B64FC0AA64DA72E6E1A0F9"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -27,20 +51,20 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_375E1C37A0231245F6ACE0C274220FCE"
+        "OwnerKey" = "8:_74A7C6D80E4F4B429F485E6E4894BDA5"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_74A7C6D80E4F4B429F485E6E4894BDA5"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_849757A1F94D406AA6EB5519A55CB63F"
-        "OwnerKey" = "8:_74A7C6D80E4F4B429F485E6E4894BDA5"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_849757A1F94D406AA6EB5519A55CB63F"
-        "OwnerKey" = "8:_336A18A4ABB4DA39DF6BE38EC2223D1E"
+        "MsmKey" = "8:_7B8CE40639B847AAB30C644A82545E3F"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -114,14 +138,85 @@
         }
         "File"
         {
-            "{FB480208-1853-44D0-9ABD-A3B734C3FAAA}:_336A18A4ABB4DA39DF6BE38EC2223D1E"
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_11EBBE9957B3466191614D2D22372998"
+            {
+            "SourcePath" = "8:..\\SQLite\\SQLite.Net 1.1\\SQLite.NET.dll license.txt"
+            "TargetName" = "8:SQLite.NET.dll license.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_6D7C1AF9273F4B06A7FD2E6FE0EEA66F"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{FB480208-1853-44D0-9ABD-A3B734C3FAAA}:_24876BB454B64FC0AA64DA72E6E1A0F9"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:SQLite.NET, Version=0.21.2929.41103, Culture=neutral, PublicKeyToken=c273bd375e695f9c"
+                "ScatterAssemblies"
+                {
+                    "_24876BB454B64FC0AA64DA72E6E1A0F9"
+                    {
+                    "Name" = "8:SQLite.NET.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\SQLite\\SQLite.Net 1.1\\SQLite.NET.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_6D7C1AF9273F4B06A7FD2E6FE0EEA66F"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_36EA3D2FDAAF416098C6F7DF0D91A404"
+            {
+            "SourcePath" = "8:..\\DataClassFileBuilder\\LightDatamodel.snk"
+            "TargetName" = "8:LightDatamodel.snk"
+            "Tag" = "8:"
+            "Folder" = "8:_6D7C1AF9273F4B06A7FD2E6FE0EEA66F"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{FB480208-1853-44D0-9ABD-A3B734C3FAAA}:_375E1C37A0231245F6ACE0C274220FCE"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:LightDatamodel, Version=1.0.0.0, Culture=neutral, PublicKeyToken=c7a68962c12dce64"
                 "ScatterAssemblies"
                 {
-                    "_336A18A4ABB4DA39DF6BE38EC2223D1E"
+                    "_375E1C37A0231245F6ACE0C274220FCE"
                     {
                     "Name" = "8:LightDatamodel.dll"
                     "Attributes" = "3:512"
@@ -145,10 +240,10 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{A582A373-4685-4296-BEFE-614B80A702C3}:_36EA3D2FDAAF416098C6F7DF0D91A404"
+            "{A582A373-4685-4296-BEFE-614B80A702C3}:_7B8CE40639B847AAB30C644A82545E3F"
             {
-            "SourcePath" = "8:..\\DataClassFileBuilder\\LightDatamodel.snk"
-            "TargetName" = "8:LightDatamodel.snk"
+            "SourcePath" = "8:..\\SQLite\\SQLite binary\\sqlite3.dll"
+            "TargetName" = "8:sqlite3.dll"
             "Tag" = "8:"
             "Folder" = "8:_6D7C1AF9273F4B06A7FD2E6FE0EEA66F"
             "Condition" = "8:"
@@ -738,7 +833,7 @@
         }
         "MergeModule"
         {
-            "{35A69C6E-5BA4-440D-803D-762B59A45393}:_849757A1F94D406AA6EB5519A55CB63F"
+            "{35A69C6E-5BA4-440D-803D-762B59A45393}:_141459722923499190969557899CB6C2"
             {
             "UseDynamicProperties" = "11:TRUE"
             "IsDependency" = "11:TRUE"

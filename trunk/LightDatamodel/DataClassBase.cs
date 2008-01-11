@@ -626,6 +626,51 @@ namespace System.Data.LightDatamodel
 
 	#endregion
 
+
+	public class ConfigureProperties
+	{
+		public string Connectionstring;
+		public string DestinationDir;
+		public string Namespace;
+	}
+
+	/// <summary>
+	/// If a data provider supports assisted configuration, it must implement this interface.
+	/// Must also have a default constructor.
+	/// </summary>
+	public interface IConfigureAbleDataProvider
+	{
+		/// <summary>
+		/// This method should present a dialog for the user to configure the data provider.
+		/// </summary>
+		/// <param name="owner">The owner dialog</param>
+		/// <param name="previousConnectionString">Any previously configured properties</param>
+		/// <returns>The new connection properties, or null if the setup was cancelled</returns>
+		ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties);
+
+		/// <summary>
+		/// Returns a user identifiable name for the provider.
+		/// </summary>
+		string FriendlyName { get; }
+
+		/// <summary>
+		/// This method should return a configuration for the provider, given the commandline arguments, or return null if the commandline was not meaningfull to the provider.
+		/// </summary>
+		/// <param name="arguments">The commandline arguments</param>
+		/// <returns>A configuration for the provider, or null if the arguments where not meaningfull for the provider</returns>
+		ConfigureProperties AutoConfigure(string[] arguments);
+
+		/// <summary>
+		/// Returns a dataprovider, given the connectionstring
+		/// </summary>
+		/// <param name="connectionstring"></param>
+		/// <returns></returns>
+		IDataProvider GetProvider(string connectionstring);
+	}
+
+	/// <summary>
+	/// All data providers must implement this interface
+	/// </summary>
 	public interface IDataProvider
 	{
 		void DeleteRow(string tablename, string primarycolumnname, object primaryvalue);
