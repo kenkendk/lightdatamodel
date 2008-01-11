@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections;
 
 namespace System.Data.LightDatamodel
@@ -8,6 +9,41 @@ namespace System.Data.LightDatamodel
 	/// </summary>
 	public class SQLiteDataProvider : GenericDataProvider
 	{
+		/// <summary>
+		/// To create a provider, using just a connectionstring, the SQLite provider must know what Connection class to create.
+		/// The two &quot;regular&quot; providers are tried, depending on framework version if this is not set.
+		/// </summary>
+		public static Type SQLiteConnectionType = null;
+
+		public SQLiteDataProvider(string connectionstring)
+		{
+			if (System.Environment.Version < new Version(2,0,0,0))
+			{
+				if (SQLiteConnectionType == null)
+					SQLiteConnectionType = Type.GetType("Finisar.SQLite.SQLiteConnection");
+				if (SQLiteConnectionType == null)
+					try { SQLiteConnectionType = Activator.CreateInstance("SQLite.NET", "Finisar.SQLite.SQLiteConnection").Unwrap().GetType(); }
+					catch {}
+				
+				//.Net 1.1, uses the Finisar.SQLite provider
+				if (SQLiteConnectionType == null)
+					throw new Exception("Cannot find a suitable SQLite provider, try including the Finisar SQLite dll (SQLite.NET.dll)\n or manually set the connection type System.Data.LightDataModel.SQLiteDataProvider.SQLiteConnectionType = typeof(Finisar.SQLite.SQLiteConnection)");
+			}
+			else
+			{
+				if (SQLiteConnectionType == null)
+                    SQLiteConnectionType = Type.GetType("System.Data.SQLite.SQLiteConnection");
+				if (SQLiteConnectionType == null)
+					try { SQLiteConnectionType = Activator.CreateInstance("System.Data.SQLite", "System.Data.SQLite.SQLiteConnection").Unwrap().GetType(); }
+					catch {}
+				
+				//.Net 2.0, uses the System.Data.SQLite provider
+				if (SQLiteConnectionType == null)
+					throw new Exception("Cannot find a suitable SQLite provider, try including the SQLite dll (System.Data.SQLite.dll)\n or manually set the connection type System.Data.LightDataModel.SQLiteDataProvider.SQLiteConnectionType = typeof(System.Data.SQLite.SQLiteConnection)");
+			}
+			m_connection = (IDbConnection)Activator.CreateInstance(SQLiteConnectionType, new object[] {connectionstring});
+		}
+
 		public SQLiteDataProvider(IDbConnection cmd)
 		{
 			m_connection = cmd;
@@ -25,6 +61,9 @@ namespace System.Data.LightDatamodel
 				if (!rd.Read())
 					throw new Exception("Failed to read SQL from SQLITE_MASTER for table " + tablename);
 				string sql = rd.GetValue(0).ToString();
+
+				//TODO: use a regexp for this, it will not get any uglier than this :D
+				//Basically we look for "[column name] datatype primary key," and extract "column name"
 				int p = sql.ToLower().IndexOf(" primary");
 
 				if (p > 0)
@@ -125,6 +164,46 @@ namespace System.Data.LightDatamodel
 			return "SELECT last_insert_rowid()";
 		}
 
+	}
 
+	public class AccessDataProviderConfiguration : IConfigureAbleDataProvider
+	{
+		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
+		{
+			System.Windows.Forms.OpenFileDialog dlg = new System.Windows.Forms.OpenFileDialog();
+			dlg.Filter = "SQLite database (*.sqlite;*.sqlite3)|*.sqlite;*.sqlite3|Alle filer (*.*)|*.*";
+
+			if(dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+			{
+				ConfigureProperties prop = new ConfigureProperties();
+				prop.Connectionstring = "Version=3;Data Source=" + dlg.FileName + ";";
+				prop.DestinationDir = Path.GetDirectoryName(dlg.FileName);
+				prop.Namespace = "Datamodel." + Path.GetFileNameWithoutExtension(dlg.FileName);
+				return prop;
+			}
+			else
+				return previousConnectionProperties;
+		}
+
+		public string FriendlyName { get { return "SQLite database"; } }
+
+		public ConfigureProperties AutoConfigure(string[] args)
+		{
+			if(args.Length > 0 && File.Exists(args[0]) && (Path.GetExtension(args[0]).ToLower() == ".sqlite" || Path.GetExtension(args[0]).ToLower() == ".sqlite3"))
+			{
+				ConfigureProperties prop = new ConfigureProperties();
+				prop.Connectionstring = "Version=3;Data Source=" + args[0] + ";";
+				prop.DestinationDir = Path.GetDirectoryName(args[0]);
+				prop.Namespace = "Datamodel." + Path.GetFileNameWithoutExtension(args[0]);
+				return prop;
+			}
+
+			return null;
+		}
+
+		public IDataProvider GetProvider(string connectionstring)
+		{
+			return new SQLiteDataProvider(connectionstring);
+		}
 	}
 }
