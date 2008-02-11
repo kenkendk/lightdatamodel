@@ -1,0 +1,39 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightDatamodel", "..\LightDatamodel.csproj", "{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest", "UnitTest.csproj", "{4E6A0AF9-73DE-4559-A224-C189BC567DAE}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest.Datamodel", "Datamodel\UnitTest.Datamodel.csproj", "{D8FAE879-F4A2-4E81-9B36-AED0D824C265}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}.Debug.ActiveCfg = Debug|.NET
+		{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}.Debug.Build.0 = Debug|.NET
+		{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}.Release.ActiveCfg = Release|.NET
+		{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}.Release.Build.0 = Release|.NET
+		{4E6A0AF9-73DE-4559-A224-C189BC567DAE}.Debug.ActiveCfg = Debug|.NET
+		{4E6A0AF9-73DE-4559-A224-C189BC567DAE}.Debug.Build.0 = Debug|.NET
+		{4E6A0AF9-73DE-4559-A224-C189BC567DAE}.Release.ActiveCfg = Release|.NET
+		{4E6A0AF9-73DE-4559-A224-C189BC567DAE}.Release.Build.0 = Release|.NET
+		{D8FAE879-F4A2-4E81-9B36-AED0D824C265}.Debug.ActiveCfg = Debug|.NET
+		{D8FAE879-F4A2-4E81-9B36-AED0D824C265}.Debug.Build.0 = Debug|.NET
+		{D8FAE879-F4A2-4E81-9B36-AED0D824C265}.Release.ActiveCfg = Release|.NET
+		{D8FAE879-F4A2-4E81-9B36-AED0D824C265}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

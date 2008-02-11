@@ -41,8 +41,73 @@ namespace System.Data.LightDatamodel.QueryModel
 		Xor,
 		Not,
 		IIF,
-		In
+		In,
+		Between
 	}
+
+	/// <summary>
+	/// Simple comparer for .Net types
+	/// </summary>
+	public class Comparer : IComparer
+	{
+
+		/// <summary>
+		/// Compares one operand to another. Deals with te various odd conversions that .Net imposes for boxed variables
+		/// </summary>
+		/// <param name="op1">Operand 1 (usually left hand argument)</param>
+		/// <param name="op2">Operand 2 (usually right hand argument)</param>
+		/// <returns>0 if the operands are considered equal, negative if the op1 is less than op2 and positive otherwise. May throw an exception if the two operands cannot be compared.</returns>
+		public static int CompareTo(object op1, object op2)
+		{
+			if (op1 == null && op2 == null)
+				return 0;
+			else if (op1 == null)
+				return -1;
+			else if (op2 == null)
+				return 1;
+			else if (op1 as IComparable == null || op2 as IComparable == null)
+				throw new Exception("Unable to compare: " + op1.GetType() + " with " + op2.GetType());
+			else if (op1.GetType().IsPrimitive && op2.GetType().IsPrimitive && op1.GetType() != op2.GetType())
+			{
+				if (op1.GetType() == typeof(double) || op1.GetType() == typeof(float) || op1.GetType() == typeof(decimal) &&
+					(op2.GetType() == typeof(double) || op2.GetType() == typeof(float) || op2.GetType() == typeof(decimal)))
+					return CompareTo(Convert.ChangeType(op1, typeof(double)), Convert.ChangeType(op2, typeof(double)));
+				else if (op1.GetType() == typeof(long) || op1.GetType() == typeof(int) || op1.GetType() == typeof(byte) || op1.GetType() == typeof(short) || op1.GetType() == typeof(byte) &&
+					(op2.GetType() == typeof(long) || op2.GetType() == typeof(int) || op1.GetType() == typeof(byte) || op2.GetType() == typeof(short) || op2.GetType() == typeof(byte)))
+					return CompareTo(Convert.ChangeType(op1, typeof(long)), Convert.ChangeType(op2, typeof(long)));
+				else if (op1.GetType() == typeof(ulong) || op1.GetType() == typeof(uint) || op1.GetType() == typeof(ushort) &&
+					(op2.GetType() == typeof(ulong) || op2.GetType() == typeof(uint) || op2.GetType() == typeof(ushort)))
+					return CompareTo(Convert.ChangeType(op1, typeof(ulong)), Convert.ChangeType(op2, typeof(ulong)));
+				else 
+					throw new Exception("Could not find suitable comparision for type " + op1.GetType().FullName + " and " + op2.GetType().FullName);
+			}
+			else if (op1.GetType() == typeof(string) || op2.GetType() == typeof(string))
+			{
+				return op1.ToString().CompareTo(op2.ToString());
+			}
+			else
+			{
+				return ((IComparable)op1).CompareTo((IComparable)op2);
+			}
+		}
+
+		#region IComparer Members
+
+		/// <summary>
+		/// Compares one operand to another. Deals with te various odd conversions that .Net imposes for boxed variables
+		/// </summary>
+		/// <param name="op1">Operand 1 (usually left hand argument)</param>
+		/// <param name="op2">Operand 2 (usually right hand argument)</param>
+		/// <returns>0 if the operands are considered equal, negative if the op1 is less than op2 and positive otherwise. May throw an exception if the two operands cannot be compared.</returns>
+		public int Compare(object op1, object op2)
+		{
+			return CompareTo(op1, op2);
+		}
+
+		#endregion
+
+	}
+
 
 	/// <summary>
 	/// This is a base representation for the two items in the query model
@@ -61,6 +126,60 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// <param name="parameters">The (optional) unbound parameters</param>
 		/// <returns>The resulting value</returns>
 		public abstract object Evaluate(object item, object[] parameters);
+	}
+
+	/// <summary>
+	/// Represents a sortable column and its sorting direction
+	/// </summary>
+	public class SortableParameter : OperationOrParameter
+	{
+		private OperationOrParameter m_column;
+		private bool m_ascending;
+
+		public SortableParameter(OperationOrParameter column, bool ascending)
+		{
+			m_column = column;
+			m_ascending = ascending;
+		}
+
+		public OperationOrParameter Column { get { return m_column; } }
+		public bool Ascending { get { return m_ascending; } }
+		public override bool IsOperation { get { return m_column.IsOperation; } }
+		public override object Evaluate(object item, object[] parameters)
+		{
+			return m_column.Evaluate(item, parameters);
+		}
+	}
+
+	/// <summary>
+	/// Represents a sortable extension to an operation
+	/// </summary>
+	public class SortableOperation : Operation
+	{
+		private SortableParameter[] m_sortparameters;
+		public SortableOperation(SortableParameter[] sortparameters, Operators @operator, params OperationOrParameter[] parameters)
+			: base(@operator, parameters)
+		{
+			m_sortparameters = sortparameters;
+		}
+
+		public SortableParameter[] SortParameters { get { return m_sortparameters; } }
+
+		/// <summary>
+		/// Evaluates a list of objects against the query
+		/// </summary>
+		/// <param name="items">The items to filter</param>
+		/// <returns>A filtered list with only the matching items</returns>
+		public override object[] EvaluateList(IEnumerable items, params object[] parameters)
+		{
+			ArrayList lst = new ArrayList();
+			foreach(object o in items)
+				if (ResAsBool(this.Evaluate(o, parameters)))
+					lst.Add(o);
+			Sorter.Sort(this, lst);
+			return (object[])lst.ToArray(typeof(object));
+		}
+
 	}
 
 	/// <summary>
@@ -87,6 +206,10 @@ namespace System.Data.LightDatamodel.QueryModel
 				case Operators.Not:
 					if (parameters.Length != 1)
 						throw new Exception("The NOT operator must have exactly one parameter");
+					break;
+				case Operators.Between:
+					if (parameters.Length != 2 || parameters[1] as Operation == null || (parameters[1] as Operation).Operator != Operators.And)
+						throw new Exception("The BETWEEN operator must have two parameters, and the second must be the AND operator");
 					break;
 				case Operators.IIF:
 					if (parameters.Length != 3)
@@ -170,17 +293,17 @@ namespace System.Data.LightDatamodel.QueryModel
 				case Operators.Not:
 					return !ResAsBool(res[0].Result);
 				case Operators.Equal:
-					return CompareTo(res[0].Result, res[1].Result) == 0;
+					return Comparer.CompareTo(res[0].Result, res[1].Result) == 0;
 				case Operators.NotEqual:
-					return CompareTo(res[0].Result, res[1].Result) != 0;
+					return Comparer.CompareTo(res[0].Result, res[1].Result) != 0;
 				case Operators.GreaterThan:
-					return CompareTo(res[0].Result, res[1].Result) > 0;
+					return Comparer.CompareTo(res[0].Result, res[1].Result) > 0;
 				case Operators.LessThan:
-					return CompareTo(res[0].Result, res[1].Result) < 0;
+					return Comparer.CompareTo(res[0].Result, res[1].Result) < 0;
 				case Operators.LessThanOrEqual:
-					return CompareTo(res[0].Result, res[1].Result) <= 0;
+					return Comparer.CompareTo(res[0].Result, res[1].Result) <= 0;
 				case Operators.GreaterThanOrEqual:
-					return CompareTo(res[0].Result, res[1].Result) >= 0;
+					return Comparer.CompareTo(res[0].Result, res[1].Result) >= 0;
 				case Operators.Like:
 					if (res[0].Result == null && res[1].Result == null)
 						return true;
@@ -196,15 +319,30 @@ namespace System.Data.LightDatamodel.QueryModel
 					return ResAsBool(res[0].Result) ^ ResAsBool(res[1].Result);
 				case Operators.IIF:
 					return ResAsBool(res[0].Result) ? res[1].Result : res[2].Result;
+				case Operators.Between:
+				{
+					Operation andOp = m_parameters[1] as Operation;
+					if (andOp == null || andOp.Operator != Operators.And || andOp.Parameters == null || andOp.Parameters.Length != 2)
+						throw new Exception("Bad parameter for the between operator!");
+
+					object min = andOp.Parameters[0].Evaluate(item, parameters);
+					object max = andOp.Parameters[1].Evaluate(item, parameters);
+
+					//Swap if needed
+					if (Comparer.CompareTo(min, max) < 0)
+						return Comparer.CompareTo(res[0].Result, min) >= 0 && Comparer.CompareTo(res[0].Result, max) <= 0;
+					else
+						return Comparer.CompareTo(res[0].Result, max) >= 0 && Comparer.CompareTo(res[0].Result, min) <= 0;
+				}
 				case Operators.In:
 					for(int i = 1; i < res.Length; i++)
-						if (res[1].Result as ICollection != null)
+						if (res[i].Result as ICollection != null)
 						{
-							foreach(object ox in res[1].Result as ICollection)
-								if (CompareTo(res[0].Result, ox) == 0)
+							foreach(object ox in res[i].Result as ICollection)
+								if (Comparer.CompareTo(res[0].Result, ox) == 0)
 									return true;
 						}
-						else if (CompareTo(res[0].Result, res[1].Result) == 0)
+						else if (Comparer.CompareTo(res[0].Result, res[i].Result) == 0)
 							return true;
 					return false;
 				default:
@@ -214,52 +352,11 @@ namespace System.Data.LightDatamodel.QueryModel
 		}
 
 		/// <summary>
-		/// Compares one operand to another. Deals with te various odd conversions that .Net imposes for boxed variables
-		/// </summary>
-		/// <param name="op1">Operand 1 (usually left hand argument)</param>
-		/// <param name="op2">Operand 2 (usually right hand argument)</param>
-		/// <returns>0 if the operands are considered equal, negative if the op1 is less than op2 and positive otherwise. May throw an exception if the two operands cannot be compared.</returns>
-		private int CompareTo(object op1, object op2)
-		{
-			if (op1 == null && op2 == null)
-				return 0;
-			else if (op1 == null)
-				return -1;
-			else if (op2 == null)
-				return 1;
-			else if (op1 as IComparable == null || op2 as IComparable == null)
-				throw new Exception("Unable to compare: " + op1.GetType() + " with " + op2.GetType());
-			else if (op1.GetType().IsPrimitive && op2.GetType().IsPrimitive && op1.GetType() != op2.GetType())
-			{
-				if (op1.GetType() == typeof(double) || op1.GetType() == typeof(float) || op1.GetType() == typeof(decimal) &&
-					(op2.GetType() == typeof(double) || op2.GetType() == typeof(float) || op2.GetType() == typeof(decimal)))
-					return CompareTo(Convert.ChangeType(op1, typeof(double)), Convert.ChangeType(op2, typeof(double)));
-				else if (op1.GetType() == typeof(long) || op1.GetType() == typeof(int) || op1.GetType() == typeof(byte) || op1.GetType() == typeof(short) || op1.GetType() == typeof(byte) &&
-					(op2.GetType() == typeof(long) || op2.GetType() == typeof(int) || op1.GetType() == typeof(byte) || op2.GetType() == typeof(short) || op2.GetType() == typeof(byte)))
-					return CompareTo(Convert.ChangeType(op1, typeof(long)), Convert.ChangeType(op2, typeof(long)));
-				else if (op1.GetType() == typeof(ulong) || op1.GetType() == typeof(uint) || op1.GetType() == typeof(ushort) &&
-					(op2.GetType() == typeof(ulong) || op2.GetType() == typeof(uint) || op2.GetType() == typeof(ushort)))
-					return CompareTo(Convert.ChangeType(op1, typeof(ulong)), Convert.ChangeType(op2, typeof(ulong)));
-				else 
-					throw new Exception("Could not find suitable comparision for type " + op1.GetType().FullName + " and " + op2.GetType().FullName);
-			}
-			else if (op1.GetType() == typeof(string) || op2.GetType() == typeof(string))
-			{
-				return op1.ToString().CompareTo(op2.ToString());
-			}
-			else
-			{
-				return ((IComparable)op1).CompareTo((IComparable)op2);
-			}
-
-		}
-
-		/// <summary>
 		/// Evaluates a list of objects against the query
 		/// </summary>
 		/// <param name="items">The items to filter</param>
 		/// <returns>A filtered list with only the matching items</returns>
-		public object[] EvaluateList(IEnumerable items, params object[] parameters)
+		public virtual object[] EvaluateList(IEnumerable items, params object[] parameters)
 		{
 			ArrayList lst = new ArrayList();
 			foreach(object o in items)
@@ -274,7 +371,7 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// </summary>
 		/// <param name="item">The item to convert to a boolean</param>
 		/// <returns>The most appropriate boolean return value</returns>
-		private bool ResAsBool(object item)
+		protected bool ResAsBool(object item)
 		{
 			if (item == null)
 				return false;
@@ -364,11 +461,15 @@ namespace System.Data.LightDatamodel.QueryModel
 			for(int i = 0; i < parts.Length; i++)
 			{
 				System.Reflection.PropertyInfo pi = retval.GetType().GetProperty(parts[i]);
+                if (pi == null)
+                    pi = retval.GetType().GetProperty(parts[i], System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.FlattenHierarchy);
 				if (pi == null)
 				{
 					System.Reflection.MethodInfo mi = retval.GetType().GetMethod(parts[i]);
+                    if (mi == null)
+                        mi = retval.GetType().GetMethod(parts[i], System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.FlattenHierarchy);
 					if (mi == null)
-						throw new Exception("Invalid parameter: " + parts + " (" + (string)m_value + ")" + " on type: " + retval.GetType());
+						throw new Exception("Invalid parameter: " + parts[i] + " no such public property or method found\nWas looking for method with path '" + (string)m_value + "' on type: " + retval.GetType().FullName);
 				
 					retval = mi.Invoke(retval, null);
 				}
@@ -381,6 +482,54 @@ namespace System.Data.LightDatamodel.QueryModel
 
 			return retval;
 		}
+	}
+
+	/// <summary>
+	/// Class that holds code to sort a list of arbitrary objects
+	/// </summary>
+	public class Sorter
+	{
+		public static ArrayList Sort(SortableOperation opr, ICollection items)
+		{
+			ArrayList res;
+			if (items as ArrayList != null)
+				res = items as ArrayList;
+			else
+				res = new ArrayList(items);
+
+			res.Sort(new ListComparer(opr.SortParameters));
+			return res;
+		}
+
+		private class ListComparer : IComparer
+		{
+			SortableParameter[] m_sortorder;
+			public ListComparer(SortableParameter[] sortorder)
+			{
+				m_sortorder = sortorder;
+			}
+
+			#region IComparer Members
+
+			public int Compare(object x, object y)
+			{
+				foreach(SortableParameter sp in m_sortorder)
+				{
+					object v1 = sp.Evaluate(x, null);
+					object v2 = sp.Evaluate(y, null);
+
+					int res = Comparer.CompareTo(v1, v2);
+					if (res != 0)
+						return res * (sp.Ascending ? 1 : -1);
+				}
+
+				return 0;
+			}
+
+			#endregion
+
+		}
+
 	}
 
 	/// <summary>
@@ -431,6 +580,7 @@ namespace System.Data.LightDatamodel.QueryModel
 			OperatorList.Add("IIF", Operators.IIF);
 			OperatorList.Add("NOT", Operators.Not);
 			OperatorList.Add("!", Operators.Not);
+			OperatorList.Add("BETWEEN", Operators.Between);
 
 			Pairwise.Add("[", "]");
 			Pairwise.Add("(", ")");
@@ -453,28 +603,30 @@ namespace System.Data.LightDatamodel.QueryModel
 			OperatorPrecedence.Add(Operators.Or, 8);
 			OperatorPrecedence.Add(Operators.In, 8);
 			OperatorPrecedence.Add(Operators.Like, 8);
+			OperatorPrecedence.Add(Operators.Between, 8);
 		}
 
-		/// <summary>
-		/// Parses an SQL string into an Operation statement
-		/// </summary>
-		/// <param name="query">The SQL Query to parse</param>
-		/// <returns>The equvalent query structure</returns>
-		public static Operation ParseQuery(string query, params object[] values)
-		{
-			//TODO: Add a NOP operation
-			if (query == null || query.Trim().Length == 0)
-				return new Operation(Operators.Not, new Parameter(false, false));
+        /// <summary>
+        /// Parses an SQL string into an Operation statement
+        /// </summary>
+        /// <param name="query">The SQL Query to parse</param>
+        /// <returns>The equvalent query structure</returns>
+        public static Operation ParseQuery(string query, params object[] values)
+        {
+            //TODO: Add a NOP operation
+            if (query == null || query.Trim().Length == 0)
+                return new Operation(Operators.Not, new Parameter(false, false));
 
-			int bindIndex = 0;
+            int bindIndex = 0;
 
-			OperationOrParameter[] op = InternalParseQuery(query, values, ref bindIndex);
-			if (op.Length != 1)
-				throw new Exception("Failed to parse the query into a meaningfull representation");
-			else if (!op[0].IsOperation)
-				throw new Exception("Query does not produce a valid statement");
-			return (Operation)op[0];
-		}
+            OperationOrParameter[] op = InternalParseQuery(query, values, ref bindIndex);
+            if (op.Length != 1)
+                throw new Exception("Failed to parse the query into a meaningfull representation");
+            else if (!op[0].IsOperation)
+                throw new Exception("Query does not produce a valid statement");
+
+            return (Operation)op[0];
+        }
 
 		/// <summary>
 		/// Parses an SQL string into an OperationOrParameter statement
@@ -534,16 +686,18 @@ namespace System.Data.LightDatamodel.QueryModel
 						else
 						{
 							//Operators (=, <, >, <=, >=, !, <>, !=) are both seperators and tokens
-							if (OperatorList.ContainsKey(query[i].ToString()) && (i == query.Length - 1 || !HasExtraSeperators(query , i)))
+							if (OperatorList.ContainsKey(query[i].ToString()))
 							{
 								int operatorLength = HasExtraSeperators(query, i) ? 2 : 1;
+                                i += operatorLength - 1;
 
 								string f = query.Substring(tokenstart, (i - tokenstart) + 1).Trim();
 								string right = f.Substring(0, f.Length - operatorLength).Trim();
 								if (right.Length > 0)
 									tokens.Enqueue(right);
 								tokens.Enqueue(f.Substring(f.Length - operatorLength).Trim());
-								tokenstart = i + 1;
+
+                                tokenstart = i + 1;
 							}
 							else if (WhiteSpace.ContainsKey(query[i].ToString())) 
 							{
@@ -572,6 +726,7 @@ namespace System.Data.LightDatamodel.QueryModel
 			//Sort out operator precedence
 			SortedList operators = new SortedList();
 			ArrayList parsed = new ArrayList();
+			ArrayList sortorders = null;
 			int pix = 0;
 			while(tokens.Count > 0)
 			{
@@ -586,6 +741,34 @@ namespace System.Data.LightDatamodel.QueryModel
 						operators.Add(precedence, new ArrayList());
 					((ArrayList)operators[precedence]).Add(pix);
 					parsed.Add(op);
+				}
+				else if (opr.ToUpper().Equals("ORDER"))
+				{
+					if (!((string)tokens.Dequeue()).ToUpper().Equals("BY"))
+						throw new Exception("The keyword ORDER must be followed by the keyword BY");
+					
+					sortorders = new ArrayList();
+					//Rest of the items are sort expressions
+					while(tokens.Count > 0)
+					{
+						string col = (string)tokens.Dequeue();
+						OperationOrParameter[] p = TokenAsParameter(col, parameters, ref bindIndex);
+						if (p == null || p.Length != 1)
+							throw new Exception("Bad sort operand: " + col);
+						bool asc = true;
+                        if (tokens.Count > 0)
+                        {
+                            string next = (string)tokens.Peek();
+                            if (next != null || (next.ToUpper().Equals("ASC") || next.ToUpper().Equals("DESC")))
+                            {
+                                tokens.Dequeue();
+                                if (next.ToUpper().Equals("DESC"))
+                                    asc = false;
+                            }
+                        }
+
+						sortorders.Add(new SortableParameter(p[0], asc));
+					}
 				}
 				else
 				{
@@ -675,12 +858,32 @@ namespace System.Data.LightDatamodel.QueryModel
 
 				}
 
+			SortableParameter[] sorted = null;
+			if (sortorders != null)
+				sorted = (SortableParameter[])sortorders.ToArray(typeof(SortableParameter));
+
 			if (parsed.Count == 0)
-				return new OperationOrParameter[] {};
+			{
+				if (sorted == null)
+					return new OperationOrParameter[] {};
+				else
+					return new OperationOrParameter[] { new SortableOperation(sorted, Operators.Not, new Parameter(false, false)) }; 
+			}
 			else if (parsed.Count == 1 && parsed[0] as Operation != null)
-				return new OperationOrParameter[] { (OperationOrParameter)parsed[0] };
+			{
+				if (sorted == null)
+					return new OperationOrParameter[] { (OperationOrParameter)parsed[0] };
+
+				Operation op = (Operation)parsed[0];
+				return new OperationOrParameter[] { new SortableOperation(sorted, op.Operator, op.Parameters) };
+			}
 			else 
-				return (OperationOrParameter[])parsed.ToArray(typeof(OperationOrParameter));
+			{
+				if (sorted != null)
+					throw new Exception("Found an ORDER BY directive inside a substatement");
+				else
+					return (OperationOrParameter[])parsed.ToArray(typeof(OperationOrParameter));
+			}
 		}
 
 		private static OperationOrParameter[] TokenAsParameter(string query, object[] parameters, ref int bindIndex)
@@ -690,6 +893,8 @@ namespace System.Data.LightDatamodel.QueryModel
 
 			if (query.Trim() == "?")
 				return new OperationOrParameter[] { new Parameter(parameters, bindIndex++) };
+            else if (query.Trim().ToUpper() == "NULL")
+                return new OperationOrParameter[] { new Parameter(null , false) };
 			else if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Integer, CI, out v))
 				return new OperationOrParameter[] { new Parameter((long)v, false) };
 			else if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Float, CI, out v))
