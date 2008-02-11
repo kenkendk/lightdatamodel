@@ -1,12 +1,70 @@
-		public class %CLASSNAME%Collection : System.Data.LightDatamodel.SyncCollectionBase, System.Collections.ICollection, System.Collections.IEnumerable		{
+#region " Unsynchronized Includes "
 
-			public %CLASSNAME%Collection() { }
-			public %CLASSNAME%Collection(object owner, string reversePropertyname, string reversePropertyID)
-				: base(typeof(%CLASSNAME%), owner, reversePropertyname, reversePropertyID)
+	//Don't put any region sections in here
+
+#endregion
+
+/// <metadata>
+/// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\LightDatamodel\Unit test\bin\Debug\unittest.sqlite3;" />
+/// <type>Table</type>
+/// <namespace>UnitTest</namespace>
+/// <name>LeftSide</name>
+/// <sql></sql>
+/// </metadata>
+
+namespace UnitTest
+{
+
+	public class LeftSide : System.Data.LightDatamodel.DataClassBase
+	{
+
+#region " private members "
+		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
+		private System.Int64 m_ID;
+		private System.String m_Text;
+#endregion
+
+#region " unique value "
+
+		public override object UniqueValue {get{return ID;}}
+		public override string UniqueColumn {get{return "ID";}}
+#endregion
+
+#region " properties "
+
+		public System.Int64 ID
+		{
+			get{return m_ID;}
+			set{object oldvalue = m_ID;OnBeforeDataWrite(this, "ID", oldvalue, value);m_ID = value;OnAfterDataWrite(this, "ID", oldvalue, value);}
+		}
+
+		public System.String Text
+		{
+			get{return m_Text;}
+			set{object oldvalue = m_Text;OnBeforeDataWrite(this, "Text", oldvalue, value);m_Text = value;OnAfterDataWrite(this, "Text", oldvalue, value);}
+		}
+
+#endregion
+
+#region " Unsynchronized Custom Code Region "
+
+	//Don't put any region sections in here
+
+#endregion
+
+	}
+#region " typed collection "
+
+		public class LeftSideCollection : System.Data.LightDatamodel.SyncCollectionBase, System.Collections.ICollection, System.Collections.IEnumerable		{
+
+			public LeftSideCollection() { }
+			public LeftSideCollection(object owner, string reversePropertyname, string reversePropertyID)
+				: base(typeof(LeftSide), owner, reversePropertyname, reversePropertyID)
 			{
 			}
 
-			public virtual int Add(%CLASSNAME% item)
+			public virtual int Add(LeftSide item)
 			{
 				int i = m_baseList.Add(item);
 				HookItem(item);
@@ -16,16 +74,16 @@
 			public virtual void AddRange(System.Collections.ICollection items)
 			{
 				foreach(object o in items)
-					if (o != null && o as %CLASSNAME% == null)
-						throw new System.Exception("Only objects of type '" + typeof(%CLASSNAME%).FullName + "' may be inserted");
+					if (o != null && o as LeftSide == null)
+						throw new System.Exception("Only objects of type '" + typeof(LeftSide).FullName + "' may be inserted");
 
 				foreach(object o in items)
-					HookItem((%CLASSNAME%)o);
+					HookItem((LeftSide)o);
 
 				m_baseList.AddRange(items);
 			}
 
-			public virtual bool Contains(%CLASSNAME% item)
+			public virtual bool Contains(LeftSide item)
 			{
 				return m_baseList.Contains(item);
 			}
@@ -57,30 +115,30 @@
 				return m_baseList.GetEnumerator(index, count);
 			}
 
-			public virtual %CLASSNAME%Collection GetRange(int index, int count)
+			public virtual LeftSideCollection GetRange(int index, int count)
 			{
-				%CLASSNAME%Collection c = new %CLASSNAME%Collection();
+				LeftSideCollection c = new LeftSideCollection();
 				c.AddRange(m_baseList.GetRange(index, count));
 				return c;
 			}
 
 
-			public virtual int IndexOf(%CLASSNAME% item)
+			public virtual int IndexOf(LeftSide item)
 			{
 				return m_baseList.IndexOf(item);
 			}
 
-			public virtual int IndexOf(%CLASSNAME% item, int startIndex)
+			public virtual int IndexOf(LeftSide item, int startIndex)
 			{
 				return m_baseList.IndexOf(item, startIndex);
 			}
 			
-			public virtual int IndexOf(%CLASSNAME% item, int startIndex, int count)
+			public virtual int IndexOf(LeftSide item, int startIndex, int count)
 			{
 				return m_baseList.IndexOf(item, startIndex, count);
 			}
 			
-			public virtual void Insert(int index, %CLASSNAME% item)
+			public virtual void Insert(int index, LeftSide item)
 			{
 				m_baseList.Insert(index, item);
 				HookItem(item);
@@ -89,10 +147,10 @@
 			public virtual void InsertRange(int index, System.Collections.ICollection items)
 			{
 				foreach(object o in items)
-					if (o != null && o as %CLASSNAME% == null)
-						throw new System.Exception("Only objects of type '" + typeof(%CLASSNAME%).FullName + "' may be inserted");
+					if (o != null && o as LeftSide == null)
+						throw new System.Exception("Only objects of type '" + typeof(LeftSide).FullName + "' may be inserted");
 				foreach(object o in items)
-					HookItem((%CLASSNAME%)o);
+					HookItem((LeftSide)o);
 
 				m_baseList.InsertRange(index, items);
 			}
@@ -101,22 +159,22 @@
 			public virtual bool IsReadOnly { get { return m_baseList.IsReadOnly; } }
 			public virtual bool IsSynchronized { get { return m_baseList.IsSynchronized; } }
 
-			public virtual int LastIndexOf(%CLASSNAME% item)
+			public virtual int LastIndexOf(LeftSide item)
 			{
 				return m_baseList.LastIndexOf(item);
 			}
 
-			public virtual int LastIndexOf(%CLASSNAME% item, int startIndex)
+			public virtual int LastIndexOf(LeftSide item, int startIndex)
 			{
 				return m_baseList.LastIndexOf(item, startIndex);
 			}
 			
-			public virtual int LastIndexOf(%CLASSNAME% item, int startIndex, int count)
+			public virtual int LastIndexOf(LeftSide item, int startIndex, int count)
 			{
 				return m_baseList.LastIndexOf(item, startIndex, count);
 			}
 
-			public virtual void Remove(%CLASSNAME% item)
+			public virtual void Remove(LeftSide item)
 			{
 				if (m_baseList.Contains(item))
 				{
@@ -127,7 +185,7 @@
 
 			public virtual void RemoveAt(int index)
 			{
-				UnhookItem((%CLASSNAME%)m_baseList[index]);
+				UnhookItem((LeftSide)m_baseList[index]);
 				m_baseList.RemoveAt(index);
 			}
 
@@ -150,14 +208,14 @@
 			public virtual void SetRange(int index, System.Collections.ICollection items)
 			{
 				foreach(object o in items)
-					if (o != null && o as %CLASSNAME% == null)
-						throw new System.Exception("Only objects of type '" + typeof(%CLASSNAME%).FullName + "' may be inserted");
+					if (o != null && o as LeftSide == null)
+						throw new System.Exception("Only objects of type '" + typeof(LeftSide).FullName + "' may be inserted");
 
 				for(int i = 0; i < System.Math.Min(items.Count, m_baseList.Count - index); i++)
-					UnhookItem((%CLASSNAME%)m_baseList[i + index]);
+					UnhookItem((LeftSide)m_baseList[i + index]);
 
 				foreach(object o in items)
-					HookItem((%CLASSNAME%)o);
+					HookItem((LeftSide)o);
 				
 				m_baseList.SetRange(index, items);
 			}
@@ -179,9 +237,9 @@
 
 			public virtual object SyncRoot { get { return m_baseList.SyncRoot; } }
 
-			public virtual %CLASSNAME%[] ToArray()
+			public virtual LeftSide[] ToArray()
 			{
-				return (%CLASSNAME%[])m_baseList.ToArray(typeof(%CLASSNAME%));
+				return (LeftSide[])m_baseList.ToArray(typeof(LeftSide));
 			}
 
 			public virtual void TrimToSize()
@@ -189,14 +247,18 @@
 				m_baseList.TrimToSize();
 			}
 
-			public virtual %CLASSNAME% this[int index]
+			public virtual LeftSide this[int index]
 			{
-				get { return (%CLASSNAME%)m_baseList[index]; }
+				get { return (LeftSide)m_baseList[index]; }
 				set 
 				{ 
-					UnhookItem((%CLASSNAME%)m_baseList[index]);
+					UnhookItem((LeftSide)m_baseList[index]);
 					HookItem(value);
 					m_baseList[index] = value; 
 				}
 			}
 		}
+#endregion
+
+
+}
