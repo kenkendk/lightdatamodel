@@ -135,7 +135,7 @@ namespace DataClassFileBuilder
 			this.TableGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
 			this.TableGroup.Location = new System.Drawing.Point(8, 48);
 			this.TableGroup.Name = "TableGroup";
-			this.TableGroup.Size = new System.Drawing.Size(600, 136);
+			this.TableGroup.Size = new System.Drawing.Size(600, 128);
 			this.TableGroup.TabIndex = 4;
 			this.TableGroup.TabStop = false;
 			this.TableGroup.Text = "Create classes for all tables in datasource";
@@ -144,7 +144,7 @@ namespace DataClassFileBuilder
 			// 
 			this.BrowseDB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.BrowseDB.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.BrowseDB.Location = new System.Drawing.Point(568, 32);
+			this.BrowseDB.Location = new System.Drawing.Point(568, 24);
 			this.BrowseDB.Name = "BrowseDB";
 			this.BrowseDB.Size = new System.Drawing.Size(24, 21);
 			this.BrowseDB.TabIndex = 13;
@@ -155,7 +155,7 @@ namespace DataClassFileBuilder
 			// 
 			this.ConnectionStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
 				| System.Windows.Forms.AnchorStyles.Right)));
-			this.ConnectionStringText.Location = new System.Drawing.Point(104, 32);
+			this.ConnectionStringText.Location = new System.Drawing.Point(104, 24);
 			this.ConnectionStringText.Name = "ConnectionStringText";
 			this.ConnectionStringText.Size = new System.Drawing.Size(464, 20);
 			this.ConnectionStringText.TabIndex = 8;
@@ -173,7 +173,7 @@ namespace DataClassFileBuilder
 			// 
 			this.BrowseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.BrowseButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.BrowseButton.Location = new System.Drawing.Point(568, 56);
+			this.BrowseButton.Location = new System.Drawing.Point(568, 48);
 			this.BrowseButton.Name = "BrowseButton";
 			this.BrowseButton.Size = new System.Drawing.Size(24, 21);
 			this.BrowseButton.TabIndex = 12;
@@ -184,7 +184,7 @@ namespace DataClassFileBuilder
 			// 
 			this.DestinationDirText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
 				| System.Windows.Forms.AnchorStyles.Right)));
-			this.DestinationDirText.Location = new System.Drawing.Point(104, 56);
+			this.DestinationDirText.Location = new System.Drawing.Point(104, 48);
 			this.DestinationDirText.Name = "DestinationDirText";
 			this.DestinationDirText.Size = new System.Drawing.Size(464, 20);
 			this.DestinationDirText.TabIndex = 11;
@@ -202,7 +202,7 @@ namespace DataClassFileBuilder
 			// 
 			this.BuildButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.BuildButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.BuildButton.Location = new System.Drawing.Point(456, 104);
+			this.BuildButton.Location = new System.Drawing.Point(456, 96);
 			this.BuildButton.Name = "BuildButton";
 			this.BuildButton.Size = new System.Drawing.Size(136, 24);
 			this.BuildButton.TabIndex = 9;
@@ -213,7 +213,7 @@ namespace DataClassFileBuilder
 			// 
 			this.NamespaceStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
 				| System.Windows.Forms.AnchorStyles.Right)));
-			this.NamespaceStringText.Location = new System.Drawing.Point(104, 80);
+			this.NamespaceStringText.Location = new System.Drawing.Point(104, 72);
 			this.NamespaceStringText.Name = "NamespaceStringText";
 			this.NamespaceStringText.Size = new System.Drawing.Size(488, 20);
 			this.NamespaceStringText.TabIndex = 6;
@@ -238,7 +238,7 @@ namespace DataClassFileBuilder
 			this.ViewGroup.Controls.Add(this.ViewNameText);
 			this.ViewGroup.Enabled = false;
 			this.ViewGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.ViewGroup.Location = new System.Drawing.Point(8, 192);
+			this.ViewGroup.Location = new System.Drawing.Point(8, 184);
 			this.ViewGroup.Name = "ViewGroup";
 			this.ViewGroup.Size = new System.Drawing.Size(600, 104);
 			this.ViewGroup.TabIndex = 5;
