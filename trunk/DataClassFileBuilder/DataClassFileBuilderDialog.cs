@@ -41,7 +41,7 @@ namespace DataClassFileBuilder
 		private System.Windows.Forms.Button CreateViewButton;
 		protected System.Windows.Forms.TextBox SQLText;
 		protected System.Windows.Forms.TextBox ViewNameText;
-		public IConfigureAbleDataProvider[] Providers;
+		public IConfigureableDataProvider[] Providers;
 		private System.Windows.Forms.GroupBox TableGroup;
 		private System.Windows.Forms.GroupBox ViewGroup;
 		public System.Windows.Forms.ComboBox ProviderList;
@@ -343,7 +343,7 @@ namespace DataClassFileBuilder
 
 			dlg.Providers = GetAvalibleProviders();
 			dlg.ProviderList.Items.Clear();
-			foreach(IConfigureAbleDataProvider t in dlg.Providers)
+			foreach(IConfigureableDataProvider t in dlg.Providers)
 				dlg.ProviderList.Items.Add(t.FriendlyName);
 
 			for(int i = 0; i < dlg.Providers.Length; i++)
@@ -435,6 +435,13 @@ namespace DataClassFileBuilder
 				string assemblyname = NamespaceStringText.Text;
 				int p = assemblyname.LastIndexOf('.');
 				if(p >= 0) assemblyname = assemblyname.Substring(p+1);
+				if (!System.IO.Directory.Exists(DestinationDirText.Text))
+				{
+					if (MessageBox.Show("Directory \"" + DestinationDirText.Text + "\" doesn't exists. Create it now?", "Create dir?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+						System.IO.Directory.CreateDirectory(DestinationDirText.Text);
+					else
+						return;
+				}
 
 				//tables
 				string[] tablenames = provider.GetTablenames();
@@ -446,10 +453,13 @@ namespace DataClassFileBuilder
 					paths[i] = DestinationDirText.Text + tablenames[i] + ".cs";
 					BuildClassFile(tablenames[i], null, paths[i], NamespaceStringText.Text, provider, typeof(DataClassBase));
 				}
-				BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, tablenames, null, null);
-				string[] includes = new string[paths.Length + 1];
+
+				//datahub
+				//BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, tablenames, null, null);
+				//string[] includes = new string[paths.Length + 1];
+				string[] includes = new string[paths.Length];
 				Array.Copy(paths, includes, paths.Length);
-				includes[includes.Length -1] = DestinationDirText.Text + "DataHub.cs";
+				//includes[includes.Length -1] = DestinationDirText.Text + "DataHub.cs";
 
 				//Build project
 				BuildProjectFile(assemblyname, NamespaceStringText.Text, DestinationDirText.Text + assemblyname + ".csproj", includes);
@@ -935,7 +945,7 @@ namespace DataClassFileBuilder
 				if(sql == null)
 				{
 					sw.Write("#region \" unique value \"\n\n");
-					sw.Write("\t\tpublic override object UniqueValue {get{return " + primarykeycol + ";}}\n");
+					sw.Write("\t\tpublic override object UniqueValue {get{return " + (primarykeycol != "" ? "m_" + primarykeycol : "null") + ";}}\n");
 					sw.Write("\t\tpublic override string UniqueColumn {get{return \"" + primarykeycol + "\";}}\n");
 					//sw.Write("\t\tpublic override void Commit() {if(m_dataparent!=null)m_dataparent.PopulateDatabase(this);}\n");
 					//sw.Write("\t\tpublic override void Update() {if(m_dataparent!=null)m_dataparent.UpdateDataClass(this);}\n\n");
@@ -965,12 +975,12 @@ namespace DataClassFileBuilder
 
 				sw.Write("\t}\n"); //end class
 
-				sw.Write("#region \" typed collection \"\n\n");
-				string TypedCollection = "";
-				using(StreamReader sr = new StreamReader(this.GetType().Assembly.GetManifestResourceStream("DataClassFileBuilder.TemplateTypedCollection.txt")))
-					TypedCollection = sr.ReadToEnd();
-				sw.Write(TypedCollection.Replace("%CLASSNAME%", name));
-				sw.Write("#endregion\n\n");
+				//sw.Write("#region \" typed collection \"\n\n");
+				//string TypedCollection = "";
+				//using(StreamReader sr = new StreamReader(this.GetType().Assembly.GetManifestResourceStream("DataClassFileBuilder.TemplateTypedCollection.txt")))
+				//    TypedCollection = sr.ReadToEnd();
+				//sw.Write(TypedCollection.Replace("%CLASSNAME%", name));
+				//sw.Write("#endregion\n\n");
 
 				sw.Write("\n}"); //end namespace
 
@@ -1013,7 +1023,7 @@ namespace DataClassFileBuilder
 				if(p >= 0) assemblyname = assemblyname.Substring(p+1);
 
 				//Build view
-				BuildClassFile(ViewNameText.Text, SQLText.Text, DestinationDirText.Text + "\\" + ViewNameText.Text + ".cs", NamespaceStringText.Text, provider, typeof(DataCustomClassBase));
+				BuildClassFile(ViewNameText.Text, SQLText.Text, DestinationDirText.Text + "\\" + ViewNameText.Text + ".cs", NamespaceStringText.Text, provider, typeof(DataClassView));
 
 				//Build datahub
 				BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, null, new string[]{ViewNameText.Text}, new string[]{SQLText.Text});
@@ -1052,7 +1062,7 @@ namespace DataClassFileBuilder
 			}
 		}
 
-		private static IConfigureAbleDataProvider[] GetAvalibleProviders()
+		private static IConfigureableDataProvider[] GetAvalibleProviders()
 		{
 			ArrayList files = new ArrayList();
 			ArrayList types = new ArrayList();
@@ -1068,12 +1078,12 @@ namespace DataClassFileBuilder
 				{
 					System.Reflection.Assembly asm = System.Reflection.Assembly.LoadFile(s);
 					foreach(Type t in asm.GetExportedTypes())
-						if (t.IsClass && t.GetInterface(typeof(System.Data.LightDatamodel.IConfigureAbleDataProvider).FullName) != null)
+						if (t.IsClass && t.GetInterface(typeof(System.Data.LightDatamodel.IConfigureableDataProvider).FullName) != null)
 							types.Add(Activator.CreateInstance(t));
 				}
 				catch {	}
 
-			return (IConfigureAbleDataProvider[])types.ToArray(typeof(IConfigureAbleDataProvider));
+			return (IConfigureableDataProvider[])types.ToArray(typeof(IConfigureableDataProvider));
 		}
 
 		private void BrowseDB_Click(object sender, System.EventArgs e)
