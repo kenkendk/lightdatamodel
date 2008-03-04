@@ -59,6 +59,29 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
+		/// Will return a single result
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="expression"></param>
+		/// <param name="filter"></param>
+		/// <returns></returns>
+		public virtual object Compute(string tablename, string expression, string filter)
+		{
+			if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			IDbCommand cmd = m_connection.CreateCommand();
+			cmd.CommandText = "SELECT " + expression + " FROM " + QuoteTablename(tablename) + ( filter != null && filter != "" ? " WHERE " + filter : "");
+
+			try
+			{
+				return cmd.ExecuteScalar();
+			}
+			catch(Exception ex)
+			{
+				throw new Exception("Couldn't load expression (" + expression.ToString() + ") from table \"" + tablename + "\"\nError: " + ex.Message);
+			}
+		}
+
+		/// <summary>
 		/// Will get or set the connection string. All DBs I've meet is able to connect throug the use a single connection string. Even Oracle! (It can be rather huge though)
 		/// </summary>
 		public virtual string ConnectionString

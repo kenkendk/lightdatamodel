@@ -170,7 +170,7 @@ namespace System.Data.LightDatamodel
 
 	}
 
-	public class AccessDataProviderConfiguration : IConfigureAbleDataProvider
+	public class AccessDataProviderConfiguration : IConfigureableDataProvider
 	{
 		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
 		{

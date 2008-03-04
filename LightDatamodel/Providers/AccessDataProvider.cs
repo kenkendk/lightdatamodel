@@ -42,7 +42,7 @@ namespace System.Data.LightDatamodel
 		public override string GetPrimaryKey(string tablename)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
-			DataTable primsch = ((OleDb.OleDbConnection)m_connection).GetOleDbSchemaTable(OleDbSchemaGuid.Primary_Keys, new Object[] {null, null, tablename});
+			DataTable primsch = ((OleDb.OleDbConnection)m_connection).GetOleDbSchemaTable(OleDbSchemaGuid.Primary_Keys, new object[] {null, null, tablename});
 			if( primsch == null || primsch.Rows.Count == 0) return "";
 			return primsch.Rows[0].ItemArray[3].ToString();
 		}
@@ -116,7 +116,7 @@ namespace System.Data.LightDatamodel
 
 	}
 
-	public class SQLiteDataProviderConfiguration : IConfigureAbleDataProvider
+	public class SQLiteDataProviderConfiguration : IConfigureableDataProvider
 	{
 		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
 		{
