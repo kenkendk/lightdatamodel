@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace System.Data.LightDatamodel
 {
@@ -43,9 +44,9 @@ namespace System.Data.LightDatamodel
 	{
 		protected IDataFetcherCached m_baseFetcher;
 		protected IDataProvider m_provider;
-		protected Hashtable m_types = null;
+		protected SortedList<string, Type> m_types = null;
 
-		public Hashtable KnownTypes { get { return m_types; } set { m_types = value; } }
+		public SortedList<string, Type> KnownTypes { get { return m_types; } set { m_types = value; } }
 		public IDataFetcherCached BaseFetcher { get { return m_baseFetcher; } }
 
 		public DataProviderNested(IDataFetcherCached parent)
@@ -123,7 +124,7 @@ namespace System.Data.LightDatamodel
 
 		public Data[][] SelectRowsFromCache(string tablename, QueryModel.Operation operation)
 		{
-			object[] items = m_baseFetcher.GetObjectsFromCache((Type)KnownTypes[tablename], operation);
+			object[] items = m_baseFetcher.GetObjectsFromCache(KnownTypes[tablename], operation);
 			Data[][] v = new Data[items.Length][];
 			for (int i = 0; i < items.Length; i++)
 				v[i] = FromObjectToData(items[i]);
@@ -132,7 +133,7 @@ namespace System.Data.LightDatamodel
 
 		public Data[][] SelectRows(string tablename, QueryModel.Operation operation)
 		{
-			object[] items = m_baseFetcher.GetObjects((Type)KnownTypes[tablename], operation);
+			object[] items = m_baseFetcher.GetObjects(KnownTypes[tablename], operation);
 			Data[][] v = new Data[items.Length][];
 			for(int i = 0; i < items.Length; i++)
 				v[i] = FromObjectToData(items[i]);
@@ -151,14 +152,14 @@ namespace System.Data.LightDatamodel
 
 		public void UpdateRow(string tablename, string primarycolumnname, object primaryvalue, params Data[] values)
 		{
-			DataClassBase obj = (DataClassBase)m_baseFetcher.GetObjectById((Type)KnownTypes[tablename], primaryvalue);
+			DataClassBase obj = (DataClassBase)m_baseFetcher.GetObjectById(KnownTypes[tablename], primaryvalue);
 			obj.m_isdirty = true;
 			UpdateObject(obj, values);
 		}
 
 		public void InsertRow(string tablename, params Data[] values)
 		{
-			DataClassExtended o = (DataClassExtended)m_baseFetcher.CreateObject((Type)KnownTypes[tablename]);
+			DataClassExtended o = (DataClassExtended)m_baseFetcher.CreateObject(KnownTypes[tablename]);
 			Guid oldkey = o.m_guid;
 			UpdateObject(o, values);
 			if (m_baseFetcher as IDataFetcher == null)

@@ -172,12 +172,23 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// <returns>A filtered list with only the matching items</returns>
 		public override object[] EvaluateList(IEnumerable items, params object[] parameters)
 		{
-			ArrayList lst = new ArrayList();
-			foreach(object o in items)
-				if (ResAsBool(this.Evaluate(o, parameters)))
-					lst.Add(o);
+			object[] lst = base.EvaluateList(items, parameters);
 			Sorter.Sort(this, lst);
-			return (object[])lst.ToArray(typeof(object));
+			return lst;
+		}
+
+		/// <summary>
+		/// Evaluates a list of objects against the query
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="items"></param>
+		/// <param name="parameters"></param>
+		/// <returns></returns>
+		public override T[] EvaluateList<T>(IEnumerable items, params object[] parameters)
+		{
+			T[] itemlist = base.EvaluateList<T>(items, parameters);
+			Sorter.Sort(this, itemlist);
+			return itemlist;
 		}
 
 	}
@@ -363,6 +374,22 @@ namespace System.Data.LightDatamodel.QueryModel
 				if (ResAsBool(this.Evaluate(o, parameters)))
 					lst.Add(o);
 			return (object[])lst.ToArray(typeof(object));
+		}
+
+		/// <summary>
+		/// Evaluates a list of objects against the query
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="items"></param>
+		/// <param name="parameters"></param>
+		/// <returns></returns>
+		public virtual T[] EvaluateList<T>(IEnumerable items, params object[] parameters)
+		{
+			System.Collections.Generic.List<T> lst = new System.Collections.Generic.List<T>();
+			foreach (T o in items)
+				if (ResAsBool(this.Evaluate(o, parameters)))
+					lst.Add(o);
+			return lst.ToArray();
 		}
 
 

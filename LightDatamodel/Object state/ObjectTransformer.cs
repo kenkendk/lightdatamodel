@@ -137,6 +137,19 @@ namespace System.Data.LightDatamodel
 
 			return ret;
 		}
+		public static object[] TransformToObjects(Type type, Data[][] data, IDataProvider provider)
+		{
+			object[] ret = new object[data.Length];
+
+			for (int i = 0; i < ret.Length; i++)
+			{
+				object newobj = Activator.CreateInstance(type);
+				ObjectTransformer.PopulateDataClass(newobj, data[i], provider);
+				ret[i] = newobj;
+			}
+
+			return ret;
+		}
 	}
 
 	#region " Attribute classes "
