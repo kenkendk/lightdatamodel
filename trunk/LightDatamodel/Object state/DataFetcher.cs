@@ -133,9 +133,36 @@ namespace System.Data.LightDatamodel
 			return obj[0];
 		}
 
+		public virtual object GetObjectById(Type type, object id)
+		{
+			string tablename = type.Name;
+
+			if (GetDataClassLevel(type) < DataClassLevels.Base) throw new Exception("This object cannot be fetched by primary key. Use GetObjects instead");
+
+			//Fetch From Data source
+			IDataClass newobj = (IDataClass)Activator.CreateInstance(type);
+			OnBeforeDataConnection(newobj, DataActions.Fetch);
+			Data[] data = m_provider.SelectRow(tablename, newobj.UniqueColumn, id);
+			if (data == null) return null;
+			object[] obj = ObjectTransformer.TransformToObjects(type, new Data[][] { data }, m_provider);
+			HookObject((IDataClass)obj[0]);
+			(obj[0] as DataClassBase).m_dataparent = this;
+			(obj[0] as DataClassBase).m_state = ObjectStates.Default;
+			OnAfterDataConnection(obj[0], DataActions.Fetch);
+
+			return obj[0];
+		}
+
 		public virtual DATACLASS CreateObject<DATACLASS>() where DATACLASS : IDataClass
 		{
 			DATACLASS newobj = Activator.CreateInstance<DATACLASS>();
+			HookObject((IDataClass)newobj);
+			return newobj;
+		}
+
+		public virtual object CreateObject(Type type)
+		{
+			object newobj = Activator.CreateInstance(type);
 			HookObject((IDataClass)newobj);
 			return newobj;
 		}

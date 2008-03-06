@@ -36,8 +36,10 @@ namespace System.Data.LightDatamodel
 		DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 		DATACLASS[] GetObjects<DATACLASS>() where DATACLASS : IDataClass;
 		DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass;
+		object GetObjectById(Type type, object id);
 		void Commit(IDataClass obj);
 		DATACLASS CreateObject<DATACLASS>() where DATACLASS : IDataClass;
+		object CreateObject(Type type);
 		IDataProvider Provider { get; }
 		RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter);
 		void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass;

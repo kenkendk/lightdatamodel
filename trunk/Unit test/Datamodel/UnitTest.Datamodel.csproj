@@ -3,14 +3,14 @@
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}</ProjectGuid>
+    <ProjectGuid>{D8FAE879-F4A2-4E81-9B36-AED0D824C265}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>
     </ApplicationIcon>
     <AssemblyKeyContainerName>
     </AssemblyKeyContainerName>
-    <AssemblyName>LightDatamodel</AssemblyName>
+    <AssemblyName>UnitTest</AssemblyName>
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
     <DefaultClientScript>JScript</DefaultClientScript>
@@ -18,7 +18,7 @@
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <OutputType>Library</OutputType>
-    <RootNamespace>System.Data.LightDatamodel</RootNamespace>
+    <RootNamespace>UnitTest</RootNamespace>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <StartupObject>
     </StartupObject>
@@ -80,9 +80,6 @@
     <Reference Include="System.Data">
       <Name>System.Data</Name>
     </Reference>
-    <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
-    </Reference>
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
     </Reference>
@@ -91,46 +88,33 @@
     <Compile Include="AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\DataFetcherCached.cs">
+    <Compile Include="LeftSide.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\DataClassExtended.cs">
+    <Compile Include="ManyToMany.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\ExtendedInterfaces.cs">
+    <Compile Include="Note.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\DataFetcherNested.cs">
+    <Compile Include="Project.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\QueryModel.cs">
+    <Compile Include="Registration.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\SyncCollectionBase.cs" />
-    <Compile Include="Object state\DataClassBase.cs">
+    <Compile Include="RightSide.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Object state\DataFetcher.cs">
+    <Compile Include="SpecificEvent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Object state\DataFetcherInterfaces.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Object state\ObjectTransformer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Providers\AccessDataProvider.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Providers\GenericDataProvider.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Providers\ProviderInterfaces.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Providers\SQLiteDataProvider.cs">
-      <SubType>Code</SubType>
-    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\LightDatamodel\LightDatamodel.csproj">
+      <Project>{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}</Project>
+      <Name>LightDatamodel</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

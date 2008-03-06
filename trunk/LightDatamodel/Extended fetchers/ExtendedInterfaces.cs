@@ -26,9 +26,12 @@ namespace System.Data.LightDatamodel
 	{
 		DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 		DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass;
+		object[] GetObjectsFromCache(Type type, QueryModel.Operation operation);
 		DATACLASS[] GetReferenceObjects<DATACLASS>(string reverseProperty, string idProperty, IDataClass refObj) where DATACLASS : IDataClass;
-		DATACLASS GetObjectByGuid<DATACLASS>(object guid) where DATACLASS : IDataClass;
+		DATACLASS GetObjectByGuid<DATACLASS>(Guid guid) where DATACLASS : IDataClass;
+		object GetObjectByGuid(Guid guid);
 		DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass;
+		object[] GetObjects(Type type, QueryModel.Operation operation);
 		void Remove(IDataClass obj);
 		void Add(IDataClass obj);
 	}
