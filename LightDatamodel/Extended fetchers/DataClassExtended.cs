@@ -156,8 +156,9 @@ namespace System.Data.LightDatamodel
 				}
 				else
 				{
-					if (revval as ICollection != null)
-					{
+                    //TODO: What does this look like as a generic?
+					//if (revval as ICollection != null)
+					//{
 						MethodInfo mi = revval.GetType().GetMethod("Contains");
 						if (mi == null)
 							throw new Exception("Type " + revval.GetType().FullName + " did not have a Contains method");
@@ -169,9 +170,9 @@ namespace System.Data.LightDatamodel
 								throw new Exception("Type " + revval.GetType().FullName + " did not have an Add method");
 							mi.Invoke(revval, new object[] { this });
 						}
-					}
+					/*}
 					else
-						throw new Exception("Reverse Property " + reversePropertyname + " on type " + value.GetType().FullName + " must be either type " + this.GetType().FullName + " or System.Collections.ICollection");
+						throw new Exception("Reverse Property " + reversePropertyname + " on type " + value.GetType().FullName + " must be either type " + this.GetType().FullName + " or System.Collections.ICollection"); */
 				}
 			}
 		}

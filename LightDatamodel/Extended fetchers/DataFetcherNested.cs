@@ -89,7 +89,7 @@ namespace System.Data.LightDatamodel
 			if (o as DataClassBase != null)
 				foreach (string s in new string[] { "m_guid", "m_existsInDB", "m_referenceObjects" } )
 				{
-					FieldInfo bfi = typeof(DataClassBase).GetField(s, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+					FieldInfo bfi = typeof(DataClassExtended).GetField(s, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 					if (bfi != null)
 						fields.Add(new Data(bfi.Name, bfi.GetValue(o), null));
 					//All 'special' values are tagged with type == null
@@ -115,7 +115,7 @@ namespace System.Data.LightDatamodel
 					//We tag the Guid property with an invalid type, to avoid potential conflicts with similarly named properties
 				else if (d[i].Type == null && isDataClassBase)
 				{
-					FieldInfo bfi = typeof(DataClassBase).GetField(d[i].Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+					FieldInfo bfi = typeof(DataClassExtended).GetField(d[i].Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 					if (bfi != null)
 						bfi.SetValue(o, d[i].Value);
 				}

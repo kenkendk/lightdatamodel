@@ -17,7 +17,7 @@ using System.Collections.Generic;
 namespace UnitTest
 {
 
-	public class Note : System.Data.LightDatamodel.DataClassBase
+	public class Note : System.Data.LightDatamodel.DataClassExtended
 	{
 
 #region " private members "
@@ -52,14 +52,14 @@ namespace UnitTest
 #region " Unsynchronized Custom Code Region "
 
 	//Don't put any region sections in here
-	public List<Project> ProjectNotes
+	public IList<Project> ProjectNotes
 	{
-		get { return new ProjectCollection(this, "ProjectNote", "ProjectNoteID"); }
+		get { return new System.Data.LightDatamodel.SyncCollectionBase<Project>(this, "ProjectNote", "ProjectNoteID"); }
 	}
 
-	public List<Project> TaskNotes
+	public IList<Project> TaskNotes
 	{
-		get { return new ProjectCollection(this, "CurrentTaskNote", "CurrentTaskNoteID"); }
+        get { return new System.Data.LightDatamodel.SyncCollectionBase<Project>(this, "CurrentTaskNote", "CurrentTaskNoteID"); }
 	}
 		
 #endregion

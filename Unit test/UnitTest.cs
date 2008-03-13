@@ -23,7 +23,7 @@ namespace UnitTest
 			if (File.Exists(filename))
 				File.Delete(filename);
 
-			Finisar.SQLite.SQLiteConnection con = new Finisar.SQLite.SQLiteConnection("New=True;Version=3;Data Source=" + filename);
+            System.Data.SQLite.SQLiteConnection con = new System.Data.SQLite.SQLiteConnection("New=True;Version=3;Data Source=" + filename);
 			con.Open();
 
 
@@ -39,7 +39,7 @@ namespace UnitTest
 
 		public static void TestQueryModel(IDbConnection con)
 		{
-			DataHub hub = new DataHub(con);
+            DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
 
 			Operation op1 = new Operation(Operators.GreaterThan, new OperationOrParameter[] {new Parameter("ID", true), new Parameter(0, false)});
 			Operation op2 = new Operation(Operators.LessThan, new OperationOrParameter[] {new Parameter("ID", true), new Parameter(1000, false)});
@@ -110,9 +110,9 @@ namespace UnitTest
 
 		public static void TestRelations(IDbConnection con)
 		{
-			DataHub hub = new DataHub(con);
+            DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
 
-			NestedDataFetcher nd = new NestedDataFetcher(hub);
+            DataFetcherNested nd = new DataFetcherNested(hub);
 
 			Note n = (Note)nd.CreateObject(typeof(Note));
 			Project p = (Project)nd.CreateObject(typeof(Project));
@@ -147,7 +147,7 @@ namespace UnitTest
 			if (p.ProjectNoteID != n.ID)
 				throw new Exception("Failed to update reverse ID");
 
-			nd = new NestedDataFetcher(hub);
+            nd = new DataFetcherNested(hub);
 			p = (Project)nd.GetObjectByGuid(pg);
 			if (p == null)
 				throw new Exception("Failed to load item from guid");
@@ -160,7 +160,7 @@ namespace UnitTest
 			hub.DiscardObject(p);
 			hub.DiscardObject(n);
 
-			nd = new NestedDataFetcher(hub);
+            nd = new DataFetcherNested(hub);
 			p = (Project)nd.GetObjectById(typeof(Project), id);
 			if (p == null)
 				throw new Exception("Failed to load item from DB");
@@ -204,7 +204,7 @@ namespace UnitTest
 
 			id = p.ProjectNoteID;
 
-			nd = new System.Data.LightDatamodel.NestedDataFetcher(hub);
+            nd = new System.Data.LightDatamodel.DataFetcherNested(hub);
 
 			n = (Note)nd.GetObjectById(typeof(Note), id);
 			p = (Project)nd.CreateObject(typeof(Project));
@@ -248,7 +248,7 @@ namespace UnitTest
 			pg = p.Guid;
 			ng = n.Guid;
 
-			nd = new NestedDataFetcher(hub);
+            nd = new DataFetcherNested(hub);
 			p = (Project)nd.GetObjectByGuid(pg);
 			if (p.ProjectNote == null)
 				throw new Exception("Failed to pass on created object");

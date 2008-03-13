@@ -974,14 +974,6 @@ namespace DataClassFileBuilder
 				sw.Write(unsynchronizedcodeend + "\n");
 
 				sw.Write("\t}\n"); //end class
-
-				//sw.Write("#region \" typed collection \"\n\n");
-				//string TypedCollection = "";
-				//using(StreamReader sr = new StreamReader(this.GetType().Assembly.GetManifestResourceStream("DataClassFileBuilder.TemplateTypedCollection.txt")))
-				//    TypedCollection = sr.ReadToEnd();
-				//sw.Write(TypedCollection.Replace("%CLASSNAME%", name));
-				//sw.Write("#endregion\n\n");
-
 				sw.Write("\n}"); //end namespace
 
 			}

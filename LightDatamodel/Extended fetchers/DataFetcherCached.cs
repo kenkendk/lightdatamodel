@@ -185,6 +185,16 @@ namespace System.Data.LightDatamodel
 			return GetObjectsFromCache<DATACLASS>(properyName + ".Guid=?" + (refObj as DataClassExtended).Guid);
 		}
 
+        public override DATACLASS[] GetObjects<DATACLASS>()
+        {
+            return GetObjects<DATACLASS>("");
+        }
+
+        public virtual DATACLASS[] GetObjects<DATACLASS>(string query) where DATACLASS : IDataClass
+        {
+            return GetObjects<DATACLASS>(QueryModel.Parser.ParseQuery(query));
+        }
+
 		/// <summary>
 		/// This will load a list of arbitary objects
 		/// If the given object is a DataClassBase it will be hook into the DataFetcher
@@ -200,37 +210,39 @@ namespace System.Data.LightDatamodel
 			string tablename = type.Name;
 			if (!m_knownTypes.ContainsKey(tablename))
 				m_knownTypes.Add(tablename, type);
+            if (!m_cache.ContainsKey(tablename))
+                m_cache[tablename] = new SortedList<object, IDataClass>();
 
-			QueryModel.Parameter[] p = new QueryModel.Parameter[m_cache[tablename].Count + 1];
-			int i = 1;
-			foreach(object o in m_cache[tablename].Keys)
-				p[i++] = new QueryModel.Parameter(o, false);
+            QueryModel.Operation filter = QueryModel.Parser.ParseQuery("Not (" + ((DataClassBase)Activator.CreateInstance(type)).UniqueColumn + " IN ?)", m_cache[tablename].Keys);
 
-			p[0] = new QueryModel.Parameter(((DataClassBase)Activator.CreateInstance(type)).UniqueColumn, true);
-			QueryModel.Operation op = new QueryModel.Operation(QueryModel.Operators.In, p);
-			op = new QueryModel.Operation(QueryModel.Operators.Not, op);
-			op = new QueryModel.Operation(QueryModel.Operators.And, new QueryModel.OperationOrParameter[] {op, operation});
+			QueryModel.Operation op = new QueryModel.Operation(QueryModel.Operators.And, new QueryModel.OperationOrParameter[] {filter, operation});
 
 			Data[][] data = m_provider.SelectRows(tablename, op);
 			InsertObjectsInCache<DATACLASS>(data);
 			return operation.EvaluateList<DATACLASS>(m_cache[tablename].Values);
 		}
 
+        public virtual object[] GetObjects(Type type)
+        {
+            return GetObjects(type, "");
+        }
+
+        public virtual object[] GetObjects(Type type, string query)
+        {
+            return GetObjects(type, QueryModel.Parser.ParseQuery(query));
+        }
+
 		public virtual object[] GetObjects(Type type, QueryModel.Operation operation)
 		{
 			string tablename = type.Name;
 			if (!m_knownTypes.ContainsKey(tablename))
 				m_knownTypes.Add(tablename, type);
+            if (!m_cache.ContainsKey(tablename))
+                m_cache[tablename] = new SortedList<object, IDataClass>();
 
-			QueryModel.Parameter[] p = new QueryModel.Parameter[m_cache[tablename].Count + 1];
-			int i = 1;
-			foreach (object o in m_cache[tablename].Keys)
-				p[i++] = new QueryModel.Parameter(o, false);
+            QueryModel.Operation filter = QueryModel.Parser.ParseQuery("Not (" + ((DataClassBase)Activator.CreateInstance(type)).UniqueColumn + " IN ?)", m_cache[tablename].Keys);
 
-			p[0] = new QueryModel.Parameter(((DataClassBase)Activator.CreateInstance(type)).UniqueColumn, true);
-			QueryModel.Operation op = new QueryModel.Operation(QueryModel.Operators.In, p);
-			op = new QueryModel.Operation(QueryModel.Operators.Not, op);
-			op = new QueryModel.Operation(QueryModel.Operators.And, new QueryModel.OperationOrParameter[] { op, operation });
+            QueryModel.Operation op = new QueryModel.Operation(QueryModel.Operators.And, new QueryModel.OperationOrParameter[] { filter, operation });
 
 			Data[][] data = m_provider.SelectRows(tablename, op);
 			InsertObjectsInCache(type, data);
@@ -551,6 +563,8 @@ namespace System.Data.LightDatamodel
 				Data[] data = m_provider.SelectRow(tablename, newobj.UniqueColumn, id);
 				if (data == null) return null;
 				InsertObjectsInCache(type, new Data[][] { data });
+                if (!m_cache[tablename].ContainsKey(id))
+                    return null;
 			}
 
 			return m_cache[tablename][id];
@@ -684,7 +698,7 @@ namespace System.Data.LightDatamodel
 				specialItems.Add(o, null);
 
 			//Step 2, re-assign to update internal ID's
-			Hashtable classProperties = new Hashtable();
+            Dictionary<Type, List<PropertyInfo>> classProperties = new Dictionary<Type, List<PropertyInfo>>();
 			ArrayList totals = new ArrayList();
 			totals.AddRange(added);
 			totals.AddRange(modified);
@@ -695,8 +709,7 @@ namespace System.Data.LightDatamodel
 				if (!classProperties.ContainsKey(o.GetType()))
 					classProperties.Add(o.GetType(), FindObjProps(o));
 
-				ArrayList piList = (ArrayList)classProperties[o.GetType()];
-				foreach (PropertyInfo pi in piList)
+                foreach (PropertyInfo pi in classProperties[o.GetType()])
 				{
 					object ox = pi.GetValue(o, null);
 					if (ox != null && specialItems.ContainsKey(ox))
@@ -716,9 +729,9 @@ namespace System.Data.LightDatamodel
 				b.DataParent.Commit(b);
 		}
 
-		private static ArrayList FindObjProps(object o)
+		private static List<PropertyInfo> FindObjProps(object o)
 		{
-			ArrayList res = new ArrayList();
+            List<PropertyInfo> res = new List<PropertyInfo>();
 			foreach(PropertyInfo pi in o.GetType().GetProperties())
 			{
 				if (!pi.CanWrite || !pi.CanRead)
