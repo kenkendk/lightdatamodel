@@ -57,7 +57,7 @@ namespace System.Data.LightDatamodel
 					}
 					else if (isDataClassBase)
 					{
-						FieldInfo bfi = typeof(DataClassBase).GetField(data[i].Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+						FieldInfo bfi = typeof(DataClassExtended).GetField(data[i].Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 						if (bfi != null)
 							bfi.SetValue(obj, data[i].Value);
 					}
@@ -100,7 +100,7 @@ namespace System.Data.LightDatamodel
 			if (obj as DataClassBase != null)
 				foreach (string s in new string[] { "m_guid", "m_existsInDB", "m_referenceObjects" })
 				{
-					FieldInfo bfi = typeof(DataClassBase).GetField(s, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+					FieldInfo bfi = typeof(DataClassExtended).GetField(s, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 					if (bfi != null)
 						fieldList.Add(new Data(bfi.Name, bfi.GetValue(obj), null));
 					//All 'special' values are tagged with type == null

@@ -829,8 +829,8 @@ namespace System.Data.LightDatamodel.QueryModel
 							if (pos >= parsed.Count)
 								throw new Exception("No parameters for the not operator");
 							opm = new Operation(op, (OperationOrParameter)parsed[pos + 1]);
-							parsed.RemoveRange(pos, 2);
-							parsed.Insert(pos, opm);
+							//parsed.RemoveRange(pos, 2);
+							//parsed.Insert(pos, opm);
 							rc = 2;
 							rm = pos;
 							break;
