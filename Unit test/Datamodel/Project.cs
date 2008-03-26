@@ -16,7 +16,7 @@ using System.Data.LightDatamodel;
 namespace UnitTest
 {
 
-	public class Project : System.Data.LightDatamodel.DataClassExtended
+    public class Project : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "
@@ -67,15 +67,18 @@ namespace UnitTest
 	//Don't put any region sections in here
 		public Note ProjectNote
 		{
-			get { return (Note)(base.GetReferenceObject("ProjectNote", "m_ProjectNoteID")); }
-			set { base.SetReferenceObject("ProjectNote", "m_ProjectNoteID", "ProjectNotes", value); }
+			get { return (Note)(base.RelationManager.GetReferenceObject(this, "ProjectNote", "m_ProjectNoteID")); }
+			set { base.RelationManager.SetReferenceObject(this, "ProjectNote", "m_ProjectNoteID", "ProjectNotes", value); }
 		}
 
 		public Note CurrentTaskNote
 		{
-			get { return (Note)base.GetReferenceObject("CurrentTaskNote", "m_CurrentTaskNoteID"); }
-			set { base.SetReferenceObject("CurrentTaskNote", "m_CurrentTaskNoteID", "TaskNotes", value); }
+			get { return (Note)base.RelationManager.GetReferenceObject(this, "CurrentTaskNote", "m_CurrentTaskNoteID"); }
+			set { base.RelationManager.SetReferenceObject(this, "CurrentTaskNote", "m_CurrentTaskNoteID", "TaskNotes", value); }
 		}
+
+        public System.Guid Guid { get { return this.RelationManager.GetGuidForObject(this); } }
+        public bool ExistsInDB { get { return this.RelationManager.ExistsInDb(this); } }
 
 #endregion
 

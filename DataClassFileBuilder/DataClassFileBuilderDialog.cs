@@ -865,9 +865,9 @@ namespace DataClassFileBuilder
 		{
 			//Save (means keep) existing file
 			string unsynchronizedcode = "";
-			string unsynchronizedcodestart = "#region \" Unsynchronized Custom Code Region \"\n";
+			string unsynchronizedcodestart = "#region \" Unsynchronized Custom Code Region \"";
 			string unsynchronizedcodeend = "#endregion\n";
-			string unsynchronizedincludesstart = "#region \" Unsynchronized Includes \"\n";
+			string unsynchronizedincludesstart = "#region \" Unsynchronized Includes \"";
 			string unsynchronizedincludesend = "#endregion\n";
 			string unsynchronizedincludes = "";
 			if(File.Exists(path))
@@ -904,6 +904,10 @@ namespace DataClassFileBuilder
 			string primarykeycol = "";
 			if(sql == null) primarykeycol= provider.GetPrimaryKey(name);
 
+            string primaryAutoGenerate = "";
+            if (provider.IsAutoIncrement(name, primarykeycol))
+                primaryAutoGenerate = "[System.Data.LightDatamodel.MemberModifierAutoIncrement()]";
+
 			StreamWriter sw = null;
 			try
 			{
@@ -937,6 +941,8 @@ namespace DataClassFileBuilder
 				sw.Write("#region \" private members \"\n\n");
 				for(int i = 0; i< cols.Length; i++)
 				{
+                    if (cols[i].Name == primarykeycol)
+                        sw.Write(primaryAutoGenerate);
 					sw.Write("\t\tprivate " + cols[i].Type.ToString() + " " + "m_" + cols[i].Name + ";\n");
 				}
 				sw.Write("#endregion\n\n");

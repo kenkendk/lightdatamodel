@@ -16,7 +16,7 @@
 namespace UnitTest
 {
 
-    public class RightSide : System.Data.LightDatamodel.DataClassExtended
+    public class RightSide : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "

@@ -25,210 +25,108 @@ using System.Collections.Generic;
 namespace System.Data.LightDatamodel
 {
 	/// <summary>
-	/// Nested data fetcher, shorthand class for:
-	/// = new DataFetcher(new NestedDataProvider(basefetcher))
+	/// Nested data fetcher, use as an in memory transaction
 	/// </summary>
 	public class DataFetcherNested : DataFetcherCached
 	{
-		public DataFetcherNested(IDataFetcherCached basefetcher) : base(new DataProviderNested(basefetcher))
+        private IDataFetcherCached m_baseFetcher;
+		public DataFetcherNested(IDataFetcherCached basefetcher) : base(basefetcher.Provider)
 		{
-			((DataProviderNested)m_provider).KnownTypes = this.KnownTypes;
-		}
-	}
-
-	/// <summary>
-	/// Nested data provider, reads data from an existing DataFetcher.
-	/// Use this class to perform in-memory transactions that can be easily undone.
-	/// </summary>
-	public class DataProviderNested : IDataProvider
-	{
-		protected IDataFetcherCached m_baseFetcher;
-		protected IDataProvider m_provider;
-		protected SortedList<string, Type> m_types = null;
-
-		public SortedList<string, Type> KnownTypes { get { return m_types; } set { m_types = value; } }
-		public IDataFetcherCached BaseFetcher { get { return m_baseFetcher; } }
-
-		public DataProviderNested(IDataFetcherCached parent)
-		{
-			m_baseFetcher = parent;
-			m_provider = m_baseFetcher.Provider;
+            m_baseFetcher = basefetcher;
 		}
 
-		#region IDataProvider Members
+        /// <summary>
+        /// Gets an object by key, this is faster than an ordinary load.
+        /// If possible, this call will not touch the database.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public override object GetObjectById(Type type, object id)
+        {
+            object tmp = base.GetObjectById(type, id);
+            if (tmp == null)
+                return null;
+            return ProcessLoad(tmp);
+        }
 
-		public void DeleteRow(string tablename, string primarycolumnname, object primaryvalue)
-		{
-			m_baseFetcher.Remove((DataClassExtended)m_baseFetcher.GetObjectById((System.Type)KnownTypes[tablename], primaryvalue));
-		}
+        /// <summary>
+        /// Returns an object by its Guid
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public override object GetObjectByGuid(Guid key)
+        {
+            object item = base.GetObjectByGuid(key);
+            if (item == null)
+            {
+                item = m_baseFetcher.GetObjectByGuid(key);
+                if (item == null) return null;
 
-		public Data[] SelectRow(string tablename, string primarycolumnname, object primaryvalue)
-		{
-			DataClassBase obj = (DataClassBase)m_baseFetcher.GetObjectById((System.Type)KnownTypes[tablename], primaryvalue);
-			if (obj == null)
-				return null;
-			return FromObjectToData(obj);
-		}
+                InsertObjectsInCache(new object[] { ProcessLoad(item) });
+            }
 
-		public object Compute(string tablename, string expression, string filter)
-		{
-			return m_provider.Compute(tablename, expression, filter);
-		}
+            return item;
+        }
 
-		internal Data[] FromObjectToData(object o)
-		{
-			FieldInfo[] fi = o.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-			ArrayList fields = new ArrayList();
+        #region Provider interactions
+        /* The methods in this regions does all interaction with the provider.
+         * This approach enables easy overrides of provider interaction,
+         * when using the Nested provider.
+         * 
+         * It also removes clutter and varying ways to interact with the provider
+         */
 
-			for(int i = 0; i < fi.Length; i++)
-				if (fi[i].Name.StartsWith("m_"))
-					fields.Add(new Data(fi[i].Name.Substring(2), fi[i].GetValue(o), fi[i].ReflectedType));
-				else
-					fields.Add(new Data(fi[i].Name, fi[i].GetValue(o), fi[i].ReflectedType));
+        protected override object[] LoadObjects(Type type, QueryModel.Operation op)
+        {
+            object[] tmp = m_baseFetcher.GetObjects(type, op);
+            object[] res = new object[tmp.Length];
+            for (int i = 0; i < tmp.Length; i++)
+                res[i] = ProcessLoad(tmp[i]);
 
-			if (o as DataClassBase != null)
-				foreach (string s in new string[] { "m_guid", "m_existsInDB", "m_referenceObjects" } )
-				{
-					FieldInfo bfi = typeof(DataClassExtended).GetField(s, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-					if (bfi != null)
-						fields.Add(new Data(bfi.Name, bfi.GetValue(o), null));
-					//All 'special' values are tagged with type == null
-				}
-            
-			return (Data[])fields.ToArray(typeof(Data));
-		}
+            return res;
+        }
 
-		internal void UpdateObject(object o, Data[] d)
-		{
-			bool isDataClassBase = o as DataClassBase != null;
+        /// <summary>
+        /// Does all bookeeping when inserting an object into the fetcher
+        /// </summary>
+        /// <param name="tmp"></param>
+        /// <returns></returns>
+        private object ProcessLoad(object tmp)
+        {
+            object res = null;
+            Guid g = (tmp as IDataClass).RelationManager.GetGuidForObject(tmp as IDataClass);
+            if (m_relationManager.HasGuid(g))
+                res = m_relationManager.GetObjectByGuid(g);
+            else
+            {
+                res = Activator.CreateInstance(tmp.GetType());
+                (res as DataClassBase).m_dataparent = this;
+            }
 
-			for(int i = 0; i < d.Length; i++)
-			{
-				FieldInfo fi = o.GetType().GetField("m_" + d[i].Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-				if (fi != null && d[i].Type != null)
-				{
-					if (d[i].Value == null)
-						fi.SetValue(o, null);
-					else
-						fi.SetValue(o, Convert.ChangeType(d[i].Value, fi.FieldType));
-				}
-					//We tag the Guid property with an invalid type, to avoid potential conflicts with similarly named properties
-				else if (d[i].Type == null && isDataClassBase)
-				{
-					FieldInfo bfi = typeof(DataClassExtended).GetField(d[i].Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-					if (bfi != null)
-						bfi.SetValue(o, d[i].Value);
-				}
-			}
-		}
+            ObjectTransformer.CopyObject(tmp, res);
 
-		public Data[][] SelectRowsFromCache(string tablename, QueryModel.Operation operation)
-		{
-			object[] items = m_baseFetcher.GetObjectsFromCache(KnownTypes[tablename], operation);
-			Data[][] v = new Data[items.Length][];
-			for (int i = 0; i < items.Length; i++)
-				v[i] = FromObjectToData(items[i]);
-			return v;
-		}
+            return res;
+        }
 
-		public Data[][] SelectRows(string tablename, QueryModel.Operation operation)
-		{
-			object[] items = m_baseFetcher.GetObjects(KnownTypes[tablename], operation);
-			Data[][] v = new Data[items.Length][];
-			for(int i = 0; i < items.Length; i++)
-				v[i] = FromObjectToData(items[i]);
-			return v;
-		}
+        protected override void InsertObject(object obj)
+        {
+            object item = m_baseFetcher.CreateObject(obj.GetType());
+            ObjectTransformer.CopyObject(obj, item);
+        }
 
-		public Data[][] SelectRows(string tablename, string filter)
-		{
-			return SelectRows(tablename, filter, null);
-		}
+        protected override void UpdateObject(object obj)
+        {
+            ObjectTransformer.CopyObject(obj, m_baseFetcher.GetObjectByGuid(this.RelationManager.GetGuidForObject((IDataClass)obj)));
+        }
 
-		public Data[][] SelectRows(string tablename, string filter, object[] values)
-		{
-			return SelectRows(tablename, QueryModel.Parser.ParseQuery(filter, values));
-		}
+        protected override void RemoveObject(object obj)
+        {
+            m_baseFetcher.DeleteObject(obj);
+        }
 
-		public void UpdateRow(string tablename, string primarycolumnname, object primaryvalue, params Data[] values)
-		{
-			DataClassBase obj = (DataClassBase)m_baseFetcher.GetObjectById(KnownTypes[tablename], primaryvalue);
-			obj.m_isdirty = true;
-			UpdateObject(obj, values);
-		}
-
-		public void InsertRow(string tablename, params Data[] values)
-		{
-			DataClassExtended o = (DataClassExtended)m_baseFetcher.CreateObject(KnownTypes[tablename]);
-			Guid oldkey = o.m_guid;
-			UpdateObject(o, values);
-			if (m_baseFetcher as IDataFetcher == null)
-				throw new Exception("Nested provider can only commit to fetcher derived from DataFetcher");
-			((DataFetcherCached)m_baseFetcher).ReRegisterObjectGuid(oldkey, o);
-		}
-
-		public string GetPrimaryKey(string tablename)
-		{
-			return m_provider.GetPrimaryKey(tablename);
-		}
-
-		public string[] GetTablenames()
-		{
-			return m_provider.GetTablenames();
-		}
-
-		public Data[] GetStructure(string sql)
-		{
-			return m_provider.GetStructure(sql);
-		}
-
-		public Data[] GetTableStructure(string tablename)
-		{
-			return m_provider.GetTableStructure(tablename);
-		}
-
-		public void Close()
-		{
-		}
-
-		public string ConnectionString
-		{
-			get
-			{
-				return "";
-			}
-			set
-			{
-			}
-		}
-
-		public object GetNullValue(Type type)
-		{
-			return m_provider.GetNullValue(type);
-		}
-
-		public void BeginTransaction(Guid id)
-		{
-			//TODO: Implement these...	
-		}
-
-		public void CommitTransaction(Guid id)
-		{
-			//TODO: Implement these...	
-		}
-
-		public void RollbackTransaction(Guid id)
-		{
-			//TODO: Implement these...	
-		}
-
-		public object GetLastAutogeneratedValue(string tablename)
-		{
-			return null;
-		}
+        #endregion
 
 
-		#endregion
-
-	}
+    }
 }

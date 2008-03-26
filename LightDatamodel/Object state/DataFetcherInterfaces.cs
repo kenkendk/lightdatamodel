@@ -38,21 +38,24 @@ namespace System.Data.LightDatamodel
 		DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass;
 		object GetObjectById(Type type, object id);
 		void Commit(IDataClass obj);
+        void CommitAll();
 		DATACLASS CreateObject<DATACLASS>() where DATACLASS : IDataClass;
 		object CreateObject(Type type);
 		IDataProvider Provider { get; }
 		RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter);
 		void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass;
-
+        void DeleteObject(object item);
 	}
 
 	public interface IDataClass
 	{
 		IDataFetcher DataParent { get ; }
+        IRelationManager RelationManager { get; }
 		bool IsDirty{get;}
 		ObjectStates ObjectState{get;}
 		string UniqueColumn	{get;}
 		object UniqueValue{get;}
+        void SetIsDirty();
 	}
 
 	public delegate void DataConnectionEventHandler(object sender, DataActions action);
@@ -120,6 +123,5 @@ namespace System.Data.LightDatamodel
 		NoInheritance = 0,
 		View = 1,
 		Base = 2,
-		Extended = 3,
 	}
 }

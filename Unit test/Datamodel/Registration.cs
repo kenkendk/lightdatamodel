@@ -16,7 +16,7 @@
 namespace UnitTest
 {
 
-    public class Registration : System.Data.LightDatamodel.DataClassExtended
+    public class Registration : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "

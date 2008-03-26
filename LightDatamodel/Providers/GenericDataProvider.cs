@@ -17,6 +17,7 @@ namespace System.Data.LightDatamodel
 
 		public abstract string GetPrimaryKey(string tablename);
 		public abstract string[] GetTablenames();
+        public abstract bool IsAutoIncrement(string tablename, string column);
 
 		public abstract void BeginTransaction(Guid id);
 		public abstract void CommitTransaction(Guid id);

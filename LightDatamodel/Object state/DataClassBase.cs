@@ -34,49 +34,24 @@ namespace System.Data.LightDatamodel
 
 		#region IDataClass Members
 
-		public IDataFetcher DataParent
-		{
-			get
-			{
-				return m_dataparent;
-			}
-		}
+		public IDataFetcher DataParent { get { return m_dataparent;	} }
+        public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
+		public bool IsDirty { get {	return false; } }
 
-		public bool IsDirty
-		{
-			get
-			{
-				return false;
-			}
-		}
+        public void SetIsDirty()
+        {
+        }
 
 		public System.Data.LightDatamodel.ObjectStates ObjectState
 		{
-			get
-			{
-				return ObjectStates.Default;
-			}
-			set
-			{
+			get	{ return ObjectStates.Default; }
+			set	
+            {
 				//meh
 			}
 		}
-
-		public string UniqueColumn
-		{
-			get
-			{
-				return null;
-			}
-		}
-
-		public object UniqueValue
-		{
-			get
-			{
-				return null;
-			}
-		}
+		public string UniqueColumn { get { return null; } }
+		public object UniqueValue { get	{ return null; } }
 
 		#endregion
 	}
@@ -93,10 +68,12 @@ namespace System.Data.LightDatamodel
 		public event DataWriteEventHandler AfterDataWrite;
 
         public IDataFetcher DataParent { get { return m_dataparent; } }
+        public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
 		public bool IsDirty{get{return m_isdirty;}}
 		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
 		public abstract string UniqueColumn	{get;}
 		public abstract object UniqueValue{get;}
+        public void SetIsDirty() { m_isdirty = true; }
 
 		protected void OnBeforeDataWrite(object sender, string propertyname, object oldvalue, object newvalue)
 		{

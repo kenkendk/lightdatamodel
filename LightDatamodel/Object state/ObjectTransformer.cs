@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace System.Data.LightDatamodel
 {
@@ -28,38 +29,91 @@ namespace System.Data.LightDatamodel
 	/// </summary>
 	public class ObjectTransformer
 	{
+        /// <summary>
+        /// Creates a new copy of the given item
+        /// </summary>
+        /// <typeparam name="DATACLASS">The type of object to work on</typeparam>
+        /// <param name="source">The source object</param>
+        /// <returns>A fresh copy</returns>
+        public static DATACLASS CreateCopy<DATACLASS>(DATACLASS source)
+        {
+            return (DATACLASS)CreateCopy(source);
+        }
+
+        /// <summary>
+        /// Creates a new copy of the given item
+        /// </summary>
+        /// <param name="source">The source object</param>
+        /// <returns>A fresh copy</returns>
+        public static object CreateCopy(object source)
+        {
+            object target = Activator.CreateInstance(source.GetType());
+            CopyObject(source, target);
+            return target;
+        }
+
+        /// <summary>
+        /// Copies all data variables from one object into another
+        /// </summary>
+        /// <param name="source">The object to copy from</param>
+        /// <param name="target">The object to copy to</param>
+        public static void CopyObject(object source, object target)
+        {
+            if (source == null)
+                throw new ArgumentNullException("source");
+            if (target == null)
+                throw new ArgumentNullException("target");
+            if (target.GetType() != source.GetType())
+                throw new Exception("Objects must be of same type");
+
+            FieldInfo[] fields = source.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            foreach (FieldInfo fi in fields)
+                fi.SetValue(target, fi.GetValue(source));
+
+            IRelationManager sourceManager = null;
+            IRelationManager targetManager = null;
+
+
+            //take care of relations
+            if (source as IDataClass != null)
+                sourceManager = ((IDataClass)source).RelationManager;
+            if (target as IDataClass != null)
+                targetManager = ((IDataClass)target).RelationManager;
+            if (sourceManager != null && targetManager != null)
+            {
+                if (targetManager.IsRegistered(target as IDataClass))
+                    targetManager.ReassignGuid(targetManager.GetGuidForObject(target as IDataClass), sourceManager.GetGuidForObject(source as IDataClass));
+                else
+                    targetManager.RegisterObject(sourceManager.GetGuidForObject(source as IDataClass), target as IDataClass);
+
+                targetManager.SetExistsInDb(target as IDataClass, sourceManager.ExistsInDb(source as IDataClass));
+                targetManager.SetReferenceObjects(target as IDataClass, sourceManager.GetReferenceObjects(source as IDataClass));
+            }
+        }
+
 		/// <summary>
 		/// This will insert the given data into an arbitary object (the private variables)
 		/// </summary>
 		/// <param name="obj"></param>
 		/// <param name="data"></param>
-		public static void PopulateDataClass(object obj, Data[] data, IDataProvider provider)
+        /// <returns>The item populated</returns>
+		public static object PopulateDataClass(object obj, Data[] data, IDataProvider provider)
 		{
 			for (int i = 0; i < data.Length; i++)
 			{
-				bool isDataClassBase = obj as DataClassBase != null;
 				try
 				{
-					if (data[i].Type != null)
+					FieldInfo field = obj.GetType().GetField("m_" + data[i].Name, BindingFlags.Instance | BindingFlags.NonPublic);
+					if (field != null)
 					{
-						FieldInfo field = obj.GetType().GetField("m_" + data[i].Name, BindingFlags.Instance | BindingFlags.NonPublic);
-						if (field != null)
+						MemberModifierEnum m = MemberModifier.CalculateModifier(field);
+						if ((m & MemberModifierEnum.IgnoreWithSelect) != MemberModifierEnum.IgnoreWithSelect)
 						{
-							MemberModifierEnum m = MemberModifier.CalculateModifier(field);
-							if ((m & MemberModifierEnum.IgnoreWithSelect) != MemberModifierEnum.IgnoreWithSelect)
-							{
-								if (data[i].Value != DBNull.Value)
-									field.SetValue(obj, data[i].Value);
-								else
-									field.SetValue(obj, provider.GetNullValue(data[i].Type));
-							}
+							if (data[i].Value != DBNull.Value)
+								field.SetValue(obj, data[i].Value);
+							else
+								field.SetValue(obj, provider.GetNullValue(data[i].Type));
 						}
-					}
-					else if (isDataClassBase)
-					{
-						FieldInfo bfi = typeof(DataClassExtended).GetField(data[i].Name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-						if (bfi != null)
-							bfi.SetValue(obj, data[i].Value);
 					}
 				}
 				catch (Exception ex)
@@ -67,12 +121,11 @@ namespace System.Data.LightDatamodel
 					throw new Exception("Couldn't set field\nError: " + ex.Message);
 				}
 			}
+            return obj;
 		}
 
-		public static void PopulateDatabase(IDataClass obj, IDataProvider provider)
-		{
-			string tablename = obj.GetType().Name;
-
+        public static Data[] GetDataFromObject(object obj)
+        {
 			//get private fields
 			FieldInfo[] fields = obj.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 			ArrayList fieldList = new ArrayList();
@@ -82,47 +135,27 @@ namespace System.Data.LightDatamodel
 				if (d.Name.StartsWith("m_"))
 					d.Name = d.Name.Substring(2);
 				MemberModifierEnum m = MemberModifier.CalculateModifier(fields[i]);
-				if (obj.ObjectState == ObjectStates.New)
-				{
-					if ((m & MemberModifierEnum.IgnoreWithInsert) != MemberModifierEnum.IgnoreWithInsert)
-						fieldList.Add(d);
-				}
-				else if (obj.ObjectState == ObjectStates.Default)
-				{
-					if ((m & MemberModifierEnum.IgnoreWithUpdate) != MemberModifierEnum.IgnoreWithUpdate)
-						fieldList.Add(d);
-				}
-				else
-					fieldList.Add(d);
+                if (obj as IDataClass != null)
+                {
+                    if ((obj as IDataClass).ObjectState == ObjectStates.New)
+                    {
+                        if ((m & MemberModifierEnum.IgnoreWithInsert) != MemberModifierEnum.IgnoreWithInsert)
+                            fieldList.Add(d);
+                    }
+                    else if ((obj as IDataClass).ObjectState == ObjectStates.Default)
+                    {
+                        if ((m & MemberModifierEnum.IgnoreWithUpdate) != MemberModifierEnum.IgnoreWithUpdate)
+                            fieldList.Add(d);
+                    }
+                    else
+                        fieldList.Add(d);
+                }
+                else
+                    fieldList.Add(d);
 			}
 
-			//take care of system fields
-			if (obj as DataClassBase != null)
-				foreach (string s in new string[] { "m_guid", "m_existsInDB", "m_referenceObjects" })
-				{
-					FieldInfo bfi = typeof(DataClassExtended).GetField(s, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-					if (bfi != null)
-						fieldList.Add(new Data(bfi.Name, bfi.GetValue(obj), null));
-					//All 'special' values are tagged with type == null
-				}
-
-
-			Data[] data = (Data[])fieldList.ToArray(typeof(Data));
-
-			//sql
-			if (obj.ObjectState == ObjectStates.Default)
-			{
-				provider.UpdateRow(tablename, obj.UniqueColumn, obj.UniqueValue, data);
-			}
-			else if (obj.ObjectState == ObjectStates.New)
-			{
-				provider.InsertRow(tablename, data);
-			}
-			else if (obj.ObjectState == ObjectStates.Deleted)
-			{
-				provider.DeleteRow(tablename, obj.UniqueColumn, obj.UniqueValue);
-			}
-		}
+			return (Data[])fieldList.ToArray(typeof(Data));
+        }
 
 		public static DATACLASS[] TransformToObjects<DATACLASS>(Data[][] data, IDataProvider provider)
 		{

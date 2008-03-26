@@ -16,7 +16,7 @@
 namespace UnitTest
 {
 
-    public class ManyToMany : System.Data.LightDatamodel.DataClassExtended
+    public class ManyToMany : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "
