@@ -16,7 +16,7 @@
 namespace UnitTest
 {
 
-    public class SpecificEvent : System.Data.LightDatamodel.DataClassExtended
+    public class SpecificEvent : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "

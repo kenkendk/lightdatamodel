@@ -1,7 +1,7 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>8.0.50727</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -94,9 +94,6 @@
     <Compile Include="Extended fetchers\DataFetcherCached.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\DataClassExtended.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Extended fetchers\ExtendedInterfaces.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -106,6 +103,7 @@
     <Compile Include="Extended fetchers\QueryModel.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extended fetchers\RelationManager.cs" />
     <Compile Include="Extended fetchers\SyncCollectionBase.cs" />
     <Compile Include="Object state\DataClassBase.cs">
       <SubType>Code</SubType>

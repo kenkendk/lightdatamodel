@@ -39,6 +39,15 @@ namespace System.Data.LightDatamodel
 		{
 		}
 
+        public override bool IsAutoIncrement(string tablename, string column)
+        {
+            return false;
+            /*if (m_connection.State != ConnectionState.Open) m_connection.Open();
+            DataTable primsch = ((OleDb.OleDbConnection)m_connection).GetOleDbSchemaTable(OleDbSchemaGuid.Primary_Keys, new object[] { null, null, tablename });
+            if (primsch == null || primsch.Rows.Count == 0) return "";
+            return primsch.Rows[0].ItemArray[3].ToString();*/
+        }
+
 		public override string GetPrimaryKey(string tablename)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();

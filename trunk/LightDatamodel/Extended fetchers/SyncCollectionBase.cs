@@ -21,13 +21,13 @@ namespace System.Data.LightDatamodel
             if (m_reverseProperty == null)
                 throw new System.Exception("Class " + typeof(DATACLASS).FullName + " does not contain the property " + reversePropertyname);
 
-            DataClassExtended db = owner as DataClassExtended;
-            if (db != null)
+            IDataClass db = owner as IDataClass;
+            if (db != null && db.RelationManager != null)
             {
-                if (db.ExistsInDB)
+                if (db.RelationManager.ExistsInDb(db))
                     db.DataParent.GetObjects<DATACLASS>(reversePropertyID + "=?", db.UniqueValue);
 
-                m_baseList.AddRange((db.DataParent as DataFetcherCached).GetObjectsFromCache<DATACLASS>(reversePropertyname + ".Guid=?", db.Guid));
+                m_baseList.AddRange((db.DataParent as DataFetcherCached).GetObjectsFromCache<DATACLASS>(reversePropertyname + ".Guid=?", db.RelationManager.GetGuidForObject(db)));
             }
         }
 

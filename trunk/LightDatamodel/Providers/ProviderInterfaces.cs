@@ -34,6 +34,7 @@ namespace System.Data.LightDatamodel
 		void UpdateRow(string tablename, string primarycolumnname, object primaryvalue, params Data[] values);
 		void InsertRow(string tablename, params Data[] values);
 		string GetPrimaryKey(string tablename);
+        bool IsAutoIncrement(string tablename, string column);
 		string[] GetTablenames();
 		Data[] GetStructure(string sql);
 		Data[] GetTableStructure(string tablename);

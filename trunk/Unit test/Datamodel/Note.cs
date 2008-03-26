@@ -17,7 +17,7 @@ using System.Collections.Generic;
 namespace UnitTest
 {
 
-	public class Note : System.Data.LightDatamodel.DataClassExtended
+    public class Note : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "
@@ -61,7 +61,10 @@ namespace UnitTest
 	{
         get { return new System.Data.LightDatamodel.SyncCollectionBase<Project>(this, "CurrentTaskNote", "CurrentTaskNoteID"); }
 	}
-		
+
+    public System.Guid Guid { get { return this.RelationManager.GetGuidForObject(this); } }
+    public bool ExistsInDB { get { return this.RelationManager.ExistsInDb(this); } }
+
 #endregion
 
 	}

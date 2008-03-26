@@ -10,44 +10,76 @@ namespace System.Data.LightDatamodel
 	public class SQLiteDataProvider : GenericDataProvider
 	{
 		/// <summary>
-		/// To create a provider, using just a connectionstring, the SQLite provider must know what Connection class to create.
-		/// The two &quot;regular&quot; providers are tried, depending on framework version if this is not set.
+		/// To create a provider, using just a connectionstring, the SQLite provider must know what Connection class to create. SQLite is not part of the standard distribution, so we check that it was loaded by the caller.
 		/// </summary>
 		public static Type SQLiteConnectionType = null;
 
 		public SQLiteDataProvider(string connectionstring)
 		{
-			if (System.Environment.Version < new Version(2,0,0,0))
-			{
-				if (SQLiteConnectionType == null)
-					SQLiteConnectionType = Type.GetType("Finisar.SQLite.SQLiteConnection");
-				if (SQLiteConnectionType == null)
-					try { SQLiteConnectionType = Activator.CreateInstance("SQLite.NET", "Finisar.SQLite.SQLiteConnection").Unwrap().GetType(); }
-					catch {}
-				
-				//.Net 1.1, uses the Finisar.SQLite provider
-				if (SQLiteConnectionType == null)
-					throw new Exception("Cannot find a suitable SQLite provider, try including the Finisar SQLite dll (SQLite.NET.dll)\n or manually set the connection type System.Data.LightDataModel.SQLiteDataProvider.SQLiteConnectionType = typeof(Finisar.SQLite.SQLiteConnection)");
-			}
-			else
-			{
-				if (SQLiteConnectionType == null)
-                    SQLiteConnectionType = Type.GetType("System.Data.SQLite.SQLiteConnection");
-				if (SQLiteConnectionType == null)
-					try { SQLiteConnectionType = Activator.CreateInstance("System.Data.SQLite", "System.Data.SQLite.SQLiteConnection").Unwrap().GetType(); }
-					catch {}
-				
-				//.Net 2.0, uses the System.Data.SQLite provider
-				if (SQLiteConnectionType == null)
-					throw new Exception("Cannot find a suitable SQLite provider, try including the SQLite dll (System.Data.SQLite.dll)\n or manually set the connection type System.Data.LightDataModel.SQLiteDataProvider.SQLiteConnectionType = typeof(System.Data.SQLite.SQLiteConnection)");
-			}
-			m_connection = (IDbConnection)Activator.CreateInstance(SQLiteConnectionType, new object[] {connectionstring});
+
+			if (SQLiteConnectionType == null)
+                SQLiteConnectionType = Type.GetType("System.Data.SQLite.SQLiteConnection");
+			if (SQLiteConnectionType == null)
+				try { SQLiteConnectionType = Activator.CreateInstance("System.Data.SQLite", "System.Data.SQLite.SQLiteConnection").Unwrap().GetType(); }
+				catch {}
+			
+			//.Net 2.0, uses the System.Data.SQLite provider
+			if (SQLiteConnectionType == null)
+				throw new Exception("Cannot find a suitable SQLite provider, try including the SQLite dll (System.Data.SQLite.dll)\n or manually set the connection type System.Data.LightDataModel.SQLiteDataProvider.SQLiteConnectionType = typeof(System.Data.SQLite.SQLiteConnection)");
+
+            m_connection = (IDbConnection)Activator.CreateInstance(SQLiteConnectionType, new object[] {connectionstring});
+
 		}
 
 		public SQLiteDataProvider(IDbConnection cmd)
 		{
 			m_connection = cmd;
 		}
+
+        public override bool IsAutoIncrement(string tablename, string column)
+        {
+            if (!column.ToLower().Trim().Equals(GetPrimaryKey(tablename)))
+                return false;
+
+            if (m_connection.State != ConnectionState.Open) m_connection.Open();
+            IDbCommand cmd = m_connection.CreateCommand();
+            cmd.CommandText = "SELECT SQL FROM SQLITE_MASTER WHERE name=" + AddParameter(cmd, tablename) + " AND type='table'";
+            IDataReader rd = null;
+            try
+            {
+                rd = cmd.ExecuteReader();
+                if (!rd.Read())
+                    throw new Exception("Failed to read SQL from SQLITE_MASTER for table " + tablename);
+                string sql = rd.GetValue(0).ToString();
+
+                //TODO: use a regexp for this, it will not get any uglier than this :D
+                //Basically we look for "[column name] datatype primary key," and extract "datatype" and check if it is integer
+                int p = sql.ToLower().IndexOf(" primary");
+
+                if (p > 0)
+                {
+                    sql = sql.Substring(0, p + 1).Trim();
+                    p = sql.LastIndexOfAny(new char[] { ',', '(' });
+                    if (p >= 0)
+                        sql = sql.Substring(p + 1).Trim();
+                    p = sql.LastIndexOf(" ");
+                    if (p > 0)
+                        sql = sql.Substring(p).Trim();
+
+                    if (sql.ToLower().Trim() == "integer")
+                        return true;
+                }
+
+            }
+            finally
+            {
+                try { if (rd != null) rd.Close(); }
+                catch { }
+            }
+
+            return false;
+            
+        }
 
 		public override string GetPrimaryKey(string tablename)
 		{

@@ -118,7 +118,12 @@ namespace UnitTest
 			Project p = (Project)nd.CreateObject(typeof(Project));
 			p.ProjectNote = n;
 			Guid pg = p.Guid;
-			Guid ng = n.Guid;
+            Guid ng = n.Guid;
+
+            if (p.DataParent != nd)
+                throw new Exception("Bad dataparent");
+            if (n.DataParent != nd)
+                throw new Exception("Bad dataparent");
 
 			nd.CommitAll();
 
@@ -136,6 +141,11 @@ namespace UnitTest
 				throw new Exception("Project has wrong flag");
 			if (n.ExistsInDB)
 				throw new Exception("Note has wrong flag");
+
+            if (p.DataParent != hub)
+                throw new Exception("Bad dataparent");
+            if (n.DataParent != hub)
+                throw new Exception("Bad dataparent");
 
 			hub.CommitAll();
 
@@ -164,6 +174,8 @@ namespace UnitTest
 			p = (Project)nd.GetObjectById(typeof(Project), id);
 			if (p == null)
 				throw new Exception("Failed to load item from DB");
+            if (p.DataParent != nd)
+                throw new Exception("Invalid dataparent");
 			if (!p.ExistsInDB)
 				throw new Exception("Project has wrong flag");
 
