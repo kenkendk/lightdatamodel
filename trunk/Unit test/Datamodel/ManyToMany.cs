@@ -6,7 +6,7 @@
 
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
-/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\LightDatamodel\Unit test\bin\Debug\unittest.sqlite3;" />
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\Unit test\bin\Debug\unittest.sqlite3;" />
 /// <type>Table</type>
 /// <namespace>UnitTest</namespace>
 /// <name>ManyToMany</name>
@@ -16,7 +16,7 @@
 namespace UnitTest
 {
 
-    public class ManyToMany : System.Data.LightDatamodel.DataClassBase
+	public class ManyToMany : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "
@@ -29,7 +29,7 @@ namespace UnitTest
 
 #region " unique value "
 
-		public override object UniqueValue {get{return ID;}}
+		public override object UniqueValue {get{return m_ID;}}
 		public override string UniqueColumn {get{return "ID";}}
 #endregion
 

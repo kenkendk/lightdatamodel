@@ -906,7 +906,7 @@ namespace DataClassFileBuilder
 
             string primaryAutoGenerate = "";
             if (provider.IsAutoIncrement(name, primarykeycol))
-                primaryAutoGenerate = "[System.Data.LightDatamodel.MemberModifierAutoIncrement()]";
+                primaryAutoGenerate = "\t\t[System.Data.LightDatamodel.MemberModifierAutoIncrement()]\n";
 
 			StreamWriter sw = null;
 			try

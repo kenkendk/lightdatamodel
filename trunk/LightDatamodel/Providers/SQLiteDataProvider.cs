@@ -38,7 +38,7 @@ namespace System.Data.LightDatamodel
 
         public override bool IsAutoIncrement(string tablename, string column)
         {
-            if (!column.ToLower().Trim().Equals(GetPrimaryKey(tablename)))
+            if (!column.ToLower().Trim().Equals(GetPrimaryKey(tablename).Trim().ToLower()))
                 return false;
 
             if (m_connection.State != ConnectionState.Open) m_connection.Open();
