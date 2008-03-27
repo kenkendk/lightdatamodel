@@ -41,11 +41,24 @@ namespace System.Data.LightDatamodel
 
         public override bool IsAutoIncrement(string tablename, string column)
         {
-            return false;
-            /*if (m_connection.State != ConnectionState.Open) m_connection.Open();
-            DataTable primsch = ((OleDb.OleDbConnection)m_connection).GetOleDbSchemaTable(OleDbSchemaGuid.Primary_Keys, new object[] { null, null, tablename });
-            if (primsch == null || primsch.Rows.Count == 0) return "";
-            return primsch.Rows[0].ItemArray[3].ToString();*/
+            if (m_connection.State != ConnectionState.Open) m_connection.Open();
+
+			IDbCommand cmd = m_connection.CreateCommand();
+			cmd.CommandText = "SELECT * FROM " + QuoteTablename(tablename) + " WHERE 1 = 0";
+
+			try
+			{
+				IDataReader dr = cmd.ExecuteReader();
+				DataTable schema = dr.GetSchemaTable();
+				dr.Close();
+				DataRow[] row = schema.Select("ColumnName = '" + column + "'");
+				if (row == null || row.Length == 0) throw new Exception("Couldn't column for table");
+				return (bool)row[0]["IsAutoIncrement"];
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Couldn't load IsAutoIncrement from table \"" + tablename + "\"\nError: " + ex.Message);
+			}
         }
 
 		public override string GetPrimaryKey(string tablename)
