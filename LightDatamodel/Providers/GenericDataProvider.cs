@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace System.Data.LightDatamodel
 {
@@ -9,6 +10,13 @@ namespace System.Data.LightDatamodel
 	public abstract class GenericDataProvider : IDataProvider
 	{
 		protected IDbConnection m_connection;
+        protected IObjectTransformer m_transformer;
+
+        public IObjectTransformer Transformer
+        {
+            get { return m_transformer; }
+            set { m_transformer = value; }
+        }
 
 		#region Abstract Members
 
@@ -27,10 +35,154 @@ namespace System.Data.LightDatamodel
 
 		#endregion
 
+        #region SQL Command Cache Functions
+        protected Dictionary<Type, string> m_cachedDelete = new Dictionary<Type, string>();
+        protected Dictionary<Type, string> m_cachedSelect = new Dictionary<Type, string>();
+        protected Dictionary<Type, string> m_cachedUpdate = new Dictionary<Type, string>();
+        protected Dictionary<Type, string> m_cachedInsert = new Dictionary<Type, string>();
+        protected Dictionary<Type, string> m_identityWhere = new Dictionary<Type, string>();
 
-		#region IDataProvider Members
+        /// <summary>
+        /// Returns a string of the form "DELETE FROM Table" for the given type
+        /// </summary>
+        /// <param name="typeinfo"></param>
+        /// <returns></returns>
+        protected virtual string GetDeleteString(TypeConfiguration.MappedClass typeinfo)
+        {
+            if (!m_cachedDelete.ContainsKey(typeinfo.Type))
+            {
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.Append("DELETE FROM ");
+                sb.Append(QuoteTablename(typeinfo.TableName));
+                m_cachedDelete[typeinfo.Type] = sb.ToString();
+            }
 
-		/// <summary>
+            return m_cachedDelete[typeinfo.Type];
+        }
+
+        /// <summary>
+        /// Returns a string of the form " WHERE ID=?" for the given type
+        /// </summary>
+        /// <param name="typeinfo"></param>
+        /// <returns></returns>
+        protected virtual string GetIdentityWhere(TypeConfiguration.MappedClass typeinfo)
+        {
+            if (!m_identityWhere.ContainsKey(typeinfo.Type))
+            {
+                if (typeinfo.PrimaryKey == null)
+                    throw new Exception("Cannot delete row from table \"" + typeinfo.TableName + "\" because the table has no primary key");
+
+                //Dummy parameter holder
+                IDbCommand cmd = m_connection.CreateCommand();
+
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.Append(" WHERE ");
+                sb.Append(QuoteColumnname(typeinfo.UniqueColumn));
+                sb.Append("=");
+                sb.Append(AddParameter(cmd, null));
+                m_identityWhere[typeinfo.Type] = sb.ToString();
+            }
+
+            return m_identityWhere[typeinfo.Type];
+        }
+
+        /// <summary>
+        /// Returns a string in the form "SELECT Col1,Col2 FROM TABLE" for the given type
+        /// </summary>
+        /// <param name="typeinfo"></param>
+        /// <returns></returns>
+        protected virtual string GetSelectString(TypeConfiguration.MappedClass typeinfo)
+        {
+            if (!m_cachedSelect.ContainsKey(typeinfo.Type))
+            {
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.Append("SELECT ");
+                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+                    if (!mf.IgnoreWithSelect)
+                    {
+                        sb.Append(QuoteColumnname(mf.ColumnName));
+                        sb.Append(",");
+                    }
+                sb.Length--;
+                sb.Append(" FROM ");
+                sb.Append(QuoteTablename(typeinfo.TableName));
+                m_cachedSelect[typeinfo.Type] = sb.ToString();
+            }
+
+            return m_cachedSelect[typeinfo.Type];
+        }
+
+        /// <summary>
+        /// Returns a string of the form "UPDATE Table SET Col1=?,Col2=?"
+        /// </summary>
+        /// <param name="typeinfo"></param>
+        /// <returns></returns>
+        protected virtual string GetUpdateString(TypeConfiguration.MappedClass typeinfo)
+        {
+            if (!m_cachedUpdate.ContainsKey(typeinfo.Type))
+            {
+                //Dummy parameter holder
+                IDbCommand cmd = m_connection.CreateCommand();
+
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.Append("UPDATE ");
+                sb.Append(QuoteTablename(typeinfo.TableName));
+                sb.Append(" SET ");
+                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+                    if (!mf.IgnoreWithUpdate)
+                    {
+                        sb.Append(QuoteColumnname(mf.ColumnName));
+                        sb.Append("=");
+                        sb.Append(AddParameter(cmd, null));
+                        sb.Append(",");
+                    }
+                sb.Length--;
+                m_cachedUpdate[typeinfo.Type] = sb.ToString();
+            }
+
+            return m_cachedUpdate[typeinfo.Type];
+        }
+
+        /// <summary>
+        /// Returns a string of the type "INSERT INTO Table (Col1,Col2) VALUES (?,?)"
+        /// </summary>
+        /// <param name="typeinfo"></param>
+        /// <returns></returns>
+        protected virtual string GetInsertString(TypeConfiguration.MappedClass typeinfo)
+        {
+            if (!m_cachedInsert.ContainsKey(typeinfo.Type))
+            {
+                //Dummy parameter holder
+                IDbCommand cmd = m_connection.CreateCommand();
+
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                System.Text.StringBuilder sb2 = new System.Text.StringBuilder();
+                sb.Append("INSERT INTO ");
+                sb.Append(QuoteTablename(typeinfo.TableName));
+                sb.Append("(");
+                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+                    if (!mf.IgnoreWithInsert)
+                    {
+                        sb.Append(QuoteColumnname(mf.ColumnName));
+                        sb.Append(",");
+                        sb2.Append(AddParameter(cmd, null));
+                        sb2.Append(",");
+                    }
+                sb.Length--;
+                sb2.Length--;
+                sb.Append(") VALUES (");
+                sb.Append(sb2.ToString());
+                sb.Append(")");
+                m_cachedInsert[typeinfo.Type] = sb.ToString();
+            }
+
+            return m_cachedInsert[typeinfo.Type];
+        }
+        #endregion
+
+        #region IDataProvider Members
+
+        /// <summary>
 		/// This will return the corresponding DBNull value. Eg. a date dbnull could be the classic date 1-1-1
 		/// DBNull will be eliminated from the code. There's no such thing as a secondary meaning/use of a field. 
 		/// If you need the implicit information on whether the field has been sat or not, add a boolean to the model!
@@ -91,6 +243,12 @@ namespace System.Data.LightDatamodel
 			set{m_connection.ConnectionString = value;}
 		}
 
+        /// <summary>
+        /// Helper funtion that will insert a parameter in the commands parameter collection, and return a place holder for the value, to be used in the SQL string
+        /// </summary>
+        /// <param name="cmd">The command to use</param>
+        /// <param name="value">The value to insert</param>
+        /// <returns>A placeholder for the value, to be used in the SQL command</returns>
 		protected virtual string AddParameter(IDbCommand cmd, object value)
 		{
 			IDataParameter p = cmd.CreateParameter();
@@ -105,13 +263,16 @@ namespace System.Data.LightDatamodel
 		/// <param name="tablename"></param>
 		/// <param name="primarycolumnname"></param>
 		/// <param name="primaryvalue"></param>
-		public virtual void DeleteRow(string tablename, string primarycolumnname, object primaryvalue)
+		public virtual void DeleteRow(object item)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
 			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "DELETE FROM " + QuoteTablename(tablename) + " WHERE " + QuoteColumnname(primarycolumnname) + " = " + AddParameter(cmd, primaryvalue);
+            TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
 
-			try
+            cmd.CommandText = GetDeleteString(typeinfo) + GetIdentityWhere(typeinfo);
+            AddParameter(cmd, typeinfo.UniqueValue(item));
+            
+            try
 			{
 				int r = cmd.ExecuteNonQuery();
 				if (r != 1)
@@ -119,7 +280,7 @@ namespace System.Data.LightDatamodel
 			}
 			catch(Exception ex)
 			{
-				throw new Exception("Couldn't delete row (" + primaryvalue.ToString() + ") from table \"" + tablename + "\"\nError: " + ex.Message);
+                throw new Exception("Couldn't delete row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
 			}
 		}
 
@@ -130,27 +291,36 @@ namespace System.Data.LightDatamodel
 		/// <param name="primarycolumnname"></param>
 		/// <param name="primaryvalue"></param>
 		/// <returns></returns>
-		public virtual Data[] SelectRow(string tablename, string primarycolumnname, object primaryvalue)
+		public virtual object SelectRow(Type type, object primarykey)
 		{
-			//TODO: It might be better to get a list of column names, rather than just all columns
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
-			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "SELECT * FROM " + QuoteTablename(tablename) + " WHERE " + QuoteColumnname(primarycolumnname) + " = " + AddParameter(cmd, primaryvalue);
+            
+			using(IDbCommand cmd = m_connection.CreateCommand())
+            {
 
-			try
-			{
-				IDataReader dr = cmd.ExecuteReader();
-				if(!dr.Read()) {dr.Close();return new Data[0];};
-				Data[] ret = new Data[dr.FieldCount];
-				for(int i = 0; i < dr.FieldCount; i++)
-					ret[i] = new Data(dr.GetName(i), dr.GetValue(i), dr.GetFieldType(i));
-				dr.Close();
-				return ret;
-			}
-			catch(Exception ex)
-			{
-				throw new Exception("Couldn't load row (" + primaryvalue.ToString() + ") from table \"" + tablename + "\"\nError: " + ex.Message);
-			}
+                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
+                
+                cmd.CommandText = GetSelectString(typeinfo) + GetIdentityWhere(typeinfo);
+                AddParameter(cmd, primarykey);
+
+			    try
+			    {
+				    using(IDataReader dr = cmd.ExecuteReader())
+                    {
+                        object[] results = m_transformer.TransformToObjects(type, dr, this);
+                        if (results.Length == 0)
+                            return null;
+                        else if (results.Length == 1)
+                            return results[0];
+                        else
+                            throw new Exception("Got " + results.Length.ToString() + " results after selection in table \"" + typeinfo.TableName + "\" with primary key \"" + primarykey.ToString() + "\".");
+                    }
+			    }
+			    catch(Exception ex)
+			    {
+                    throw new Exception("Couldn't load row (" + primarykey.ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+			    }
+            }
 		}
 
 		/// <summary>
@@ -159,11 +329,27 @@ namespace System.Data.LightDatamodel
 		/// <param name="tablename"></param>
 		/// <param name="operation"></param>
 		/// <returns></returns>
-		public virtual Data[][] SelectRows(string tablename, QueryModel.Operation operation)
+		public virtual object[] SelectRows(Type type, QueryModel.Operation operation)
 		{
-			ArrayList values = new ArrayList();
-			string filter = EvalTree(operation, values);
-			return SelectRows(tablename, filter, (object[])values.ToArray(typeof(object)));
+            if (m_connection.State != ConnectionState.Open) m_connection.Open();
+            using (IDbCommand cmd = m_connection.CreateCommand())
+            {
+                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
+                string filter = EvalTree(operation, cmd);
+                cmd.CommandText = GetSelectString(typeinfo);
+
+                if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
+
+                try
+                {
+                    using (IDataReader dr = cmd.ExecuteReader())
+                        return m_transformer.TransformToObjects(type, dr, this);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+                }
+            }
 		}
 
 		protected virtual string TranslateOperator(QueryModel.Operators opr)
@@ -210,15 +396,15 @@ namespace System.Data.LightDatamodel
         /// <param name="opm">The operand to translate</param>
         /// <param name="cmds">The list of parameters</param>
         /// <returns></returns>
-        private string WrapIfNeeded(QueryModel.OperationOrParameter opm, ArrayList cmds)
+        private string WrapIfNeeded(QueryModel.OperationOrParameter opm, IDbCommand cmd)
         {
             if (opm.IsOperation)
-                return "(" + EvalTree(opm, cmds) + ")";
+                return "(" + EvalTree(opm, cmd) + ")";
             else
-                return EvalTree(opm, cmds);
+                return EvalTree(opm, cmd);
         }
 
-		protected virtual string EvalTree(QueryModel.OperationOrParameter opm, ArrayList cmds)
+		protected virtual string EvalTree(QueryModel.OperationOrParameter opm, IDbCommand cmd)
 		{
 			if (opm.IsOperation)
 			{
@@ -226,21 +412,21 @@ namespace System.Data.LightDatamodel
 				switch(operation.Operator)
 				{
 					case QueryModel.Operators.Not:
-						return "Not (" + EvalTree(operation.Parameters[0], cmds) + ") ";
+						return "Not (" + EvalTree(operation.Parameters[0], cmd) + ") ";
 					case QueryModel.Operators.IIF:
-						return "IIF((" + EvalTree(operation.Parameters[0], cmds) + "),(" + EvalTree(operation.Parameters[1], cmds) + "),(" + EvalTree(operation.Parameters[2], cmds) + ")) ";
+						return "IIF((" + EvalTree(operation.Parameters[0], cmd) + "),(" + EvalTree(operation.Parameters[1], cmd) + "),(" + EvalTree(operation.Parameters[2], cmd) + ")) ";
 					case QueryModel.Operators.In:
 						string[] tmp = new string[operation.Parameters.Length - 1];
 						for(int i = 0; i < tmp.Length; i++)
-							tmp[i] = EvalTree(operation.Parameters[i+1], cmds);
-						return "(" + EvalTree(operation.Parameters[0], cmds) + ") In (" + string.Join(",", tmp) + ") ";
+							tmp[i] = EvalTree(operation.Parameters[i+1], cmd);
+						return "(" + EvalTree(operation.Parameters[0], cmd) + ") In (" + string.Join(",", tmp) + ") ";
                     case System.Data.LightDatamodel.QueryModel.Operators.Between:
                         {
                             QueryModel.Operation opr = (QueryModel.Operation)operation.Parameters[1];
-                            return WrapIfNeeded(operation.Parameters[0], cmds) + " BETWEEN " + WrapIfNeeded(opr.Parameters[0], cmds) + " AND " + WrapIfNeeded(opr.Parameters[1], cmds);
+                            return WrapIfNeeded(operation.Parameters[0], cmd) + " BETWEEN " + WrapIfNeeded(opr.Parameters[0], cmd) + " AND " + WrapIfNeeded(opr.Parameters[1], cmd);
                         }
                     default:
-                        return WrapIfNeeded(operation.Parameters[0], cmds) + " " + TranslateOperator(operation.Operator) + " " + WrapIfNeeded(operation.Parameters[1], cmds);
+                        return WrapIfNeeded(operation.Parameters[0], cmd) + " " + TranslateOperator(operation.Operator) + " " + WrapIfNeeded(operation.Parameters[1], cmd);
 				}
 			}
 			else
@@ -249,13 +435,7 @@ namespace System.Data.LightDatamodel
 				if (parameter.IsColumn)
 					return QuoteColumnname((string)parameter.Value);
 				else
-				{
-                    if (parameter.Value == null)
-                        cmds.Add(DBNull.Value);
-                    else
-					    cmds.Add(parameter.Value);
-					return "?";
-				}
+                    return AddParameter(cmd, parameter.Value);
 			}
 		}
 
@@ -266,83 +446,74 @@ namespace System.Data.LightDatamodel
 		/// <param name="filter"></param>
 		/// <param name="values">Used if the filter is parametized. Eg. ... MyCol = ? AND YourCol = ? ...</param>
 		/// <returns></returns>
-		public virtual Data[][] SelectRows(string tablename, string filter, object[] values)
+		public virtual object[] SelectRows(Type type, string filter, object[] values)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
-			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "SELECT * FROM " + QuoteTablename(tablename) + "";
-			cmd.Parameters.Clear();
+            using (IDbCommand cmd = m_connection.CreateCommand())
+            {
+                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
 
-			if(filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
-			if (values != null)
-				foreach(object o in values)
-				{
-					IDbDataParameter p = cmd.CreateParameter();
-					p.Value = o;
-					cmd.Parameters.Add(p);
-				}
+                cmd.CommandText = GetSelectString(typeinfo);
+                cmd.Parameters.Clear();
 
-			try
-			{
-				IDataReader dr = cmd.ExecuteReader();
-				if(!dr.Read()) {dr.Close();return new Data[0][];};
-				ArrayList list = new ArrayList();
-				do
-				{
-					Data[] row = new Data[dr.FieldCount];
-					for(int i = 0; i < dr.FieldCount; i++)
-						row[i] = new Data(dr.GetName(i), dr.GetValue(i), dr.GetFieldType(i));
-					list.Add(row);
-				} while(dr.Read());
-				dr.Close();
-				return (Data[][])list.ToArray(typeof(Data[]));
-			}
-			catch(Exception ex)
-			{
-				throw new Exception("Couldn't load rows (" + filter + ") from table \"" + tablename + "\"\nError: " + ex.Message);
-			}
+                if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
+                if (values != null)
+                    foreach (object o in values)
+                        AddParameter(cmd, o);
+
+                try
+                {
+                    using (IDataReader dr = cmd.ExecuteReader())
+                        return m_transformer.TransformToObjects(type, dr, this);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+                }
+            }
 		}
 
 		/// <summary>
 		/// Selects multiple rows from DB. 
 		/// </summary>
 		/// <param name="tablename"></param>
-		/// <param name="filter">Non parametized. Eg. MyCol = "Cheese" AND ...</param>
+		/// <param name="filter">Non parameterized. Eg. MyCol = "Cheese" AND ...</param>
 		/// <returns></returns>
-		public virtual Data[][] SelectRows(string tablename, string filter)
+		public virtual object[] SelectRows(Type type, string filter)
 		{
-			return SelectRows(tablename, filter, null);
+			return SelectRows(type, filter, null);
 		}
 
 		/// <summary>
-		/// Will update a given row in the DB. Will throw an exception if non or more than 1 are updated
+		/// Will update a given row in the DB. Will throw an exception if none or more than 1 are updated
 		/// </summary>
 		/// <param name="tablename"></param>
 		/// <param name="primarycolumnname"></param>
 		/// <param name="primaryvalue"></param>
 		/// <param name="values"></param>
-		public virtual void UpdateRow(string tablename, string primarycolumnname, object primaryvalue, params Data[] values)
+		public virtual void UpdateRow(object item)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
-			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "UPDATE " + QuoteTablename(tablename) + " SET ";
-			foreach(Data col in values)
-                if (col.Type != null)
-				    cmd.CommandText += QuoteColumnname(col.Name) + " = " + AddParameter(cmd, col.Value) + ", ";
+            using (IDbCommand cmd = m_connection.CreateCommand())
+            {
+                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
+                cmd.CommandText = GetUpdateString(typeinfo) + GetIdentityWhere(typeinfo);
+                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+                    if (!mf.IgnoreWithUpdate)
+                        AddParameter(cmd, mf.Field.GetValue(item));
+                AddParameter(cmd, typeinfo.UniqueValue(item));
 
-			cmd.CommandText = cmd.CommandText.Substring(0, cmd.CommandText.Length - 2);
-			cmd.CommandText += " WHERE " + QuoteColumnname(primarycolumnname) + " = " + AddParameter(cmd, primaryvalue);
-
-			try
-			{
-				int r = cmd.ExecuteNonQuery();
-				if (r != 1)
-					throw new Exception("Row update was expected to update 1 row, but updated: " + r.ToString());
-			}
-			catch(Exception ex)
-			{
-				throw new Exception("Couldn't update row (" + primaryvalue.ToString() + ") from table \"" + tablename + "\"\nError: " + ex.Message);
-			}
+                try
+                {
+                    int r = cmd.ExecuteNonQuery();
+                    if (r != 1)
+                        throw new Exception("Row update was expected to update 1 row, but updated: " + r.ToString());
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Couldn't update row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+                }
+            }
 		}
 
 		/// <summary>
@@ -350,52 +521,54 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="tablename"></param>
 		/// <param name="values"></param>
-		public virtual void InsertRow(string tablename, params Data[] values)
+		public virtual void InsertRow(object item)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
-			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "INSERT INTO " + QuoteTablename(tablename) + " (";
-			foreach(Data col in values)
-                if (col.Type != null)
-				    cmd.CommandText += QuoteColumnname(col.Name) + ", ";
-			cmd.CommandText = cmd.CommandText.Substring(0, cmd.CommandText.Length - 2)+ ") VALUES (";
-			foreach(Data col in values)
-                if (col.Type != null)
-				    cmd.CommandText += AddParameter(cmd, col.Value) + ", ";
-			cmd.CommandText = cmd.CommandText.Substring(0, cmd.CommandText.Length - 2) + ")";
-			try
-			{
-				int r = cmd.ExecuteNonQuery();
-				if (r != 1)
-					throw new Exception("The insert was expected to update 1 row, but updated: " + r.ToString());
-			}
-			catch(Exception ex)
-			{
-				throw new Exception("Couldn't insert row in table \"" + tablename + "\"\nError: " + ex.Message);
-			}
+            using (IDbCommand cmd = m_connection.CreateCommand())
+            {
+                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
+                cmd.CommandText = GetInsertString(typeinfo);
+                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+                    if (!mf.IgnoreWithInsert)
+                        AddParameter(cmd, mf.Field.GetValue(item));
+
+                try
+                {
+                    int r = cmd.ExecuteNonQuery();
+                    if (r != 1)
+                        throw new Exception("The insert was expected to update 1 row, but updated: " + r.ToString());
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Couldn't insert row in table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+                }
+            }
 		}
 
-		public virtual Data[] GetStructure(string sql)
+        public virtual List<KeyValuePair<string, Type>> GetStructure(string sql)
 		{
+            List<KeyValuePair<string, Type>> res = new List<KeyValuePair<string, Type>>();
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
-			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = sql;
-			try
-			{
-				IDataReader dr = cmd.ExecuteReader();
-				Data[] ret = new Data[dr.FieldCount];
-				for(int i = 0; i < dr.FieldCount; i++)
-					ret[i] = new Data(dr.GetName(i), null, dr.GetFieldType(i));
-				dr.Close();
-				return ret;
-			}
-			catch(Exception ex)
-			{
-				throw new Exception("Couldn't get structure from sql (" + sql + ")\nError: " + ex.Message);
-			}
+            using (IDbCommand cmd = m_connection.CreateCommand())
+            {
+                cmd.CommandText = sql;
+                try
+                {
+                    using (IDataReader dr = cmd.ExecuteReader())
+                    {
+                        for (int i = 0; i < dr.FieldCount; i++)
+                            res.Add(new KeyValuePair<string, Type>(dr.GetName(i), dr.GetFieldType(i)));
+                        return res;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Couldn't get structure from sql (" + sql + ")\nError: " + ex.Message);
+                }
+            }
 		}
 
-		public virtual Data[] GetTableStructure(string tablename)
+        public virtual List<KeyValuePair<string, Type>> GetTableStructure(string tablename)
 		{
 			return GetStructure("SELECT * FROM " + QuoteTablename(tablename) + " WHERE 1 = 0");
 		}
