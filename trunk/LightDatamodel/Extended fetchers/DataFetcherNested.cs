@@ -32,6 +32,7 @@ namespace System.Data.LightDatamodel
         private IDataFetcherCached m_baseFetcher;
 		public DataFetcherNested(IDataFetcherCached basefetcher) : base(basefetcher.Provider)
 		{
+            m_transformer = basefetcher.ObjectTransformer;
             m_baseFetcher = basefetcher;
 		}
 

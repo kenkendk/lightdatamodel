@@ -28,6 +28,7 @@ using System.IO;
 using System.Xml;
 using System.Reflection;
 using System.Data.LightDatamodel;
+using System.Collections.Generic;
 
 namespace DataClassFileBuilder
 {
@@ -55,6 +56,7 @@ namespace DataClassFileBuilder
 		private System.Windows.Forms.Button BuildButton;
 		protected System.Windows.Forms.TextBox NamespaceStringText;
 		private System.Windows.Forms.Label label3;
+        private CheckBox UseConfigCheckBox;
 
 		/// <summary>
 		/// Required designer variable.
@@ -95,237 +97,249 @@ namespace DataClassFileBuilder
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(DataClassFileBuilderDialog));
-			this.TableGroup = new System.Windows.Forms.GroupBox();
-			this.BrowseDB = new System.Windows.Forms.Button();
-			this.ConnectionStringText = new System.Windows.Forms.TextBox();
-			this.label1 = new System.Windows.Forms.Label();
-			this.BrowseButton = new System.Windows.Forms.Button();
-			this.DestinationDirText = new System.Windows.Forms.TextBox();
-			this.label2 = new System.Windows.Forms.Label();
-			this.BuildButton = new System.Windows.Forms.Button();
-			this.NamespaceStringText = new System.Windows.Forms.TextBox();
-			this.label3 = new System.Windows.Forms.Label();
-			this.ViewGroup = new System.Windows.Forms.GroupBox();
-			this.CreateViewButton = new System.Windows.Forms.Button();
-			this.label4 = new System.Windows.Forms.Label();
-			this.SQLText = new System.Windows.Forms.TextBox();
-			this.label5 = new System.Windows.Forms.Label();
-			this.ViewNameText = new System.Windows.Forms.TextBox();
-			this.ProviderList = new System.Windows.Forms.ComboBox();
-			this.label6 = new System.Windows.Forms.Label();
-			this.TableGroup.SuspendLayout();
-			this.ViewGroup.SuspendLayout();
-			this.SuspendLayout();
-			// 
-			// TableGroup
-			// 
-			this.TableGroup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-				| System.Windows.Forms.AnchorStyles.Right)));
-			this.TableGroup.Controls.Add(this.BrowseDB);
-			this.TableGroup.Controls.Add(this.ConnectionStringText);
-			this.TableGroup.Controls.Add(this.label1);
-			this.TableGroup.Controls.Add(this.BrowseButton);
-			this.TableGroup.Controls.Add(this.DestinationDirText);
-			this.TableGroup.Controls.Add(this.label2);
-			this.TableGroup.Controls.Add(this.BuildButton);
-			this.TableGroup.Controls.Add(this.NamespaceStringText);
-			this.TableGroup.Controls.Add(this.label3);
-			this.TableGroup.Enabled = false;
-			this.TableGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.TableGroup.Location = new System.Drawing.Point(8, 48);
-			this.TableGroup.Name = "TableGroup";
-			this.TableGroup.Size = new System.Drawing.Size(600, 128);
-			this.TableGroup.TabIndex = 4;
-			this.TableGroup.TabStop = false;
-			this.TableGroup.Text = "Create classes for all tables in datasource";
-			// 
-			// BrowseDB
-			// 
-			this.BrowseDB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.BrowseDB.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.BrowseDB.Location = new System.Drawing.Point(568, 24);
-			this.BrowseDB.Name = "BrowseDB";
-			this.BrowseDB.Size = new System.Drawing.Size(24, 21);
-			this.BrowseDB.TabIndex = 13;
-			this.BrowseDB.Text = "...";
-			this.BrowseDB.Click += new System.EventHandler(this.BrowseDB_Click);
-			// 
-			// ConnectionStringText
-			// 
-			this.ConnectionStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-				| System.Windows.Forms.AnchorStyles.Right)));
-			this.ConnectionStringText.Location = new System.Drawing.Point(104, 24);
-			this.ConnectionStringText.Name = "ConnectionStringText";
-			this.ConnectionStringText.Size = new System.Drawing.Size(464, 20);
-			this.ConnectionStringText.TabIndex = 8;
-			this.ConnectionStringText.Text = "";
-			// 
-			// label1
-			// 
-			this.label1.Location = new System.Drawing.Point(8, 24);
-			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(96, 16);
-			this.label1.TabIndex = 5;
-			this.label1.Text = "Connectionstring";
-			// 
-			// BrowseButton
-			// 
-			this.BrowseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.BrowseButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.BrowseButton.Location = new System.Drawing.Point(568, 48);
-			this.BrowseButton.Name = "BrowseButton";
-			this.BrowseButton.Size = new System.Drawing.Size(24, 21);
-			this.BrowseButton.TabIndex = 12;
-			this.BrowseButton.Text = "...";
-			this.BrowseButton.Click += new System.EventHandler(this.BrowseButton_Click);
-			// 
-			// DestinationDirText
-			// 
-			this.DestinationDirText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-				| System.Windows.Forms.AnchorStyles.Right)));
-			this.DestinationDirText.Location = new System.Drawing.Point(104, 48);
-			this.DestinationDirText.Name = "DestinationDirText";
-			this.DestinationDirText.Size = new System.Drawing.Size(464, 20);
-			this.DestinationDirText.TabIndex = 11;
-			this.DestinationDirText.Text = "";
-			// 
-			// label2
-			// 
-			this.label2.Location = new System.Drawing.Point(8, 48);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(96, 16);
-			this.label2.TabIndex = 7;
-			this.label2.Text = "Dir";
-			// 
-			// BuildButton
-			// 
-			this.BuildButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.BuildButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.BuildButton.Location = new System.Drawing.Point(456, 96);
-			this.BuildButton.Name = "BuildButton";
-			this.BuildButton.Size = new System.Drawing.Size(136, 24);
-			this.BuildButton.TabIndex = 9;
-			this.BuildButton.Text = "Convert DB to classes";
-			this.BuildButton.Click += new System.EventHandler(this.BuildButton_Click);
-			// 
-			// NamespaceStringText
-			// 
-			this.NamespaceStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-				| System.Windows.Forms.AnchorStyles.Right)));
-			this.NamespaceStringText.Location = new System.Drawing.Point(104, 72);
-			this.NamespaceStringText.Name = "NamespaceStringText";
-			this.NamespaceStringText.Size = new System.Drawing.Size(488, 20);
-			this.NamespaceStringText.TabIndex = 6;
-			this.NamespaceStringText.Text = "";
-			// 
-			// label3
-			// 
-			this.label3.Location = new System.Drawing.Point(8, 72);
-			this.label3.Name = "label3";
-			this.label3.Size = new System.Drawing.Size(96, 16);
-			this.label3.TabIndex = 10;
-			this.label3.Text = "Namespace";
-			// 
-			// ViewGroup
-			// 
-			this.ViewGroup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-				| System.Windows.Forms.AnchorStyles.Right)));
-			this.ViewGroup.Controls.Add(this.CreateViewButton);
-			this.ViewGroup.Controls.Add(this.label4);
-			this.ViewGroup.Controls.Add(this.SQLText);
-			this.ViewGroup.Controls.Add(this.label5);
-			this.ViewGroup.Controls.Add(this.ViewNameText);
-			this.ViewGroup.Enabled = false;
-			this.ViewGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.ViewGroup.Location = new System.Drawing.Point(8, 184);
-			this.ViewGroup.Name = "ViewGroup";
-			this.ViewGroup.Size = new System.Drawing.Size(600, 104);
-			this.ViewGroup.TabIndex = 5;
-			this.ViewGroup.TabStop = false;
-			this.ViewGroup.Text = "Create non updateable view class";
-			// 
-			// CreateViewButton
-			// 
-			this.CreateViewButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.CreateViewButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.CreateViewButton.Location = new System.Drawing.Point(456, 72);
-			this.CreateViewButton.Name = "CreateViewButton";
-			this.CreateViewButton.Size = new System.Drawing.Size(136, 24);
-			this.CreateViewButton.TabIndex = 7;
-			this.CreateViewButton.Text = "Create view class";
-			this.CreateViewButton.Click += new System.EventHandler(this.CreateViewButton_Click);
-			// 
-			// label4
-			// 
-			this.label4.Location = new System.Drawing.Point(8, 48);
-			this.label4.Name = "label4";
-			this.label4.Size = new System.Drawing.Size(88, 16);
-			this.label4.TabIndex = 5;
-			this.label4.Text = "SQL";
-			// 
-			// SQLText
-			// 
-			this.SQLText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-				| System.Windows.Forms.AnchorStyles.Right)));
-			this.SQLText.Location = new System.Drawing.Point(104, 48);
-			this.SQLText.Name = "SQLText";
-			this.SQLText.Size = new System.Drawing.Size(488, 20);
-			this.SQLText.TabIndex = 6;
-			this.SQLText.Text = "";
-			// 
-			// label5
-			// 
-			this.label5.Location = new System.Drawing.Point(8, 24);
-			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(88, 16);
-			this.label5.TabIndex = 3;
-			this.label5.Text = "Name";
-			// 
-			// ViewNameText
-			// 
-			this.ViewNameText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-				| System.Windows.Forms.AnchorStyles.Right)));
-			this.ViewNameText.Location = new System.Drawing.Point(104, 24);
-			this.ViewNameText.Name = "ViewNameText";
-			this.ViewNameText.Size = new System.Drawing.Size(488, 20);
-			this.ViewNameText.TabIndex = 4;
-			this.ViewNameText.Text = "";
-			// 
-			// ProviderList
-			// 
-			this.ProviderList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-				| System.Windows.Forms.AnchorStyles.Right)));
-			this.ProviderList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.ProviderList.Location = new System.Drawing.Point(112, 16);
-			this.ProviderList.Name = "ProviderList";
-			this.ProviderList.Size = new System.Drawing.Size(496, 21);
-			this.ProviderList.TabIndex = 9;
-			this.ProviderList.SelectedIndexChanged += new System.EventHandler(this.ProviderList_SelectedIndexChanged_1);
-			// 
-			// label6
-			// 
-			this.label6.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.label6.Location = new System.Drawing.Point(8, 16);
-			this.label6.Name = "label6";
-			this.label6.Size = new System.Drawing.Size(88, 16);
-			this.label6.TabIndex = 8;
-			this.label6.Text = "Provider";
-			// 
-			// DataClassFileBuilderDialog
-			// 
-			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-			this.ClientSize = new System.Drawing.Size(616, 301);
-			this.Controls.Add(this.ProviderList);
-			this.Controls.Add(this.label6);
-			this.Controls.Add(this.ViewGroup);
-			this.Controls.Add(this.TableGroup);
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.Name = "DataClassFileBuilderDialog";
-			this.Text = "DataClassBuilder";
-			this.TableGroup.ResumeLayout(false);
-			this.ViewGroup.ResumeLayout(false);
-			this.ResumeLayout(false);
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataClassFileBuilderDialog));
+            this.TableGroup = new System.Windows.Forms.GroupBox();
+            this.BrowseDB = new System.Windows.Forms.Button();
+            this.ConnectionStringText = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.BrowseButton = new System.Windows.Forms.Button();
+            this.DestinationDirText = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.BuildButton = new System.Windows.Forms.Button();
+            this.NamespaceStringText = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.ViewGroup = new System.Windows.Forms.GroupBox();
+            this.CreateViewButton = new System.Windows.Forms.Button();
+            this.label4 = new System.Windows.Forms.Label();
+            this.SQLText = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.ViewNameText = new System.Windows.Forms.TextBox();
+            this.ProviderList = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.UseConfigCheckBox = new System.Windows.Forms.CheckBox();
+            this.TableGroup.SuspendLayout();
+            this.ViewGroup.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // TableGroup
+            // 
+            this.TableGroup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.TableGroup.Controls.Add(this.BrowseDB);
+            this.TableGroup.Controls.Add(this.ConnectionStringText);
+            this.TableGroup.Controls.Add(this.label1);
+            this.TableGroup.Controls.Add(this.BrowseButton);
+            this.TableGroup.Controls.Add(this.DestinationDirText);
+            this.TableGroup.Controls.Add(this.label2);
+            this.TableGroup.Controls.Add(this.BuildButton);
+            this.TableGroup.Controls.Add(this.NamespaceStringText);
+            this.TableGroup.Controls.Add(this.label3);
+            this.TableGroup.Enabled = false;
+            this.TableGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.TableGroup.Location = new System.Drawing.Point(8, 72);
+            this.TableGroup.Name = "TableGroup";
+            this.TableGroup.Size = new System.Drawing.Size(600, 128);
+            this.TableGroup.TabIndex = 4;
+            this.TableGroup.TabStop = false;
+            this.TableGroup.Text = "Create classes for all tables in datasource";
+            // 
+            // BrowseDB
+            // 
+            this.BrowseDB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.BrowseDB.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.BrowseDB.Location = new System.Drawing.Point(568, 24);
+            this.BrowseDB.Name = "BrowseDB";
+            this.BrowseDB.Size = new System.Drawing.Size(24, 21);
+            this.BrowseDB.TabIndex = 13;
+            this.BrowseDB.Text = "...";
+            this.BrowseDB.Click += new System.EventHandler(this.BrowseDB_Click);
+            // 
+            // ConnectionStringText
+            // 
+            this.ConnectionStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ConnectionStringText.Location = new System.Drawing.Point(104, 24);
+            this.ConnectionStringText.Name = "ConnectionStringText";
+            this.ConnectionStringText.Size = new System.Drawing.Size(464, 20);
+            this.ConnectionStringText.TabIndex = 8;
+            // 
+            // label1
+            // 
+            this.label1.Location = new System.Drawing.Point(8, 24);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(96, 16);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "Connectionstring";
+            // 
+            // BrowseButton
+            // 
+            this.BrowseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.BrowseButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.BrowseButton.Location = new System.Drawing.Point(568, 48);
+            this.BrowseButton.Name = "BrowseButton";
+            this.BrowseButton.Size = new System.Drawing.Size(24, 21);
+            this.BrowseButton.TabIndex = 12;
+            this.BrowseButton.Text = "...";
+            this.BrowseButton.Click += new System.EventHandler(this.BrowseButton_Click);
+            // 
+            // DestinationDirText
+            // 
+            this.DestinationDirText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.DestinationDirText.Location = new System.Drawing.Point(104, 48);
+            this.DestinationDirText.Name = "DestinationDirText";
+            this.DestinationDirText.Size = new System.Drawing.Size(464, 20);
+            this.DestinationDirText.TabIndex = 11;
+            // 
+            // label2
+            // 
+            this.label2.Location = new System.Drawing.Point(8, 48);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(96, 16);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "Dir";
+            // 
+            // BuildButton
+            // 
+            this.BuildButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.BuildButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.BuildButton.Location = new System.Drawing.Point(456, 96);
+            this.BuildButton.Name = "BuildButton";
+            this.BuildButton.Size = new System.Drawing.Size(136, 24);
+            this.BuildButton.TabIndex = 9;
+            this.BuildButton.Text = "Convert DB to classes";
+            this.BuildButton.Click += new System.EventHandler(this.BuildButton_Click);
+            // 
+            // NamespaceStringText
+            // 
+            this.NamespaceStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.NamespaceStringText.Location = new System.Drawing.Point(104, 72);
+            this.NamespaceStringText.Name = "NamespaceStringText";
+            this.NamespaceStringText.Size = new System.Drawing.Size(488, 20);
+            this.NamespaceStringText.TabIndex = 6;
+            // 
+            // label3
+            // 
+            this.label3.Location = new System.Drawing.Point(8, 72);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(96, 16);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "Namespace";
+            // 
+            // ViewGroup
+            // 
+            this.ViewGroup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ViewGroup.Controls.Add(this.CreateViewButton);
+            this.ViewGroup.Controls.Add(this.label4);
+            this.ViewGroup.Controls.Add(this.SQLText);
+            this.ViewGroup.Controls.Add(this.label5);
+            this.ViewGroup.Controls.Add(this.ViewNameText);
+            this.ViewGroup.Enabled = false;
+            this.ViewGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ViewGroup.Location = new System.Drawing.Point(8, 208);
+            this.ViewGroup.Name = "ViewGroup";
+            this.ViewGroup.Size = new System.Drawing.Size(600, 104);
+            this.ViewGroup.TabIndex = 5;
+            this.ViewGroup.TabStop = false;
+            this.ViewGroup.Text = "Create non updateable view class";
+            // 
+            // CreateViewButton
+            // 
+            this.CreateViewButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.CreateViewButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.CreateViewButton.Location = new System.Drawing.Point(456, 72);
+            this.CreateViewButton.Name = "CreateViewButton";
+            this.CreateViewButton.Size = new System.Drawing.Size(136, 24);
+            this.CreateViewButton.TabIndex = 7;
+            this.CreateViewButton.Text = "Create view class";
+            this.CreateViewButton.Click += new System.EventHandler(this.CreateViewButton_Click);
+            // 
+            // label4
+            // 
+            this.label4.Location = new System.Drawing.Point(8, 48);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(88, 16);
+            this.label4.TabIndex = 5;
+            this.label4.Text = "SQL";
+            // 
+            // SQLText
+            // 
+            this.SQLText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.SQLText.Location = new System.Drawing.Point(104, 48);
+            this.SQLText.Name = "SQLText";
+            this.SQLText.Size = new System.Drawing.Size(488, 20);
+            this.SQLText.TabIndex = 6;
+            // 
+            // label5
+            // 
+            this.label5.Location = new System.Drawing.Point(8, 24);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(88, 16);
+            this.label5.TabIndex = 3;
+            this.label5.Text = "Name";
+            // 
+            // ViewNameText
+            // 
+            this.ViewNameText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ViewNameText.Location = new System.Drawing.Point(104, 24);
+            this.ViewNameText.Name = "ViewNameText";
+            this.ViewNameText.Size = new System.Drawing.Size(488, 20);
+            this.ViewNameText.TabIndex = 4;
+            // 
+            // ProviderList
+            // 
+            this.ProviderList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ProviderList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ProviderList.Location = new System.Drawing.Point(112, 16);
+            this.ProviderList.Name = "ProviderList";
+            this.ProviderList.Size = new System.Drawing.Size(496, 21);
+            this.ProviderList.TabIndex = 9;
+            this.ProviderList.SelectedIndexChanged += new System.EventHandler(this.ProviderList_SelectedIndexChanged_1);
+            // 
+            // label6
+            // 
+            this.label6.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.label6.Location = new System.Drawing.Point(8, 16);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(88, 16);
+            this.label6.TabIndex = 8;
+            this.label6.Text = "Provider";
+            // 
+            // UseConfigCheckBox
+            // 
+            this.UseConfigCheckBox.AutoSize = true;
+            this.UseConfigCheckBox.Checked = true;
+            this.UseConfigCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.UseConfigCheckBox.Location = new System.Drawing.Point(112, 40);
+            this.UseConfigCheckBox.Name = "UseConfigCheckBox";
+            this.UseConfigCheckBox.Size = new System.Drawing.Size(168, 17);
+            this.UseConfigCheckBox.TabIndex = 14;
+            this.UseConfigCheckBox.Text = "Use a configuration document";
+            this.UseConfigCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // DataClassFileBuilderDialog
+            // 
+            this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
+            this.ClientSize = new System.Drawing.Size(616, 320);
+            this.Controls.Add(this.UseConfigCheckBox);
+            this.Controls.Add(this.ProviderList);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.ViewGroup);
+            this.Controls.Add(this.TableGroup);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "DataClassFileBuilderDialog";
+            this.Text = "DataClassBuilder";
+            this.TableGroup.ResumeLayout(false);
+            this.TableGroup.PerformLayout();
+            this.ViewGroup.ResumeLayout(false);
+            this.ViewGroup.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
 
 		}
 		#endregion
@@ -443,26 +457,35 @@ namespace DataClassFileBuilder
 						return;
 				}
 
+                List<TypeConfiguration.MappedClass> tables = TypeConfiguration.DescribeDataSource(provider);
+                string mappingFile = System.IO.Path.Combine(DestinationDirText.Text, "LightDataModel.Mapping.xml");
+                if (UseConfigCheckBox.Checked)
+                {
+                    if (System.IO.File.Exists(mappingFile))
+                        TypeConfiguration.MergeSetups(TypeConfiguration.LoadXml(mappingFile), tables);
+
+                    TypeConfiguration.SaveXml(tables, mappingFile);
+                }
+
 				//tables
-				string[] tablenames = provider.GetTablenames();
 
 				//build files
-				string[] paths = new string[tablenames.Length];
-				for(int i = 0; i< tablenames.Length; i++)
+                List<string> paths = new List<string>();
+                for (int i = 0; i < tables.Count; i++)
 				{
-					paths[i] = DestinationDirText.Text + tablenames[i] + ".cs";
-					BuildClassFile(tablenames[i], null, paths[i], NamespaceStringText.Text, provider, typeof(DataClassBase));
+                    paths.Add(System.IO.Path.Combine(DestinationDirText.Text,  tables[i].TableName + ".cs"));
+					BuildClassFile(tables[i], paths[paths.Count - 1], NamespaceStringText.Text, provider, typeof(DataClassBase));
 				}
 
 				//datahub
 				//BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, tablenames, null, null);
 				//string[] includes = new string[paths.Length + 1];
-				string[] includes = new string[paths.Length];
-				Array.Copy(paths, includes, paths.Length);
 				//includes[includes.Length -1] = DestinationDirText.Text + "DataHub.cs";
+                if (!UseConfigCheckBox.Checked)
+                    mappingFile = null;
 
 				//Build project
-				BuildProjectFile(assemblyname, NamespaceStringText.Text, DestinationDirText.Text + assemblyname + ".csproj", includes);
+				BuildProjectFile(assemblyname, NamespaceStringText.Text, System.IO.Path.Combine(DestinationDirText.Text, assemblyname + ".csproj"), mappingFile, paths.ToArray());
 				if(!File.Exists(DestinationDirText.Text + "AssemblyInfo.cs")) BuildAssemblyInfoFile(DestinationDirText.Text + "AssemblyInfo.cs", assemblyname);
 
 				//copy LightDatamodel
@@ -475,7 +498,7 @@ namespace DataClassFileBuilder
 					throw new Exception("Couldn't copy LightDatamodel.dll\nError: " + ex.Message);
 				}
 
-				//copy certificat
+				//copy certificate
 				try
 				{
 					File.Copy(Path.Combine(Application.StartupPath, "LightDataModel.snk"), Path.Combine(DestinationDirText.Text, "LightDataModel.snk"), true);
@@ -527,7 +550,7 @@ namespace DataClassFileBuilder
 			}
 		}
 
-		private void BuildProjectFile(string assemblyname, string namespacestring, string path, params string[] includefiles)
+		private void BuildProjectFile(string assemblyname, string namespacestring, string path, string mappingfile, params string[] includefiles)
 		{
 			try
 			{
@@ -664,6 +687,19 @@ namespace DataClassFileBuilder
 							includes.AppendChild(file);
 						}
 					}
+
+                    if (mappingfile != null)
+                    {
+                        XmlNode x = doc.SelectSingleNode("/VisualStudioProject/CSHARP/Files/Include/File[@RelPath='" + mappingfile + "']");
+                        if (x == null)
+                        {
+                            XmlElement file = doc.CreateElement("File");
+                            file.SetAttribute("RelPath", mappingfile);
+                            file.SetAttribute("SubType", "Code");
+                            file.SetAttribute("BuildAction", "EmbeddedResource");
+                            includes.AppendChild(file);
+                        }
+                    }
 				}
 				else //2005 project
 				{
@@ -697,6 +733,20 @@ namespace DataClassFileBuilder
 							files.AppendChild(file);
 						}
 					}
+
+                    if (mappingfile != null)
+                    {
+                        XmlNode n = files.SelectSingleNode("xs:EmbeddedResource[@Include='" + mappingfile + "']", nm);
+                        if (n == null)
+                        {
+                            XmlElement file = doc.CreateElement("EmbeddedResource", "http://schemas.microsoft.com/developer/msbuild/2003");
+                            file.SetAttribute("Include", mappingfile);
+                            XmlElement type = doc.CreateElement("SubType", "http://schemas.microsoft.com/developer/msbuild/2003");
+                            type.InnerText = "Code";
+                            file.AppendChild(type);
+                            files.AppendChild(file);
+                        }
+                    }
 
 				}
 
@@ -861,7 +911,7 @@ namespace DataClassFileBuilder
 			}
 		}
 
-		private void BuildClassFile(string name, string sql, string path, string namespacestring, IDataProvider provider, Type inheritclass)
+		private void BuildClassFile(TypeConfiguration.MappedClass mapping, string path, string namespacestring, IDataProvider provider, Type inheritclass)
 		{
 			//Save (means keep) existing file
 			string unsynchronizedcode = "";
@@ -896,101 +946,101 @@ namespace DataClassFileBuilder
 			}
 
 			//get columns
-			Data[] cols = null;
-			if(sql != null) cols= provider.GetStructure(sql);
-			else cols = provider.GetTableStructure(name);
+            Dictionary<string, TypeConfiguration.MappedField> cols = mapping.Columns;
 
 			//get primary key col
-			string primarykeycol = "";
-			if(sql == null) primarykeycol= provider.GetPrimaryKey(name);
+			string primarykeycol = mapping.PrimaryKey == null ? "" : mapping.UniqueColumn;
 
             string primaryAutoGenerate = "";
-            if (provider.IsAutoIncrement(name, primarykeycol))
+            if (mapping.PrimaryKey != null && mapping.PrimaryKey.IsAutoGenerated)
                 primaryAutoGenerate = "\t\t[System.Data.LightDatamodel.MemberModifierAutoIncrement()]\n";
 
-			StreamWriter sw = null;
 			try
 			{
 
 				//build file
-				sw = new StreamWriter(path);
+                using (StreamWriter sw = new StreamWriter(path))
+                {
+                    //Unsynchronized includes
+                    sw.Write(unsynchronizedincludesstart);
+                    sw.Write(unsynchronizedincludes);
+                    if (unsynchronizedincludes == "") sw.Write("\n\t//Don't put any region sections in here\n\n");
+                    sw.Write(unsynchronizedincludesend + "\n");
 
-				//Unsynchronized includes
-				sw.Write(unsynchronizedincludesstart);
-				sw.Write(unsynchronizedincludes);
-				if(unsynchronizedincludes == "") sw.Write("\n\t//Don't put any region sections in here\n\n");
-				sw.Write(unsynchronizedincludesend + "\n");
+                    //metadata
+                    sw.Write("/// <metadata>\n");
+                    sw.Write("/// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>\n");
+                    sw.Write("/// <provider name=\"" + provider.ToString() + "\" connectionstring=\"" + provider.ConnectionString + "\" />\n");
+                    sw.Write("/// <type>" + (mapping.ViewSQL == null ? "Table" : "View") + "</type>\n");
+                    sw.Write("/// <namespace>" + namespacestring + "</namespace>\n");
+                    sw.Write("/// <name>" + mapping.TableName + "</name>\n");
+                    sw.Write("/// <sql>" + (mapping.ViewSQL == null ? "" : mapping.ViewSQL)  + "</sql>\n");
+                    sw.Write("/// </metadata>\n\n");
 
-				//metadata
-				sw.Write("/// <metadata>\n");
-				sw.Write("/// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>\n");
-				sw.Write("/// <provider name=\"" + provider.ToString() + "\" connectionstring=\"" + provider.ConnectionString + "\" />\n");
-				sw.Write("/// <type>" + (sql == null ? "Table" : "View") + "</type>\n");
-				sw.Write("/// <namespace>" + namespacestring + "</namespace>\n");
-				sw.Write("/// <name>" + (string)name + "</name>\n");
-				sw.Write("/// <sql>" + (string)sql + "</sql>\n");
-				sw.Write("/// </metadata>\n\n");
+                    string classname = mapping.ClassName;
+                    //namespace
+                    if (classname.IndexOf(".") > 0)
+                    {
+                        classname = classname.Substring(classname.LastIndexOf(".") + 1);
+                        sw.Write("namespace " + mapping.ClassName.Substring(0, mapping.ClassName.Length - classname.Length - 1) + "\n{\n\n");
+                    }
+                    else
+                        sw.Write("namespace " + namespacestring + "\n{\n\n");
 
-				//namespace
-				sw.Write("namespace " + namespacestring + "\n{\n\n");
+                    //class
+                    sw.Write("\tpublic class " + classname + " : System.Data.LightDatamodel." + inheritclass.Name + "\n\t{\n\n");
 
-				//class
-				sw.Write("\tpublic class " + name + " : System.Data.LightDatamodel." + inheritclass.Name + "\n\t{\n\n");
+                    //private members
+                    sw.Write("#region \" private members \"\n\n");
+                    foreach(TypeConfiguration.MappedField mf in mapping.Columns.Values)
+                    {
+                        if (mf.IsPrimaryKey)
+                            sw.Write(primaryAutoGenerate);
+                        sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + ";\n");
+                    }
+                    sw.Write("#endregion\n\n");
 
-				//private members
-				sw.Write("#region \" private members \"\n\n");
-				for(int i = 0; i< cols.Length; i++)
-				{
-                    if (cols[i].Name == primarykeycol)
-                        sw.Write(primaryAutoGenerate);
-					sw.Write("\t\tprivate " + cols[i].Type.ToString() + " " + "m_" + cols[i].Name + ";\n");
-				}
-				sw.Write("#endregion\n\n");
+                    //overrides
+                    if (mapping.ViewSQL == null)
+                    {
+                        sw.Write("#region \" unique value \"\n\n");
+                        sw.Write("\t\tpublic override object UniqueValue {get{return " + (mapping.PrimaryKey  != null ? mapping.PrimaryKey.FieldName : "null") + ";}}\n");
+                        sw.Write("\t\tpublic override string UniqueColumn {get{return \"" + (mapping.PrimaryKey  != null ? mapping.UniqueColumn : "") + "\";}}\n");
+                        sw.Write("#endregion\n\n");
+                    }
 
-				//overrides
-				if(sql == null)
-				{
-					sw.Write("#region \" unique value \"\n\n");
-					sw.Write("\t\tpublic override object UniqueValue {get{return " + (primarykeycol != "" ? "m_" + primarykeycol : "null") + ";}}\n");
-					sw.Write("\t\tpublic override string UniqueColumn {get{return \"" + primarykeycol + "\";}}\n");
-					//sw.Write("\t\tpublic override void Commit() {if(m_dataparent!=null)m_dataparent.PopulateDatabase(this);}\n");
-					//sw.Write("\t\tpublic override void Update() {if(m_dataparent!=null)m_dataparent.UpdateDataClass(this);}\n\n");
-					sw.Write("#endregion\n\n");
-				}
+                    //properties
+                    sw.Write("#region \" properties \"\n\n");
+                    foreach(TypeConfiguration.MappedField mf in mapping.Columns.Values)
+                    {
+                        if (mf.PropertyName == null || mf.PropertyName.Length == 0)
+                            continue;
 
-				//properties
-				sw.Write("#region \" properties \"\n\n");
-				for(int i = 0; i< cols.Length; i++)
-				{
-					sw.Write("\t\tpublic " + cols[i].Type.ToString() + " " + cols[i].Name + "\n\t\t{\n");
-					sw.Write("\t\t\tget{return m_" + cols[i].Name + ";}\n");
-					if(sql == null)
-						sw.Write("\t\t\tset{object oldvalue = m_" + cols[i].Name + ";OnBeforeDataWrite(this, \"" + cols[i].Name + "\", oldvalue, value);m_" + cols[i].Name + " = value;OnAfterDataWrite(this, \"" + cols[i].Name + "\", oldvalue, value);}\n");
-					else
-						sw.Write("\t\t\tset{m_" + cols[i].Name + " = value;}\n");
-					sw.Write("\t\t}\n\n");
-				}
-				sw.Write("#endregion\n\n");
+                        sw.Write("\t\tpublic " + mf.DataType.FullName + " " + mf.PropertyName + "\n\t\t{\n");
+                        sw.Write("\t\t\tget{return " + mf.FieldName + ";}\n");
+                        if (mapping.ViewSQL == null)
+                            sw.Write("\t\t\tset{object oldvalue = " + mf.FieldName + ";OnBeforeDataWrite(this, \"" + mf.ColumnName + "\", oldvalue, value);" + mf.FieldName + " = value;OnAfterDataWrite(this, \"" + mf.ColumnName + "\", oldvalue, value);}\n");
+                        else
+                            sw.Write("\t\t\tset{" + mf.FieldName + " = value;}\n");
+                        sw.Write("\t\t}\n\n");
+                    }
+                    sw.Write("#endregion\n\n");
 
 
-				//Unsynchronized Custom Code Region
-				sw.Write(unsynchronizedcodestart);
-				sw.Write(unsynchronizedcode);
-				if(unsynchronizedcode == "") sw.Write("\n\t//Don't put any region sections in here\n\n");
-				sw.Write(unsynchronizedcodeend + "\n");
+                    //Unsynchronized Custom Code Region
+                    sw.Write(unsynchronizedcodestart);
+                    sw.Write(unsynchronizedcode);
+                    if (unsynchronizedcode == "") sw.Write("\n\t//Don't put any region sections in here\n\n");
+                    sw.Write(unsynchronizedcodeend + "\n");
 
-				sw.Write("\t}\n"); //end class
-				sw.Write("\n}"); //end namespace
+                    sw.Write("\t}\n"); //end class
+                    sw.Write("\n}"); //end namespace
+                }
 
 			}
 			catch(Exception ex)
 			{
 				throw new Exception("Couldn't write file \"" + path + "\"\nError: " + ex.Message);
-			}
-			finally
-			{
-				//close file
-				if(sw != null) sw.Close();
 			}
 		}
 
@@ -1020,14 +1070,16 @@ namespace DataClassFileBuilder
 				int p = assemblyname.LastIndexOf('.');
 				if(p >= 0) assemblyname = assemblyname.Substring(p+1);
 
+                TypeConfiguration.MappedClass config = TypeConfiguration.DescribeDataSource(provider, ViewNameText.Text, SQLText.Text);
+
 				//Build view
-				BuildClassFile(ViewNameText.Text, SQLText.Text, DestinationDirText.Text + "\\" + ViewNameText.Text + ".cs", NamespaceStringText.Text, provider, typeof(DataClassView));
+				BuildClassFile(config, System.IO.Path.Combine(DestinationDirText.Text, ViewNameText.Text + ".cs"), NamespaceStringText.Text, provider, typeof(DataClassView));
 
 				//Build datahub
 				BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, null, new string[]{ViewNameText.Text}, new string[]{SQLText.Text});
 
 				//Build project
-				BuildProjectFile(assemblyname, NamespaceStringText.Text, DestinationDirText.Text + assemblyname + ".csproj", DestinationDirText.Text + "\\" + ViewNameText.Text + ".cs");
+				BuildProjectFile(assemblyname, NamespaceStringText.Text, System.IO.Path.Combine(DestinationDirText.Text, assemblyname + ".csproj"), null, System.IO.Path.Combine(DestinationDirText.Text, ViewNameText.Text + ".cs"));
 				if(!File.Exists(DestinationDirText.Text + "AssemblyInfo.cs")) BuildAssemblyInfoFile(DestinationDirText.Text + "AssemblyInfo.cs", assemblyname);
 
 				//copy LightDatamodel

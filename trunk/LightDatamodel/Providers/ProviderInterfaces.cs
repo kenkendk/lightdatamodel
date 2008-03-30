@@ -18,6 +18,7 @@
 // 
 #endregion
 using System;
+using System.Collections.Generic;
 
 namespace System.Data.LightDatamodel
 {
@@ -26,18 +27,21 @@ namespace System.Data.LightDatamodel
 	/// </summary>
 	public interface IDataProvider
 	{
-		void DeleteRow(string tablename, string primarycolumnname, object primaryvalue);
-		Data[] SelectRow(string tablename, string primarycolumnname, object primaryvalue);
-		Data[][] SelectRows(string tablename, string filter);
-		Data[][] SelectRows(string tablename, string filter, object[] values);
-		Data[][] SelectRows(string tablename, QueryModel.Operation operation);
-		void UpdateRow(string tablename, string primarycolumnname, object primaryvalue, params Data[] values);
-		void InsertRow(string tablename, params Data[] values);
+        IObjectTransformer Transformer { get; set; }
+
+        void DeleteRow(object item);
+        object SelectRow(Type type, object primarykey);
+        object[] SelectRows(Type type, string filter);
+        object[] SelectRows(Type type, string filter, object[] values);
+        object[] SelectRows(Type type, QueryModel.Operation operation);
+        void UpdateRow(object item);
+		void InsertRow(object item);
+
 		string GetPrimaryKey(string tablename);
         bool IsAutoIncrement(string tablename, string column);
 		string[] GetTablenames();
-		Data[] GetStructure(string sql);
-		Data[] GetTableStructure(string tablename);
+        List<KeyValuePair<string, Type>> GetStructure(string sql);
+        List<KeyValuePair<string, Type>> GetTableStructure(string tablename);
 		void Close();
 		string ConnectionString{get;set;}
 		object GetNullValue(Type type);

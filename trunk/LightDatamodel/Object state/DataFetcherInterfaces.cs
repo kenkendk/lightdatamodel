@@ -42,7 +42,8 @@ namespace System.Data.LightDatamodel
 		DATACLASS CreateObject<DATACLASS>() where DATACLASS : IDataClass;
 		object CreateObject(Type type);
 		IDataProvider Provider { get; }
-		RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter);
+        IObjectTransformer ObjectTransformer { get; }
+        RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter);
 		void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass;
         void DeleteObject(object item);
 	}
@@ -58,30 +59,22 @@ namespace System.Data.LightDatamodel
         void SetIsDirty();
 	}
 
+    public interface IObjectTransformer
+    {
+        void CopyObject(object source, object target);
+        object CreateCopy(object source);
+        DATACLASS CreateCopy<DATACLASS>(DATACLASS source);
+        
+        object PopulateDataClass(object obj, IDataReader reader, System.Data.LightDatamodel.IDataProvider provider);
+        object[] TransformToObjects(Type type, IDataReader reader, System.Data.LightDatamodel.IDataProvider provider);
+        DATACLASS[] TransformToObjects<DATACLASS>(IDataReader reader, System.Data.LightDatamodel.IDataProvider provider);
+
+        TypeConfiguration TypeConfiguration { get; }
+    }
+
+
 	public delegate void DataConnectionEventHandler(object sender, DataActions action);
 	public delegate void DataWriteEventHandler(object sender, string propertyname, object oldvalue, object newvalue);
-
-	/// <summary>
-	/// This data structure is used to return data from a select performed on the provider into the datafetcher.
-	/// </summary>
-	public struct Data
-	{
-		public string Name;
-		public object Value;
-		public Type Type;
-		public Data(string name, object value, Type type)
-		{
-			Name = name;
-			Value = value;
-			Type = type;
-		}
-		public Data(string name, object value)
-		{
-			Name = name;
-			Value = value;
-			Type = null;
-		}
-	}
 
 	/// <summary>
 	/// This enum represents the different states an object may have
