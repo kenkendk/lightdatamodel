@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightDatamodel", "..\LightDatamodel\LightDatamodel.csproj", "{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest", "UnitTest.csproj", "{4E6A0AF9-73DE-4559-A224-C189BC567DAE}"
