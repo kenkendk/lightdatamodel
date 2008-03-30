@@ -996,6 +996,13 @@ namespace DataClassFileBuilder
                     {
                         if (mf.IsPrimaryKey)
                             sw.Write(primaryAutoGenerate);
+                        else if (mf.IgnoreWithInsert)
+                            sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithInsert()]\n");
+                        if (mf.IgnoreWithUpdate)
+                            sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithUpdate()]\n");
+                        if (mf.IgnoreWithSelect)
+                            sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithSelect()]\n");
+
                         sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + ";\n");
                     }
                     sw.Write("#endregion\n\n");
