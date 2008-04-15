@@ -14,6 +14,10 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		public static Type SQLiteConnectionType = null;
 
+		public SQLiteDataProvider() : this("")
+		{
+		}
+
 		public SQLiteDataProvider(string connectionstring)
 		{
 
@@ -202,7 +206,7 @@ namespace System.Data.LightDatamodel
 
 	}
 
-	public class AccessDataProviderConfiguration : IConfigureableDataProvider
+	public class SQLiteProviderConfiguration : IConfigureableDataProvider
 	{
 		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
 		{
@@ -222,6 +226,8 @@ namespace System.Data.LightDatamodel
 		}
 
 		public string FriendlyName { get { return "SQLite database"; } }
+
+		public string Name { get { return new SQLiteDataProvider().ToString(); } }
 
 		public ConfigureProperties AutoConfigure(string[] args)
 		{

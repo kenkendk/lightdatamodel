@@ -138,7 +138,7 @@ namespace System.Data.LightDatamodel
 
 	}
 
-	public class SQLiteDataProviderConfiguration : IConfigureableDataProvider
+	public class AccessProviderConfiguration : IConfigureableDataProvider
 	{
 		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
 		{
@@ -158,6 +158,8 @@ namespace System.Data.LightDatamodel
 		}
 
 		public string FriendlyName { get { return "Access database"; } }
+
+		public string Name { get { return new AccessDataProvider().ToString(); } }
 
 		public ConfigureProperties AutoConfigure(string[] args)
 		{
