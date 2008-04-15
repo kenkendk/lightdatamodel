@@ -68,6 +68,11 @@ namespace System.Data.LightDatamodel
 		string FriendlyName { get; }
 
 		/// <summary>
+		/// Return system name
+		/// </summary>
+		string Name { get; }
+
+		/// <summary>
 		/// This method should return a configuration for the provider, given the commandline arguments, or return null if the commandline was not meaningfull to the provider.
 		/// </summary>
 		/// <param name="arguments">The commandline arguments</param>
