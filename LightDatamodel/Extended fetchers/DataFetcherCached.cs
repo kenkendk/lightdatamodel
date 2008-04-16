@@ -185,11 +185,11 @@ namespace System.Data.LightDatamodel
             if (!m_cache.ContainsKey(tablename))
                 m_cache[tablename] = new SortedList<object, IDataClass>();
 
-            QueryModel.Operation filter = QueryModel.Parser.ParseQuery("Not (" + m_transformer.TypeConfiguration.UniqueColumn(typeof(DATACLASS)) + " IN ?)", m_cache[tablename].Keys);
+//          QueryModel.Operation filter = QueryModel.Parser.ParseQuery("Not (" + m_transformer.TypeConfiguration.UniqueColumn(typeof(DATACLASS)) + " IN ?)", m_cache[tablename].Keys);
+//			QueryModel.Operation op = new QueryModel.Operation(QueryModel.Operators.And, new QueryModel.OperationOrParameter[] {filter, operation});
+//			InsertObjectsInCache(LoadObjects(typeof(DATACLASS), op));
 
-			QueryModel.Operation op = new QueryModel.Operation(QueryModel.Operators.And, new QueryModel.OperationOrParameter[] {filter, operation});
-
-			InsertObjectsInCache(LoadObjects(typeof(DATACLASS), op));
+			InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));
 			return operation.EvaluateList<DATACLASS>(m_cache[tablename].Values);
 		}
 
