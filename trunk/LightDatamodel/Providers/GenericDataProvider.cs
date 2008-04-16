@@ -434,8 +434,19 @@ namespace System.Data.LightDatamodel
 				QueryModel.Parameter parameter = opm as QueryModel.Parameter;
 				if (parameter.IsColumn)
 					return QuoteColumnname((string)parameter.Value);
+				else if (parameter.Value as IEnumerable != null)
+				{
+					ArrayList lst = new ArrayList();
+					foreach (object o in parameter.Value as IEnumerable)
+						lst.Add(AddParameter(cmd, o));
+
+					if (lst.Count == 0)
+						return AddParameter(cmd, DBNull.Value);
+					else
+						return string.Join(",", (string[])lst.ToArray(typeof(string)));
+				}
 				else
-                    return AddParameter(cmd, parameter.Value);
+					return AddParameter(cmd, parameter.Value);
 			}
 		}
 
