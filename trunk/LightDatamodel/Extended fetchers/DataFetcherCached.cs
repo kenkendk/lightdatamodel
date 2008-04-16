@@ -324,6 +324,11 @@ namespace System.Data.LightDatamodel
             return res.ToArray();
         }
 
+		public override void DeleteObject(object item)
+		{
+			Remove((IDataClass)item);
+		}
+
 		/// <summary>
 		/// Marks an object for deletion
 		/// </summary>
