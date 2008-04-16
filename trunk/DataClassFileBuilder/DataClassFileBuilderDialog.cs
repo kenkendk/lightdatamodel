@@ -562,6 +562,9 @@ namespace DataClassFileBuilder
 			try
 			{
 				XmlDocument doc = new XmlDocument();
+				XmlNamespaceManager nm = new XmlNamespaceManager(doc.NameTable);
+				nm.AddNamespace("", "http://schemas.microsoft.com/developer/msbuild/2003");
+				nm.AddNamespace("xs", "http://schemas.microsoft.com/developer/msbuild/2003");		//duh!
 
 				//read or create
 				if(File.Exists(path)) 
@@ -574,148 +577,144 @@ namespace DataClassFileBuilder
 				{
 					//create
 					XmlElement tmp;
-					XmlElement n = doc.CreateElement("Project");
+					XmlElement n = doc.CreateElement("Project", nm.DefaultNamespace);
 					n.SetAttribute("DefaultTargets", "Build");
 					n.SetAttribute("xmlns", "http://schemas.microsoft.com/developer/msbuild/2003");
 					doc.AppendChild(n);
-					n = (XmlElement)n.AppendChild(doc.CreateElement("PropertyGroup"));
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("ProjectType"));
+					n = (XmlElement)n.AppendChild(doc.CreateElement("PropertyGroup", nm.DefaultNamespace));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("ProjectType", nm.DefaultNamespace));
 					tmp.InnerText = "Local";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("ProductVersion"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("ProductVersion", nm.DefaultNamespace));
 					tmp.InnerText = "8.0.50727";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("SchemaVersion"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("SchemaVersion", nm.DefaultNamespace));
 					tmp.InnerText = "2.0";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("ProjectGuid"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("ProjectGuid", nm.DefaultNamespace));
 					tmp.InnerText = "{" + System.Guid.NewGuid().ToString() + "}";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("Configuration"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("Configuration", nm.DefaultNamespace));
 					tmp.InnerText = "Debug";
 					tmp.SetAttribute("Condition", " '$(Configuration)' == '' ");
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("Platform"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("Platform", nm.DefaultNamespace));
 					tmp.InnerText = "AnyCPU";
 					tmp.SetAttribute("Condition", " '$(Platform)' == '' ");
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("ApplicationIcon"));
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("AssemblyKeyContainerName"));
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("AssemblyName"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("ApplicationIcon", nm.DefaultNamespace));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("AssemblyKeyContainerName", nm.DefaultNamespace));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("AssemblyName", nm.DefaultNamespace));
 					tmp.InnerText = assemblyname;
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("AssemblyOriginatorKeyFile"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("AssemblyOriginatorKeyFile", nm.DefaultNamespace));
 					tmp.InnerText = "LightDatamodel.snk";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("DefaultClientScript"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("DefaultClientScript", nm.DefaultNamespace));
 					tmp.InnerText = "JScript";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("DefaultHTMLPageLayout"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("DefaultHTMLPageLayout", nm.DefaultNamespace));
 					tmp.InnerText = "Grid";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("DefaultTargetSchema"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("DefaultTargetSchema", nm.DefaultNamespace));
 					tmp.InnerText = "IE50";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("DelaySign"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("DelaySign", nm.DefaultNamespace));
 					tmp.InnerText = "false";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("OutputType"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("OutputType", nm.DefaultNamespace));
 					tmp.InnerText = "Library";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("RootNamespace"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("RootNamespace", nm.DefaultNamespace));
 					tmp.InnerText = namespacestring;
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("RunPostBuildEvent"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("RunPostBuildEvent", nm.DefaultNamespace));
 					tmp.InnerText = "OnBuildSuccess";
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("StartupObject"));
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("FileUpgradeFlags"));
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("UpgradeBackupLocation"));
-					tmp = (XmlElement)n.AppendChild(doc.CreateElement("SignAssembly"));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("StartupObject", nm.DefaultNamespace));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("FileUpgradeFlags", nm.DefaultNamespace));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("UpgradeBackupLocation", nm.DefaultNamespace));
+					tmp = (XmlElement)n.AppendChild(doc.CreateElement("SignAssembly", nm.DefaultNamespace));
 					tmp.InnerText = "true";
 
 
 
-					XmlElement debug = doc.CreateElement("PropertyGroup");
+					XmlElement debug = doc.CreateElement("PropertyGroup", nm.DefaultNamespace);
 					debug.SetAttribute("Condition", " '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ");
-					XmlElement release = doc.CreateElement("PropertyGroup");
+					XmlElement release = doc.CreateElement("PropertyGroup", nm.DefaultNamespace);
 					release.SetAttribute("Condition", " '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ");
-					debug.AppendChild(doc.CreateElement("OutputPath")).InnerText = @"bin\Debug\";
-					debug.AppendChild(doc.CreateElement("AllowUnsafeBlocks")).InnerText = "false";
-					debug.AppendChild(doc.CreateElement("BaseAddress")).InnerText = "285212672";
-					debug.AppendChild(doc.CreateElement("CheckForOverflowUnderflow")).InnerText = "false";
-					debug.AppendChild(doc.CreateElement("ConfigurationOverrideFile")).InnerText = "";
-					debug.AppendChild(doc.CreateElement("DefineConstants")).InnerText = "DEBUG;TRACE";
-					debug.AppendChild(doc.CreateElement("DocumentationFile")).InnerText = "";
-					debug.AppendChild(doc.CreateElement("DebugSymbols")).InnerText = "true";
-					debug.AppendChild(doc.CreateElement("FileAlignment")).InnerText = "4096";
-					debug.AppendChild(doc.CreateElement("NoStdLib")).InnerText = "false";
-					debug.AppendChild(doc.CreateElement("NoWarn")).InnerText = "";
-					debug.AppendChild(doc.CreateElement("Optimize")).InnerText = "false";
-					debug.AppendChild(doc.CreateElement("RegisterForComInterop")).InnerText = "false";
-					debug.AppendChild(doc.CreateElement("RemoveIntegerChecks")).InnerText = "false";
-					debug.AppendChild(doc.CreateElement("TreatWarningsAsErrors")).InnerText = "false";
-					debug.AppendChild(doc.CreateElement("WarningLevel")).InnerText = "4";
-					debug.AppendChild(doc.CreateElement("DebugType")).InnerText = "full";
-					debug.AppendChild(doc.CreateElement("ErrorReport")).InnerText = "prompt";
+					debug.AppendChild(doc.CreateElement("OutputPath", nm.DefaultNamespace)).InnerText = @"bin\Debug\";
+					debug.AppendChild(doc.CreateElement("AllowUnsafeBlocks", nm.DefaultNamespace)).InnerText = "false";
+					debug.AppendChild(doc.CreateElement("BaseAddress", nm.DefaultNamespace)).InnerText = "285212672";
+					debug.AppendChild(doc.CreateElement("CheckForOverflowUnderflow", nm.DefaultNamespace)).InnerText = "false";
+					debug.AppendChild(doc.CreateElement("ConfigurationOverrideFile", nm.DefaultNamespace)).InnerText = "";
+					debug.AppendChild(doc.CreateElement("DefineConstants", nm.DefaultNamespace)).InnerText = "DEBUG;TRACE";
+					debug.AppendChild(doc.CreateElement("DocumentationFile", nm.DefaultNamespace)).InnerText = "";
+					debug.AppendChild(doc.CreateElement("DebugSymbols", nm.DefaultNamespace)).InnerText = "true";
+					debug.AppendChild(doc.CreateElement("FileAlignment", nm.DefaultNamespace)).InnerText = "4096";
+					debug.AppendChild(doc.CreateElement("NoStdLib", nm.DefaultNamespace)).InnerText = "false";
+					debug.AppendChild(doc.CreateElement("NoWarn", nm.DefaultNamespace)).InnerText = "";
+					debug.AppendChild(doc.CreateElement("Optimize", nm.DefaultNamespace)).InnerText = "false";
+					debug.AppendChild(doc.CreateElement("RegisterForComInterop", nm.DefaultNamespace)).InnerText = "false";
+					debug.AppendChild(doc.CreateElement("RemoveIntegerChecks", nm.DefaultNamespace)).InnerText = "false";
+					debug.AppendChild(doc.CreateElement("TreatWarningsAsErrors", nm.DefaultNamespace)).InnerText = "false";
+					debug.AppendChild(doc.CreateElement("WarningLevel", nm.DefaultNamespace)).InnerText = "4";
+					debug.AppendChild(doc.CreateElement("DebugType", nm.DefaultNamespace)).InnerText = "full";
+					debug.AppendChild(doc.CreateElement("ErrorReport", nm.DefaultNamespace)).InnerText = "prompt";
 
-					release.AppendChild(doc.CreateElement("OutputPath")).InnerText = @"bin\Debug\";
-					release.AppendChild(doc.CreateElement("AllowUnsafeBlocks")).InnerText = "false";
-					release.AppendChild(doc.CreateElement("BaseAddress")).InnerText = "285212672";
-					release.AppendChild(doc.CreateElement("CheckForOverflowUnderflow")).InnerText = "false";
-					release.AppendChild(doc.CreateElement("ConfigurationOverrideFile")).InnerText = "";
-					release.AppendChild(doc.CreateElement("DefineConstants")).InnerText = "TRACE";
-					release.AppendChild(doc.CreateElement("DocumentationFile")).InnerText = "";
-					release.AppendChild(doc.CreateElement("DebugSymbols")).InnerText = "false";
-					release.AppendChild(doc.CreateElement("FileAlignment")).InnerText = "4096";
-					release.AppendChild(doc.CreateElement("NoStdLib")).InnerText = "false";
-					release.AppendChild(doc.CreateElement("NoWarn")).InnerText = "";
-					release.AppendChild(doc.CreateElement("Optimize")).InnerText = "true";
-					release.AppendChild(doc.CreateElement("RegisterForComInterop")).InnerText = "false";
-					release.AppendChild(doc.CreateElement("RemoveIntegerChecks")).InnerText = "false";
-					release.AppendChild(doc.CreateElement("TreatWarningsAsErrors")).InnerText = "false";
-					release.AppendChild(doc.CreateElement("WarningLevel")).InnerText = "4";
-					release.AppendChild(doc.CreateElement("DebugType")).InnerText = "none";
-					release.AppendChild(doc.CreateElement("ErrorReport")).InnerText = "prompt";
+					release.AppendChild(doc.CreateElement("OutputPath", nm.DefaultNamespace)).InnerText = @"bin\Debug\";
+					release.AppendChild(doc.CreateElement("AllowUnsafeBlocks", nm.DefaultNamespace)).InnerText = "false";
+					release.AppendChild(doc.CreateElement("BaseAddress", nm.DefaultNamespace)).InnerText = "285212672";
+					release.AppendChild(doc.CreateElement("CheckForOverflowUnderflow", nm.DefaultNamespace)).InnerText = "false";
+					release.AppendChild(doc.CreateElement("ConfigurationOverrideFile", nm.DefaultNamespace)).InnerText = "";
+					release.AppendChild(doc.CreateElement("DefineConstants", nm.DefaultNamespace)).InnerText = "TRACE";
+					release.AppendChild(doc.CreateElement("DocumentationFile", nm.DefaultNamespace)).InnerText = "";
+					release.AppendChild(doc.CreateElement("DebugSymbols", nm.DefaultNamespace)).InnerText = "false";
+					release.AppendChild(doc.CreateElement("FileAlignment", nm.DefaultNamespace)).InnerText = "4096";
+					release.AppendChild(doc.CreateElement("NoStdLib", nm.DefaultNamespace)).InnerText = "false";
+					release.AppendChild(doc.CreateElement("NoWarn", nm.DefaultNamespace)).InnerText = "";
+					release.AppendChild(doc.CreateElement("Optimize", nm.DefaultNamespace)).InnerText = "true";
+					release.AppendChild(doc.CreateElement("RegisterForComInterop", nm.DefaultNamespace)).InnerText = "false";
+					release.AppendChild(doc.CreateElement("RemoveIntegerChecks", nm.DefaultNamespace)).InnerText = "false";
+					release.AppendChild(doc.CreateElement("TreatWarningsAsErrors", nm.DefaultNamespace)).InnerText = "false";
+					release.AppendChild(doc.CreateElement("WarningLevel", nm.DefaultNamespace)).InnerText = "4";
+					release.AppendChild(doc.CreateElement("DebugType", nm.DefaultNamespace)).InnerText = "none";
+					release.AppendChild(doc.CreateElement("ErrorReport", nm.DefaultNamespace)).InnerText = "prompt";
 
 					doc.FirstChild.AppendChild(debug);
 					doc.FirstChild.AppendChild(release);
 
-					XmlElement itemgroup = doc.CreateElement("ItemGroup");
+					XmlElement itemgroup = doc.CreateElement("ItemGroup", nm.DefaultNamespace);
 					doc.FirstChild.AppendChild(itemgroup);
-					XmlElement ref1 = doc.CreateElement("Reference");
-					XmlElement ref2 = doc.CreateElement("Reference");
-					XmlElement ref3 = doc.CreateElement("Reference");
-					XmlElement ref4 = doc.CreateElement("Reference");
+					XmlElement ref1 = doc.CreateElement("Reference", nm.DefaultNamespace);
+					XmlElement ref2 = doc.CreateElement("Reference", nm.DefaultNamespace);
+					XmlElement ref3 = doc.CreateElement("Reference", nm.DefaultNamespace);
+					XmlElement ref4 = doc.CreateElement("Reference", nm.DefaultNamespace);
 					itemgroup.AppendChild(ref1);
 					itemgroup.AppendChild(ref2);
 					itemgroup.AppendChild(ref3);
 					itemgroup.AppendChild(ref4);
 					ref1.SetAttribute("Include", "System");
-					tmp = (XmlElement)ref1.AppendChild(doc.CreateElement("Name"));
+					tmp = (XmlElement)ref1.AppendChild(doc.CreateElement("Name", nm.DefaultNamespace));
 					tmp.InnerText = "System";
 					ref2.SetAttribute("Include", "System.Data");
-					tmp = (XmlElement)ref2.AppendChild(doc.CreateElement("Name"));
+					tmp = (XmlElement)ref2.AppendChild(doc.CreateElement("Name", nm.DefaultNamespace));
 					tmp.InnerText = "System.Data";
 					ref3.SetAttribute("Include", "System.XML");
-					tmp = (XmlElement)ref3.AppendChild(doc.CreateElement("Name"));
+					tmp = (XmlElement)ref3.AppendChild(doc.CreateElement("Name", nm.DefaultNamespace));
 					tmp.InnerText = "System.XML";
 					ref4.SetAttribute("Include", "LightDatamodel");
-					tmp = (XmlElement)ref4.AppendChild(doc.CreateElement("Name"));
+					tmp = (XmlElement)ref4.AppendChild(doc.CreateElement("Name", nm.DefaultNamespace));
 					tmp.InnerText = "LightDatamodel";
-					tmp = (XmlElement)ref4.AppendChild(doc.CreateElement("HintPath"));
+					tmp = (XmlElement)ref4.AppendChild(doc.CreateElement("HintPath", nm.DefaultNamespace));
 					tmp.InnerText = ".\\LightDatamodel.dll";
 
-					tmp = (XmlElement)doc.FirstChild.AppendChild(doc.CreateElement("ItemGroup"));
-					tmp = (XmlElement)tmp.AppendChild(doc.CreateElement("Compile"));
+					tmp = (XmlElement)doc.FirstChild.AppendChild(doc.CreateElement("ItemGroup", nm.DefaultNamespace));
+					tmp = (XmlElement)tmp.AppendChild(doc.CreateElement("Compile", nm.DefaultNamespace));
 					tmp.SetAttribute("Include", "AssemblyInfo.cs");
-					
-					tmp = (XmlElement)doc.FirstChild.AppendChild(doc.CreateElement("ItemGroup"));
-					tmp = (XmlElement)tmp.AppendChild(doc.CreateElement("None"));
+
+					tmp = (XmlElement)doc.FirstChild.AppendChild(doc.CreateElement("ItemGroup", nm.DefaultNamespace));
+					tmp = (XmlElement)tmp.AppendChild(doc.CreateElement("None", nm.DefaultNamespace));
 					tmp.SetAttribute("Include", "LightDatamodel.snk");
 
-					tmp = (XmlElement)doc.FirstChild.AppendChild(doc.CreateElement("Import"));
+					tmp = (XmlElement)doc.FirstChild.AppendChild(doc.CreateElement("Import", nm.DefaultNamespace));
 					tmp.SetAttribute("Project", @"$(MSBuildBinPath)\Microsoft.CSharp.targets");
 
 				}
 
 				//2005 project
 				{
-					XmlNamespaceManager nm = new XmlNamespaceManager(doc.NameTable);		//TODO
-					XmlNode includes = doc.SelectSingleNode("Project/ItemGroup/Reference", nm).ParentNode;
-					XmlNode files = doc.SelectSingleNode("/Project/ItemGroup/Compile", nm).ParentNode;
-					if (files.SelectSingleNode("Compile[@Include='AssemblyInfo.cs']", nm) == null)
+					XmlNode includes = doc.SelectSingleNode("/xs:Project/xs:ItemGroup/xs:Reference", nm).ParentNode;
+					XmlNode files = doc.SelectSingleNode("/xs:Project/xs:ItemGroup/xs:Compile", nm).ParentNode;
+					if (files.SelectSingleNode("xs:Compile[@Include='AssemblyInfo.cs']", nm) == null)
 					{
-						XmlElement file = doc.CreateElement("Compile");
+						XmlElement file = doc.CreateElement("Compile", nm.DefaultNamespace);
 						file.SetAttribute("Include", "AssemblyInfo.cs");
-						XmlElement type = doc.CreateElement("SubType");
-						type.InnerText = "Code";
-						file.AppendChild(type);
 						files.AppendChild(file);
 					}
 
@@ -724,28 +723,22 @@ namespace DataClassFileBuilder
 					foreach(string filepath in includefiles)
 					{
 						fn = Path.GetFileName(filepath);
-						XmlNode n = files.SelectSingleNode("Compile[@Include='" + fn + "']", nm);
+						XmlNode n = files.SelectSingleNode("xs:Compile[@Include='" + fn + "']", nm);
 						if(n == null)
 						{
-							XmlElement file = doc.CreateElement("Compile");
+							XmlElement file = doc.CreateElement("Compile", nm.DefaultNamespace);
 							file.SetAttribute("Include", fn);
-							XmlElement type = doc.CreateElement("SubType");
-							type.InnerText = "Code";
-							file.AppendChild(type);
 							files.AppendChild(file);
 						}
 					}
 
                     if (mappingfile != null)
                     {
-                        XmlNode n = files.SelectSingleNode("EmbeddedResource[@Include='" + mappingfile + "']", nm);
+						XmlNode n = files.SelectSingleNode("xs:EmbeddedResource[@Include='" + mappingfile + "']", nm);
                         if (n == null)
                         {
-                            XmlElement file = doc.CreateElement("EmbeddedResource");
+							XmlElement file = doc.CreateElement("EmbeddedResource", nm.DefaultNamespace);
                             file.SetAttribute("Include", mappingfile);
-                            XmlElement type = doc.CreateElement("SubType");
-                            type.InnerText = "Code";
-                            file.AppendChild(type);
                             files.AppendChild(file);
                         }
                     }
