@@ -51,15 +51,27 @@ namespace UnitTest
 
 #region " Unsynchronized Custom Code Region "
 
+    IList<Project> m_ProjectNotes = null;
+    IList<Project> m_TaksNotes = null;
+
     //Don't put any region sections in here
 	public IList<Project> ProjectNotes
 	{
-		get { return new System.Data.LightDatamodel.SyncCollectionBase<Project>(this, "ProjectNote", "ProjectNoteID"); }
+		get 
+        {
+            if (m_ProjectNotes == null)
+                m_ProjectNotes = base.RelationManager.GetReferenceCollection<Project>(this, "ProjectNote");
+            return m_ProjectNotes;
+        }
 	}
 
 	public IList<Project> TaskNotes
 	{
-        get { return new System.Data.LightDatamodel.SyncCollectionBase<Project>(this, "CurrentTaskNote", "CurrentTaskNoteID"); }
+        get 
+        {   if (m_TaksNotes == null)
+            m_TaksNotes = base.RelationManager.GetReferenceCollection<Project>(this, "CurrentTaskNote");
+        return m_TaksNotes;
+        }
 	}
 
     public System.Guid Guid { get { return this.RelationManager.GetGuidForObject(this); } }
