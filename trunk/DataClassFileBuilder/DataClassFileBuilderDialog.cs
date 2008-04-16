@@ -569,12 +569,12 @@ namespace DataClassFileBuilder
 				//read or create
 				if(File.Exists(path)) 
 				{
-					 //one wonders why the default .Net encoding is not set to default...
-					using (StreamReader sr = new StreamReader(path, System.Text.Encoding.Default, true))
-						doc.Load(sr);
+					doc.Load(path);
 				}
 				else
 				{
+					doc.AppendChild(doc.CreateXmlDeclaration("1.0", "UTF-8", null));
+
 					//create
 					XmlElement tmp;
 					XmlElement n = doc.CreateElement("Project", nm.DefaultNamespace);
@@ -647,7 +647,7 @@ namespace DataClassFileBuilder
 					debug.AppendChild(doc.CreateElement("DebugType", nm.DefaultNamespace)).InnerText = "full";
 					debug.AppendChild(doc.CreateElement("ErrorReport", nm.DefaultNamespace)).InnerText = "prompt";
 
-					release.AppendChild(doc.CreateElement("OutputPath", nm.DefaultNamespace)).InnerText = @"bin\Debug\";
+					release.AppendChild(doc.CreateElement("OutputPath", nm.DefaultNamespace)).InnerText = @"bin\Release\";
 					release.AppendChild(doc.CreateElement("AllowUnsafeBlocks", nm.DefaultNamespace)).InnerText = "false";
 					release.AppendChild(doc.CreateElement("BaseAddress", nm.DefaultNamespace)).InnerText = "285212672";
 					release.AppendChild(doc.CreateElement("CheckForOverflowUnderflow", nm.DefaultNamespace)).InnerText = "false";
@@ -666,11 +666,11 @@ namespace DataClassFileBuilder
 					release.AppendChild(doc.CreateElement("DebugType", nm.DefaultNamespace)).InnerText = "none";
 					release.AppendChild(doc.CreateElement("ErrorReport", nm.DefaultNamespace)).InnerText = "prompt";
 
-					doc.FirstChild.AppendChild(debug);
-					doc.FirstChild.AppendChild(release);
+					doc["Project"].AppendChild(debug);
+					doc["Project"].AppendChild(release);
 
 					XmlElement itemgroup = doc.CreateElement("ItemGroup", nm.DefaultNamespace);
-					doc.FirstChild.AppendChild(itemgroup);
+					doc["Project"].AppendChild(itemgroup);
 					XmlElement ref1 = doc.CreateElement("Reference", nm.DefaultNamespace);
 					XmlElement ref2 = doc.CreateElement("Reference", nm.DefaultNamespace);
 					XmlElement ref3 = doc.CreateElement("Reference", nm.DefaultNamespace);
@@ -694,15 +694,15 @@ namespace DataClassFileBuilder
 					tmp = (XmlElement)ref4.AppendChild(doc.CreateElement("HintPath", nm.DefaultNamespace));
 					tmp.InnerText = ".\\LightDatamodel.dll";
 
-					tmp = (XmlElement)doc.FirstChild.AppendChild(doc.CreateElement("ItemGroup", nm.DefaultNamespace));
+					tmp = (XmlElement)doc["Project"].AppendChild(doc.CreateElement("ItemGroup", nm.DefaultNamespace));
 					tmp = (XmlElement)tmp.AppendChild(doc.CreateElement("Compile", nm.DefaultNamespace));
 					tmp.SetAttribute("Include", "AssemblyInfo.cs");
 
-					tmp = (XmlElement)doc.FirstChild.AppendChild(doc.CreateElement("ItemGroup", nm.DefaultNamespace));
+					tmp = (XmlElement)doc["Project"].AppendChild(doc.CreateElement("ItemGroup", nm.DefaultNamespace));
 					tmp = (XmlElement)tmp.AppendChild(doc.CreateElement("None", nm.DefaultNamespace));
 					tmp.SetAttribute("Include", "LightDatamodel.snk");
 
-					tmp = (XmlElement)doc.FirstChild.AppendChild(doc.CreateElement("Import", nm.DefaultNamespace));
+					tmp = (XmlElement)doc["Project"].AppendChild(doc.CreateElement("Import", nm.DefaultNamespace));
 					tmp.SetAttribute("Project", @"$(MSBuildBinPath)\Microsoft.CSharp.targets");
 
 				}
@@ -746,7 +746,7 @@ namespace DataClassFileBuilder
 				}
 
 				//save, one wonders why the default .Net encoding is not set to default...
-				using(System.IO.StreamWriter sw = new StreamWriter(path, false, System.Text.Encoding.Default))
+				using(System.IO.StreamWriter sw = new StreamWriter(path, false, System.Text.Encoding.UTF8))
 					sw.Write(doc.OuterXml);
 			}
 			catch(Exception ex)
