@@ -67,14 +67,14 @@ namespace UnitTest
 	//Don't put any region sections in here
 		public Note ProjectNote
 		{
-			get { return (Note)(base.RelationManager.GetReferenceObject(this, "ProjectNote", "m_ProjectNoteID")); }
-			set { base.RelationManager.SetReferenceObject(this, "ProjectNote", "m_ProjectNoteID", "ProjectNotes", value); }
+            get { return base.RelationManager.GetReferenceObject<Note>(this, "ProjectNote" ); }
+            set { base.RelationManager.SetReferenceObject<Note>(this, "ProjectNote", value); }
 		}
 
 		public Note CurrentTaskNote
 		{
-			get { return (Note)base.RelationManager.GetReferenceObject(this, "CurrentTaskNote", "m_CurrentTaskNoteID"); }
-			set { base.RelationManager.SetReferenceObject(this, "CurrentTaskNote", "m_CurrentTaskNoteID", "TaskNotes", value); }
+            get { return base.RelationManager.GetReferenceObject<Note>(this, "CurrentTaskNote"); }
+            set { base.RelationManager.SetReferenceObject<Note>(this, "CurrentTaskNote", value); }
 		}
 
         public System.Guid Guid { get { return this.RelationManager.GetGuidForObject(this); } }
