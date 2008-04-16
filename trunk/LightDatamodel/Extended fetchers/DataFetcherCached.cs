@@ -190,8 +190,16 @@ namespace System.Data.LightDatamodel
 //			InsertObjectsInCache(LoadObjects(typeof(DATACLASS), op));
 
 			InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));
-			return operation.EvaluateList<DATACLASS>(m_cache[tablename].Values);
-		}
+            //TODO: An enumerable collection that transparently itterates over a number of collections would make this more efficient
+            List<DATACLASS> items = new List<DATACLASS>();
+            foreach (DATACLASS b in m_cache[tablename].Values)
+                items.Add(b);
+
+            QueryModel.Operation filter = QueryModel.Parser.ParseQuery("GetType.FullName = ?", typeof(DATACLASS).FullName);
+            items.AddRange(filter.EvaluateList<DATACLASS>(m_newobjects));
+
+            return operation.EvaluateList<DATACLASS>(items);
+        }
 
         public virtual object[] GetObjects(Type type)
         {

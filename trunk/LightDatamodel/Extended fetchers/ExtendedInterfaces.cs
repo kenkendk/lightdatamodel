@@ -93,7 +93,14 @@ namespace System.Data.LightDatamodel
         bool ExistsInDb(IDataClass item);
         Guid GetGuidForObject(IDataClass item);
         IDataClass GetObjectByGuid(Guid g);
-        object GetReferenceObject(IDataClass owner, string propertyname, string idfieldname);
+        object GetReferenceObject(IDataClass owner, TypeConfiguration.ReferenceField reference);
+        T GetReferenceObject<T>(IDataClass owner, string propertyname);
+        object GetReferenceObject(IDataClass owner, string propertyname);
+        SyncCollectionBase<T> GetReferenceCollection<T>(IDataClass owner, string propertyname) where T : IDataClass;
+
+        void SetReferenceObject(IDataClass owner, string propertyname, IDataClass value);
+        void SetReferenceObject<T>(IDataClass owner, string propertyname, T value) where T : IDataClass;
+
         string GetUniqueColumn(Type type);
         bool IsRegistered(IDataClass item);
         void ReassignGuid(Guid oldGuid, Guid newGuid);
@@ -104,7 +111,7 @@ namespace System.Data.LightDatamodel
         void SetExistsInDb(IDataClass item, bool state);
         Dictionary<string, Guid> GetReferenceObjects(IDataClass item);
         void SetReferenceObjects(IDataClass item, Dictionary<string, Guid> references);
-        void SetReferenceObject(IDataClass owner, string propertyname, string idfieldname, string reversePropertyname, IDataClass value);
+        void SetReferenceObject(IDataClass owner, TypeConfiguration.ReferenceField reference, IDataClass value);
         bool HasGuid(Guid g);
 
     }

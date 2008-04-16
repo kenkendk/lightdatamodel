@@ -1,23 +1,16 @@
-#region " Unsynchronized Includes "
-
-	//Don't put any region sections in here
-using System.Collections.Generic;
-
-#endregion
-
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
-/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\Unit test\bin\Debug\unittest.sqlite3;" />
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\Unit test\Datamodel\UnitTest.sqlite3;" />
 /// <type>Table</type>
-/// <namespace>UnitTest</namespace>
+/// <namespace>Datamodel.UnitTest</namespace>
 /// <name>Note</name>
 /// <sql></sql>
 /// </metadata>
 
-namespace UnitTest
+namespace Datamodel.UnitTest
 {
 
-	public class Note : System.Data.LightDatamodel.DataClassBase
+	public partial class Note : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "
@@ -49,33 +42,29 @@ namespace UnitTest
 
 #endregion
 
-#region " Unsynchronized Custom Code Region "
+#region " referenced properties "
 
-    IList<Project> m_ProjectNotes = null;
-    IList<Project> m_TaksNotes = null;
+		private System.Data.LightDatamodel.SyncCollectionBase<Project> m_ProjectNotes;
+		public System.Data.LightDatamodel.SyncCollectionBase<Project> ProjectNotes
+		{
+			get
+			{
+				if (m_ProjectNotes == null)
+					m_ProjectNotes = base.RelationManager.GetReferenceCollection<Project>(this, "ProjectNote");
+				return m_ProjectNotes;
+			}
+		}
 
-    //Don't put any region sections in here
-	public IList<Project> ProjectNotes
-	{
-		get 
-        {
-            if (m_ProjectNotes == null)
-                m_ProjectNotes = base.RelationManager.GetReferenceCollection<Project>(this, "ProjectNote");
-            return m_ProjectNotes;
-        }
-	}
-
-	public IList<Project> TaskNotes
-	{
-        get 
-        {   if (m_TaksNotes == null)
-            m_TaksNotes = base.RelationManager.GetReferenceCollection<Project>(this, "CurrentTaskNote");
-        return m_TaksNotes;
-        }
-	}
-
-    public System.Guid Guid { get { return this.RelationManager.GetGuidForObject(this); } }
-    public bool ExistsInDB { get { return this.RelationManager.ExistsInDb(this); } }
+		private System.Data.LightDatamodel.SyncCollectionBase<Project> m_TaskNotes;
+		public System.Data.LightDatamodel.SyncCollectionBase<Project> TaskNotes
+		{
+			get
+			{
+				if (m_TaskNotes == null)
+					m_TaskNotes = base.RelationManager.GetReferenceCollection<Project>(this, "CurrentTaskNote");
+				return m_TaskNotes;
+			}
+		}
 
 #endregion
 
