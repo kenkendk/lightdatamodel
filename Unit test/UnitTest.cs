@@ -6,7 +6,7 @@ using System.Collections;
 using System.Data.LightDatamodel;
 using System.Data.LightDatamodel.QueryModel;
 
-namespace UnitTest
+namespace Datamodel.UnitTest
 {
 	/// <summary>
 	/// Summary description for UnitTest.
@@ -28,7 +28,7 @@ namespace UnitTest
 
 
 			IDbCommand cmd = con.CreateCommand();
-			using(StreamReader sr = new StreamReader(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(typeof(UnitTest), "DB Schema.sql"), System.Text.Encoding.Default, true))
+			using(StreamReader sr = new StreamReader(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("UnitTest.DB Schema.sql"), System.Text.Encoding.Default, true))
 				cmd.CommandText = sr.ReadToEnd();
 
 			cmd.ExecuteNonQuery();

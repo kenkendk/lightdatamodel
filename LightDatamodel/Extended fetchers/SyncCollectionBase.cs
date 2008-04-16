@@ -12,22 +12,30 @@ namespace System.Data.LightDatamodel
 
         public SyncCollectionBase() { }
 
-        public SyncCollectionBase(object owner, string reversePropertyname, string reversePropertyID)
+        public SyncCollectionBase(object owner, TypeConfiguration.ReferenceField reference)
         {
             if (owner == null)
                 throw new System.ArgumentNullException("owner");
             m_owner = owner;
-            m_reverseProperty = typeof(DATACLASS).GetProperty(reversePropertyname);
+            m_reverseProperty = reference.LocalProperty;
+
             if (m_reverseProperty == null)
-                throw new System.Exception("Class " + typeof(DATACLASS).FullName + " does not contain the property " + reversePropertyname);
+                throw new System.Exception("Class " + typeof(DATACLASS).FullName + " does not contain the property " + reference.PropertyName);
 
             IDataClass db = owner as IDataClass;
             if (db != null && db.RelationManager != null)
             {
                 if (db.RelationManager.ExistsInDb(db))
-                    db.DataParent.GetObjects<DATACLASS>(reversePropertyID + "=?", db.UniqueValue);
+                    db.DataParent.GetObjects<DATACLASS>(reference.LocalField.PropertyName + "=?", db.UniqueValue);
 
-                m_baseList.AddRange((db.DataParent as DataFetcherCached).GetObjectsFromCache<DATACLASS>(reversePropertyname + ".Guid=?", db.RelationManager.GetGuidForObject(db)));
+                if (reference.LocalProperty == null)
+                    throw new Exception(string.Format("Type {0} does not contain property {1}, which is required for a relation from type {2}", typeof(DATACLASS).FullName, reference.PropertyName, owner.GetType().FullName));
+                foreach (DATACLASS o in (db.DataParent as DataFetcherCached).GetObjectsFromCache<DATACLASS>(""))
+                    if (reference.LocalProperty.GetValue(o, null) == owner)
+                        m_baseList.Add(o);
+
+                //TODO: Perhaps it would be nice if it was possible to query the object for the Guid?
+                //m_baseList.AddRange((db.DataParent as DataFetcherCached).GetObjectsFromCache<DATACLASS>(reversePropertyname + ".Guid=?", db.RelationManager.GetGuidForObject(owner)));
             }
         }
 

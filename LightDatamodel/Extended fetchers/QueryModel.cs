@@ -386,9 +386,9 @@ namespace System.Data.LightDatamodel.QueryModel
 		public virtual T[] EvaluateList<T>(IEnumerable items, params object[] parameters)
 		{
 			System.Collections.Generic.List<T> lst = new System.Collections.Generic.List<T>();
-			foreach (T o in items)
+			foreach (object o in items)
 				if (ResAsBool(this.Evaluate(o, parameters)))
-					lst.Add(o);
+					lst.Add((T)o);
 			return lst.ToArray();
 		}
 

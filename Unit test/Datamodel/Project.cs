@@ -1,22 +1,16 @@
-#region " Unsynchronized Includes "
-
-	//Don't put any region sections in here
-using System.Data.LightDatamodel;
-#endregion
-
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
-/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\Unit test\bin\Debug\unittest.sqlite3;" />
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\Unit test\Datamodel\UnitTest.sqlite3;" />
 /// <type>Table</type>
-/// <namespace>UnitTest</namespace>
+/// <namespace>Datamodel.UnitTest</namespace>
 /// <name>Project</name>
 /// <sql></sql>
 /// </metadata>
 
-namespace UnitTest
+namespace Datamodel.UnitTest
 {
 
-	public class Project : System.Data.LightDatamodel.DataClassBase
+	public partial class Project : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "
@@ -62,23 +56,19 @@ namespace UnitTest
 
 #endregion
 
-#region " Unsynchronized Custom Code Region "
+#region " referenced properties "
 
-	//Don't put any region sections in here
 		public Note ProjectNote
 		{
-            get { return base.RelationManager.GetReferenceObject<Note>(this, "ProjectNote" ); }
-            set { base.RelationManager.SetReferenceObject<Note>(this, "ProjectNote", value); }
+			get{ return base.RelationManager.GetReferenceObject<Note>(this, "ProjectNote"); }
+			set{ base.RelationManager.SetReferenceObject<Note>(this, "ProjectNote", value); }
 		}
 
 		public Note CurrentTaskNote
 		{
-            get { return base.RelationManager.GetReferenceObject<Note>(this, "CurrentTaskNote"); }
-            set { base.RelationManager.SetReferenceObject<Note>(this, "CurrentTaskNote", value); }
+			get{ return base.RelationManager.GetReferenceObject<Note>(this, "CurrentTaskNote"); }
+			set{ base.RelationManager.SetReferenceObject<Note>(this, "CurrentTaskNote", value); }
 		}
-
-        public System.Guid Guid { get { return this.RelationManager.GetGuidForObject(this); } }
-        public bool ExistsInDB { get { return this.RelationManager.ExistsInDb(this); } }
 
 #endregion
 

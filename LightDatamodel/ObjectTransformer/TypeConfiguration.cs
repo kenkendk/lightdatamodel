@@ -41,6 +41,7 @@ namespace System.Data.LightDatamodel
                     if (prev[mc.TableName].ClassName != prev[mc.TableName].TableName)
                         mc.ClassName = prev[mc.TableName].ClassName;
 
+                    List<MappedField> toremove = new List<MappedField>();
                     foreach(MappedField mf in mc.Columns.Values)
                         if (prev[mc.TableName].Columns.ContainsKey(mf.ColumnName))
                         {
@@ -53,6 +54,14 @@ namespace System.Data.LightDatamodel
                             mf.IgnoreWithUpdate = prevCol.IgnoreWithUpdate;
                             mf.IgnoreWithSelect = prevCol.IgnoreWithSelect;
                         }
+                        else if (prev[mc.TableName].IgnoredFields.ContainsKey(mf.ColumnName))
+                            toremove.Add(mf);
+
+                    foreach (MappedField mf in toremove)
+                        mc.Columns.Remove(mf.ColumnName);
+
+                    mc.ReferenceColumns = prev[mc.TableName].ReferenceColumns;
+                    mc.IgnoredFields = prev[mc.TableName].IgnoredFields;
 
                     prev.Remove(mc.TableName);
                 }
@@ -67,14 +76,34 @@ namespace System.Data.LightDatamodel
         /// </summary>
         /// <param name="maps">The mapping setup</param>
         /// <param name="filename">The filename to save the setup with</param>
-        public static void SaveXml(List<MappedClass> maps, string filename)
+        public static void SaveXml(List<MappedClass> maps, List<IgnoredClass> ignored, string filename)
         {
             XmlDocument doc = new XmlDocument();
             XmlNode root = doc.AppendChild(doc.CreateElement("mapping"));
             foreach (MappedClass mc in maps)
-                mc.Serialize(root.AppendChild(doc.CreateElement("table")));
+                mc.Serialize(root.AppendChild(doc.CreateElement("class")));
+            foreach (IgnoredClass ic in ignored)
+                ic.Serialize(root.AppendChild(doc.CreateElement("ignoredclass")));
 
             doc.Save(filename);
+        }
+
+
+        /// <summary>
+        /// Loads all ignored files from an Xml file, used to merge existing file when database upgrades
+        /// </summary>
+        /// <param name="filename">The file with mapping info</param>
+        /// <returns></returns>
+        public static List<IgnoredClass> GetIgnoredTables(string filename)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.Load(filename);
+            List<IgnoredClass> res = new List<IgnoredClass>();
+
+            foreach (XmlNode n in doc.SelectNodes("/mapping/ignoredclass"))
+                res.Add(new IgnoredClass(n));
+
+            return res;
         }
 
         /// <summary>
@@ -88,9 +117,9 @@ namespace System.Data.LightDatamodel
             doc.Load(filename);
             List<MappedClass> res = new List<MappedClass>();
 
-            foreach (XmlNode n in doc.SelectNodes("/mapping/table"))
+            foreach (XmlNode n in doc.SelectNodes("/mapping/class"))
                 res.Add(new MappedClass(n));
-            
+
             return res;
         }
 
@@ -161,10 +190,11 @@ namespace System.Data.LightDatamodel
                     full.Add(t.FullName, t);
                 }
 
-            foreach (XmlNode n in config.SelectNodes("/mapping/table"))
+            Dictionary<XmlNode, MappedClass> tmp = new Dictionary<XmlNode, MappedClass>();
+            foreach (XmlNode n in config.SelectNodes("/mapping/class"))
             {
                 if (n.Attributes["tablename"] == null || n.Attributes["classname"] == null)
-                    throw new Exception("Bad document, all \"table\" nodes must have both the tablename and classname attributes");
+                    throw new Exception("Bad document, all \"class\" nodes must have both the tablename and classname attributes");
 
                 Type t = null;
                 if (partial.ContainsKey(n.Attributes["classname"].Value))
@@ -175,7 +205,16 @@ namespace System.Data.LightDatamodel
                     throw new Exception("Unable to map \"" + n.Attributes["classname"].Value + "\" to a class." + (partial.ContainsKey(n.Attributes["classname"].Value) ? "\nMultiple classes share the name, so please use the fully qualified classname" : ""));
 
                 m_knownTypes.Add(t, new MappedClass(t, n));
+                tmp.Add(n, m_knownTypes[t]);
             }
+
+            foreach (XmlNode n in tmp.Keys)
+                foreach (XmlNode n2 in n.SelectNodes("referencecolumn"))
+                {
+                    ReferenceField rf = new ReferenceField(tmp[n].Type, this, n2);
+                    tmp[n].ReferenceColumns.Add(rf.PropertyName, rf);
+                }
+
         }
 
         /// <summary>
@@ -230,7 +269,7 @@ namespace System.Data.LightDatamodel
                 }
 
                 if (!m_knownTypes.ContainsKey(type))
-                    throw new Exception("The supplied type could not be mapped!");
+                    throw new Exception(string.Format("The supplied type '{0}' could not be mapped!", type.FullName));
             }
 
             return m_knownTypes[type];
@@ -321,6 +360,7 @@ namespace System.Data.LightDatamodel
         }
 
 
+
         /// <summary>
         /// This class contains the type info for a single class/table
         /// </summary>
@@ -331,6 +371,8 @@ namespace System.Data.LightDatamodel
             //TODO: Multikey tables
             private MappedField m_primaryKey;
             private Dictionary<string, MappedField> m_fields;
+            private Dictionary<string, ReferenceField> m_referenceFields;
+            private Dictionary<string, IgnoredField> m_ignoredFields;
             private string m_viewSql;
             private string m_className;
 
@@ -342,6 +384,8 @@ namespace System.Data.LightDatamodel
                 m_primaryKey = null;
                 m_viewSql = sql;
                 m_fields = new Dictionary<string, MappedField>();
+                m_referenceFields = new Dictionary<string, ReferenceField>();
+                m_ignoredFields = new Dictionary<string, IgnoredField>();
 
                 foreach (KeyValuePair<string, Type> columns in provider.GetStructure(sql))
                     m_fields.Add(columns.Key, new MappedField(columns.Key, columns.Value, provider));
@@ -359,6 +403,8 @@ namespace System.Data.LightDatamodel
                 m_type = null;
                 m_viewSql = null;
                 m_fields = new Dictionary<string, MappedField>();
+                m_referenceFields = new Dictionary<string, ReferenceField>();
+                m_ignoredFields = new Dictionary<string, IgnoredField>();
                 string primaryKey = provider.GetPrimaryKey(tablename);
                 foreach (KeyValuePair<string, Type> columns in provider.GetTableStructure(tablename))
                 {
@@ -382,7 +428,7 @@ namespace System.Data.LightDatamodel
             public MappedClass(XmlNode mapping)
             {
                 if (mapping.Attributes["tablename"] == null || mapping.Attributes["classname"] == null)
-                    throw new Exception("All \"table\" nodes must have the columnname and fieldname attributes");
+                    throw new Exception("All \"class\" nodes must have the columnname and fieldname attributes");
                 m_tablename = mapping.Attributes["tablename"].Value;
                 m_className = mapping.Attributes["classname"].Value;
                 m_type = null;
@@ -400,6 +446,21 @@ namespace System.Data.LightDatamodel
                         m_primaryKey = mf;
                     m_fields.Add(mf.ColumnName, mf);
                 }
+
+                m_referenceFields = new Dictionary<string, ReferenceField>();
+                foreach (XmlNode n in mapping.SelectNodes("referencecolumn"))
+                {
+                    ReferenceField rf = new ReferenceField(n);
+                    m_referenceFields.Add(rf.PropertyName, rf);
+                }
+
+                m_ignoredFields = new Dictionary<string, IgnoredField>();
+                foreach (XmlNode n in mapping.SelectNodes("ignoredcolumn"))
+                {
+                    IgnoredField i = new IgnoredField(n);
+                    m_ignoredFields.Add(i.Fieldname, i);
+                }
+
             }
 
             /// <summary>
@@ -421,6 +482,9 @@ namespace System.Data.LightDatamodel
                         m_primaryKey = mf;
                     m_fields.Add(mf.ColumnName, mf);
                 }
+
+                m_referenceFields = new Dictionary<string, ReferenceField>();
+                m_ignoredFields = new Dictionary<string, IgnoredField>();
             }
 
             /// <summary>
@@ -450,6 +514,9 @@ namespace System.Data.LightDatamodel
                     }
                     m_fields.Add(mf.ColumnName, mf);
                 }
+
+                m_referenceFields = new Dictionary<string, ReferenceField>();
+                m_ignoredFields = new Dictionary<string, IgnoredField>();
             }
 
             /// <summary>
@@ -516,6 +583,18 @@ namespace System.Data.LightDatamodel
             }
 
             /// <summary>
+            /// Gets a reference field by name
+            /// </summary>
+            /// <param name="name">The name of the field</param>
+            /// <returns>The matching reference field</returns>
+            public ReferenceField GetReferenceField(string name)
+            {
+                if (!m_referenceFields.ContainsKey(name))
+                    throw new Exception(string.Format("Failed to locate a reference property name {0} in class {1}", name, this.m_type.FullName));
+                return m_referenceFields[name];
+            }
+
+            /// <summary>
             /// Gets or sets the mapping information
             /// </summary>
             /// <param name="columnName">The name of the column</param>
@@ -526,8 +605,30 @@ namespace System.Data.LightDatamodel
                 set { m_fields[columnName] = value; }
             }
 
+            /// <summary>
+            /// Gets the lisf of mapped fields
+            /// </summary>
             public Dictionary<string, MappedField> Columns { get { return m_fields; } }
 
+            /// <summary>
+            /// Gets the lisf of reference fields
+            /// </summary>
+            public Dictionary<string, ReferenceField> ReferenceColumns 
+            { 
+                get { return m_referenceFields; }
+                set { m_referenceFields = value; }
+            }
+
+
+            /// <summary>
+            /// Gets the lisf of ignored fields
+            /// </summary>
+            public Dictionary<string, IgnoredField> IgnoredFields 
+            { 
+                get { return m_ignoredFields; }
+                set { m_ignoredFields = value; }
+            }
+            
             /// <summary>
             /// Writes all mapping information into an empty Xml node
             /// </summary>
@@ -542,6 +643,12 @@ namespace System.Data.LightDatamodel
                 {
                     XmlNode n = mapping.AppendChild(mapping.OwnerDocument.CreateElement("column"));
                     mf.Serialize(n);
+                }
+
+                foreach (ReferenceField rf in m_referenceFields.Values)
+                {
+                    XmlNode n = mapping.AppendChild(mapping.OwnerDocument.CreateElement("referencecolumn"));
+                    rf.Serialize(n);
                 }
             }
         
@@ -791,9 +898,200 @@ namespace System.Data.LightDatamodel
 
         }
 
+        public class IgnoredClass
+        {
+            public string m_tablename;
+
+            public IgnoredClass()
+            {
+            }
+
+            public IgnoredClass(XmlNode node)
+            {
+                if (node.Attributes["tablename"] == null)
+                    throw new Exception("All ignoredclass tags must have a table parameter");
+                m_tablename = node.Attributes["tablename"].Value;
+            }
+
+            public string Tablename
+            {
+                get { return m_tablename; }
+                set { m_tablename = value; }
+            }
+
+            public void Serialize(XmlNode node)
+            {
+                node.Attributes.Append(node.OwnerDocument.CreateAttribute("tablename")).Value = m_tablename;
+            }
+        }
+
+        /// <summary>
+        /// This class represent an ignored field.
+        /// This ensures that the class generator does not re-create a previously hidden field.
+        /// </summary>
+        public class IgnoredField
+        {
+            public string m_fieldname;
+
+            public IgnoredField()
+            {
+            }
+
+            public IgnoredField(XmlNode node)
+            {
+                if (node.Attributes["column"] == null)
+                    throw new Exception("All ignoredfield tags must have a column parameter");
+                m_fieldname = node.Attributes["column"].Value;
+            }
+
+            public string Fieldname
+            {
+                get { return m_fieldname; }
+                set { m_fieldname = value; }
+            }
+
+            public void Serialize(XmlNode node)
+            {
+                node.Attributes.Append(node.OwnerDocument.CreateAttribute("column")).Value = m_fieldname;
+            }
+        }
+
+
+        /// <summary>
+        /// This class contains mapping information for a relational field
+        /// </summary>
         public class ReferenceField
         {
+            private bool m_isCollection;
 
+            private string m_reverse_table;
+            private string m_reverse_column;
+            private string m_reverse_propertyName;
+
+            private string m_columnname;
+            private string m_propertyName;
+
+            private TypeConfiguration m_parent;
+
+            private MappedField m_localField;
+            private PropertyInfo m_localProperty;
+            private MappedField m_reverseField;
+            private PropertyInfo m_reverseProperty;
+
+            public ReferenceField(Type type, TypeConfiguration parent, XmlNode node)
+                : this(node)
+            {
+                m_parent = parent;
+                m_localProperty = type.GetProperty(m_propertyName);
+                m_localField = parent.GetTypeInfo(type)[m_columnname];
+
+                if (m_localProperty == null)
+                    throw new Exception(string.Format("Failed to locate property {0} in class {1}", m_propertyName, type.FullName));
+                if (m_localField == null)
+                    throw new Exception(string.Format("Failed to locate field {0} in class {1}", m_columnname, type.FullName));
+
+                foreach (MappedClass mc in parent.m_knownTypes.Values)
+                    if (mc.TableName == m_reverse_table)
+                    {
+                        m_reverseField = mc.GetColumn(m_reverse_column);
+                        m_reverseProperty = mc.Type.GetProperty(m_reverse_propertyName);
+                        break;
+                    }
+            }
+
+            public ReferenceField(XmlNode node)
+            {
+                //These are for the remote table/class
+                m_reverse_table = node.Attributes["reverse_table"].Value;
+                m_reverse_column = node.Attributes["reverse_column"].Value;
+                m_reverse_propertyName = node.Attributes["reverse_property"].Value;
+
+                //These are for the local table/class
+                m_columnname = node.Attributes["column"].Value;
+                m_propertyName = node.Attributes["property"].Value;
+
+                //True if the local property is a collection
+                m_isCollection = bool.Parse(node.Attributes["iscollection"].Value);
+            }
+
+            public object GetReferencedItem(IDataClass owner)
+            {
+                return owner.RelationManager.GetReferenceObject(owner, this);
+            }
+
+            public void SetReferencedItem(IDataClass owner, IDataClass remoteobject)
+            {
+                owner.RelationManager.SetReferenceObject(owner, this, remoteobject);
+            }
+
+            public string ReverseTablename
+            {
+                get { return m_reverse_table; }
+                set { m_reverse_table = value; }
+            }
+
+            public string PropertyName
+            {
+                get { return m_propertyName; }
+                set { m_propertyName = value; }
+            }
+
+            public string Column
+            {
+                get { return m_columnname; }
+                set { m_columnname = value; }
+            }
+
+            public string ReverseColumn
+            {
+                get { return m_reverse_column; }
+                set { m_reverse_column = value; }
+            }
+
+            public string ReversePropertyName
+            {
+                get { return m_reverse_propertyName; }
+                set { m_reverse_propertyName = value; }
+            }
+
+            public bool IsCollection
+            {
+                get { return m_isCollection; }
+                set { m_isCollection = value; }
+            }
+
+            public MappedField LocalField
+            {
+                get { return m_localField; }
+            }
+
+            public PropertyInfo LocalProperty
+            {
+                get { return m_localProperty; }
+            }
+
+            public MappedField ReverseField
+            {
+                get { return m_reverseField; }
+            }
+
+            public PropertyInfo ReverseProperty
+            {
+                get { return m_reverseProperty; }
+            }
+
+            public void Serialize(XmlNode node)
+            {
+                node.Attributes.Append(node.OwnerDocument.CreateAttribute("reverse_table")).Value = m_reverse_table;
+                node.Attributes.Append(node.OwnerDocument.CreateAttribute("reverse_column")).Value = m_reverse_column;
+                if (m_reverse_propertyName != null)
+                    node.Attributes.Append(node.OwnerDocument.CreateAttribute("reverse_property")).Value = m_reverse_propertyName;
+
+                node.Attributes.Append(node.OwnerDocument.CreateAttribute("column")).Value = m_columnname;
+                node.Attributes.Append(node.OwnerDocument.CreateAttribute("property")).Value = m_propertyName;
+
+                node.Attributes.Append(node.OwnerDocument.CreateAttribute("iscollection")).Value = m_isCollection ? "true" : "false";
+            }
         }
     }
 

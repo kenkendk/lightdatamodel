@@ -1,22 +1,16 @@
-#region " Unsynchronized Includes "
-
-	//Don't put any region sections in here
-
-#endregion
-
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
-/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\Unit test\bin\Debug\unittest.sqlite3;" />
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\Unit test\Datamodel\UnitTest.sqlite3;" />
 /// <type>Table</type>
-/// <namespace>UnitTest</namespace>
+/// <namespace>Datamodel.UnitTest</namespace>
 /// <name>ManyToMany</name>
 /// <sql></sql>
 /// </metadata>
 
-namespace UnitTest
+namespace Datamodel.UnitTest
 {
 
-	public class ManyToMany : System.Data.LightDatamodel.DataClassBase
+	public partial class ManyToMany : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "
@@ -55,9 +49,7 @@ namespace UnitTest
 
 #endregion
 
-#region " Unsynchronized Custom Code Region "
-
-	//Don't put any region sections in here
+#region " referenced properties "
 
 #endregion
 
