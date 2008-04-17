@@ -56,7 +56,12 @@ namespace System.Data.LightDatamodel
 		ObjectStates ObjectState{get;}
 		string UniqueColumn	{get;}
 		object UniqueValue{get;}
-        void SetIsDirty();
+        void SetDirty();
+		event DataWriteEventHandler BeforeDataChange;
+		event DataWriteEventHandler AfterDataChange;
+		event DataConnectionEventHandler BeforeDataCommit;
+		event DataConnectionEventHandler AfterDataCommit;
+
 	}
 
     public interface IObjectTransformer

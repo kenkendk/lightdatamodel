@@ -250,14 +250,14 @@ namespace System.Data.LightDatamodel
 
                 if (m_referenceObjects[g].ContainsKey(reference.PropertyName))
                     m_referenceObjects[g].Remove(reference.PropertyName);
-                owner.SetIsDirty();
+                owner.SetDirty();
                 return;
             }
 
             if (value.DataParent != owner.DataParent) throw new Exception("Cannot mix objects from differenct data contexts");
 
             m_referenceObjects[g][reference.PropertyName] = GetGuidForObject(value);
-            owner.SetIsDirty();
+            owner.SetDirty();
 
             if (reference.LocalField.Field == null)
                 throw new Exception("Bad config for reference object, field " + reference.LocalField.FieldName + " does not exist in class " + owner.GetType().FullName);
