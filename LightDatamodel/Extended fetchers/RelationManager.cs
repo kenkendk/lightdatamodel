@@ -390,17 +390,17 @@ namespace System.Data.LightDatamodel
                         PropertyInfo pi = item.GetType().GetProperty(pair.Key);
                         subUpdates.Add(new object[] { pi, item, specialItems[pair.Value] });
                     }
-            }        
+            }
             
             foreach(object[] s in subUpdates)
                 ((PropertyInfo)s[0]).SetValue(s[1], s[2], null);
                     
             //Step 3, update all items
-            foreach (IDataClass b in modified)
-                fetcher.Commit(b);
+			while (modified.Count > 0)
+				fetcher.Commit(modified[0]);
 
-            foreach (IDataClass b in deleted)
-                fetcher.Commit(b);
+			while (deleted.Count > 0)
+				fetcher.Commit(deleted[0]);
         }
 
     }
