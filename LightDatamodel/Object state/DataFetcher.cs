@@ -118,8 +118,8 @@ namespace System.Data.LightDatamodel
         /// <param name="obj"></param>
 		protected virtual void HookObject(IDataClass obj)
 		{
-			(obj as DataClassBase).BeforeDataWrite += new DataWriteEventHandler(obj_BeforeDataWrite);
-			(obj as DataClassBase).AfterDataWrite += new DataWriteEventHandler(obj_AfterDataWrite);
+			(obj as DataClassBase).BeforeDataChange += new DataWriteEventHandler(obj_BeforeDataChange);
+			(obj as DataClassBase).AfterDataChange += new DataWriteEventHandler(obj_AfterDataChange);
 		}
 
 		protected virtual DataClassLevels GetDataClassLevel(Type type)
@@ -301,32 +301,38 @@ namespace System.Data.LightDatamodel
 			if (obj.ObjectState == ObjectStates.Default)
 			{
 				OnBeforeDataConnection(obj, DataActions.Update);
+				(obj as DataClassBase).OnBeforeDataCommit(obj, DataActions.Update);
                 UpdateObject(obj);
 				OnAfterDataConnection(obj, DataActions.Update);
+				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Update);
 			}
 			else if (obj.ObjectState == ObjectStates.New)
 			{
 				OnBeforeDataConnection(obj, DataActions.Insert);
+				(obj as DataClassBase).OnBeforeDataCommit(obj, DataActions.Insert);
                 InsertObject(obj);
 				OnAfterDataConnection(obj, DataActions.Insert);
+				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Insert);
 			}
 			else if (obj.ObjectState == ObjectStates.Deleted)
 			{
 				OnBeforeDataConnection(obj, DataActions.Delete);
+				(obj as DataClassBase).OnBeforeDataCommit(obj, DataActions.Delete);
                 RemoveObject(obj);
 				OnAfterDataConnection(obj, DataActions.Delete);
+				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Delete);
 			}
 
 			//Try to read data back from database
 			RefreshObject(obj);
 		}
 
-		protected virtual void obj_BeforeDataWrite(object sender, string propertyname, object oldvalue, object newvalue)
+		protected virtual void obj_BeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			if(BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
 		}
 
-		protected virtual void obj_AfterDataWrite(object sender, string propertyname, object oldvalue, object newvalue)
+		protected virtual void obj_AfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			if(AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
 		}

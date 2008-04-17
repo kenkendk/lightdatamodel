@@ -103,11 +103,7 @@ namespace System.Data.LightDatamodel
 						if(obj.IsDirty)
 							updated.Add(obj);
 
-
-                List<IDataClass> added = new List<IDataClass>(m_newobjects);
-                List<IDataClass> removed = new List<IDataClass>(m_deletedobjects);
-
-                m_relationManager.CommitItems(this, added, removed, updated);
+				m_relationManager.CommitItems(this, m_newobjects, m_deletedobjects, updated);
 
 				m_provider.CommitTransaction(transactionID);
                 m_newobjects = new List<IDataClass>();

@@ -31,14 +31,40 @@ namespace System.Data.LightDatamodel
 	public abstract class DataClassView : IDataClass
 	{
 		internal protected IDataFetcher m_dataparent;
+		public event DataWriteEventHandler BeforeDataChange;
+		public event DataWriteEventHandler AfterDataChange;
+		public event DataConnectionEventHandler BeforeDataCommit;
+		public event DataConnectionEventHandler AfterDataCommit;
 
 		#region IDataClass Members
+
+		protected void OnAfterDataConnection(object obj, DataActions action)
+		{
+			if (AfterDataCommit != null) AfterDataCommit(obj, action);
+		}
+
+		protected void OnBeforeDataCommit(object obj, DataActions action)
+		{
+			if (BeforeDataCommit != null) BeforeDataCommit(obj, action);
+		}
+
+		protected void OnBeforeDataCommit(object sender, string propertyname, object oldvalue, object newvalue)
+		{
+			if (oldvalue == newvalue) return;
+			if (BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
+		}
+
+		protected void OnAfterDataWrite(object sender, string propertyname, object oldvalue, object newvalue)
+		{
+			if (oldvalue == newvalue) return;
+			if (AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
+		}
 
 		public IDataFetcher DataParent { get { return m_dataparent;	} }
         public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
 		public bool IsDirty { get {	return false; } }
 
-        public void SetIsDirty()
+        public void SetDirty()
         {
         }
 
@@ -64,8 +90,10 @@ namespace System.Data.LightDatamodel
 		internal protected bool m_isdirty = true;
 		internal protected IDataFetcher m_dataparent;
 		internal protected ObjectStates m_state = ObjectStates.Default;
-		public event DataWriteEventHandler BeforeDataWrite;
-		public event DataWriteEventHandler AfterDataWrite;
+		public event DataWriteEventHandler BeforeDataChange;
+		public event DataWriteEventHandler AfterDataChange;
+		public event DataConnectionEventHandler BeforeDataCommit;
+		public event DataConnectionEventHandler AfterDataCommit;
 
         public IDataFetcher DataParent { get { return m_dataparent; } }
         public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
@@ -73,19 +101,29 @@ namespace System.Data.LightDatamodel
 		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
 		public abstract string UniqueColumn	{get;}
 		public abstract object UniqueValue{get;}
-        public void SetIsDirty() { m_isdirty = true; }
+        public void SetDirty() { m_isdirty = true; }
 
-		protected void OnBeforeDataWrite(object sender, string propertyname, object oldvalue, object newvalue)
+		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			if(oldvalue == newvalue) return;
-			if(BeforeDataWrite != null) BeforeDataWrite(sender, propertyname, oldvalue, newvalue);
+			if(BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
 		}
-	
-		protected void OnAfterDataWrite(object sender, string propertyname, object oldvalue, object newvalue)
+
+		protected virtual void OnAfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			if(oldvalue == newvalue) return;
 			m_isdirty=true;
-			if(AfterDataWrite != null) AfterDataWrite(sender, propertyname, oldvalue, newvalue);
+			if(AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
+		}
+
+		protected virtual internal void OnAfterDataCommit(object obj, DataActions action)
+		{
+			if (AfterDataCommit != null) AfterDataCommit(obj, action);
+		}
+
+		protected virtual internal void OnBeforeDataCommit(object obj, DataActions action)
+		{
+			if (BeforeDataCommit != null) BeforeDataCommit(obj, action);
 		}
 	}
 }
