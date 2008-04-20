@@ -57,6 +57,7 @@ namespace DataClassFileBuilder
 		protected System.Windows.Forms.TextBox NamespaceStringText;
 		private System.Windows.Forms.Label label3;
         private CheckBox UseConfigCheckBox;
+        private Button EditConfigButton;
 
 		/// <summary>
 		/// Required designer variable.
@@ -97,247 +98,264 @@ namespace DataClassFileBuilder
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataClassFileBuilderDialog));
-			this.TableGroup = new System.Windows.Forms.GroupBox();
-			this.BrowseDB = new System.Windows.Forms.Button();
-			this.ConnectionStringText = new System.Windows.Forms.TextBox();
-			this.label1 = new System.Windows.Forms.Label();
-			this.BrowseButton = new System.Windows.Forms.Button();
-			this.DestinationDirText = new System.Windows.Forms.TextBox();
-			this.label2 = new System.Windows.Forms.Label();
-			this.BuildButton = new System.Windows.Forms.Button();
-			this.NamespaceStringText = new System.Windows.Forms.TextBox();
-			this.label3 = new System.Windows.Forms.Label();
-			this.ViewGroup = new System.Windows.Forms.GroupBox();
-			this.CreateViewButton = new System.Windows.Forms.Button();
-			this.label4 = new System.Windows.Forms.Label();
-			this.SQLText = new System.Windows.Forms.TextBox();
-			this.label5 = new System.Windows.Forms.Label();
-			this.ViewNameText = new System.Windows.Forms.TextBox();
-			this.ProviderList = new System.Windows.Forms.ComboBox();
-			this.label6 = new System.Windows.Forms.Label();
-			this.UseConfigCheckBox = new System.Windows.Forms.CheckBox();
-			this.TableGroup.SuspendLayout();
-			this.ViewGroup.SuspendLayout();
-			this.SuspendLayout();
-			// 
-			// TableGroup
-			// 
-			this.TableGroup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.TableGroup.Controls.Add(this.BrowseDB);
-			this.TableGroup.Controls.Add(this.ConnectionStringText);
-			this.TableGroup.Controls.Add(this.label1);
-			this.TableGroup.Controls.Add(this.BrowseButton);
-			this.TableGroup.Controls.Add(this.DestinationDirText);
-			this.TableGroup.Controls.Add(this.label2);
-			this.TableGroup.Controls.Add(this.BuildButton);
-			this.TableGroup.Controls.Add(this.NamespaceStringText);
-			this.TableGroup.Controls.Add(this.label3);
-			this.TableGroup.Enabled = false;
-			this.TableGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.TableGroup.Location = new System.Drawing.Point(8, 72);
-			this.TableGroup.Name = "TableGroup";
-			this.TableGroup.Size = new System.Drawing.Size(600, 128);
-			this.TableGroup.TabIndex = 4;
-			this.TableGroup.TabStop = false;
-			this.TableGroup.Text = "Create classes for all tables in datasource";
-			// 
-			// BrowseDB
-			// 
-			this.BrowseDB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.BrowseDB.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.BrowseDB.Location = new System.Drawing.Point(568, 24);
-			this.BrowseDB.Name = "BrowseDB";
-			this.BrowseDB.Size = new System.Drawing.Size(24, 21);
-			this.BrowseDB.TabIndex = 13;
-			this.BrowseDB.Text = "...";
-			this.BrowseDB.Click += new System.EventHandler(this.BrowseDB_Click);
-			// 
-			// ConnectionStringText
-			// 
-			this.ConnectionStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ConnectionStringText.Location = new System.Drawing.Point(104, 24);
-			this.ConnectionStringText.Name = "ConnectionStringText";
-			this.ConnectionStringText.Size = new System.Drawing.Size(464, 20);
-			this.ConnectionStringText.TabIndex = 8;
-			// 
-			// label1
-			// 
-			this.label1.Location = new System.Drawing.Point(8, 24);
-			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(96, 16);
-			this.label1.TabIndex = 5;
-			this.label1.Text = "Connectionstring";
-			// 
-			// BrowseButton
-			// 
-			this.BrowseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.BrowseButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.BrowseButton.Location = new System.Drawing.Point(568, 48);
-			this.BrowseButton.Name = "BrowseButton";
-			this.BrowseButton.Size = new System.Drawing.Size(24, 21);
-			this.BrowseButton.TabIndex = 12;
-			this.BrowseButton.Text = "...";
-			this.BrowseButton.Click += new System.EventHandler(this.BrowseButton_Click);
-			// 
-			// DestinationDirText
-			// 
-			this.DestinationDirText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.DestinationDirText.Location = new System.Drawing.Point(104, 48);
-			this.DestinationDirText.Name = "DestinationDirText";
-			this.DestinationDirText.Size = new System.Drawing.Size(464, 20);
-			this.DestinationDirText.TabIndex = 11;
-			// 
-			// label2
-			// 
-			this.label2.Location = new System.Drawing.Point(8, 48);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(96, 16);
-			this.label2.TabIndex = 7;
-			this.label2.Text = "Dir";
-			// 
-			// BuildButton
-			// 
-			this.BuildButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.BuildButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.BuildButton.Location = new System.Drawing.Point(456, 96);
-			this.BuildButton.Name = "BuildButton";
-			this.BuildButton.Size = new System.Drawing.Size(136, 24);
-			this.BuildButton.TabIndex = 9;
-			this.BuildButton.Text = "Convert DB to classes";
-			this.BuildButton.Click += new System.EventHandler(this.BuildButton_Click);
-			// 
-			// NamespaceStringText
-			// 
-			this.NamespaceStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.NamespaceStringText.Location = new System.Drawing.Point(104, 72);
-			this.NamespaceStringText.Name = "NamespaceStringText";
-			this.NamespaceStringText.Size = new System.Drawing.Size(488, 20);
-			this.NamespaceStringText.TabIndex = 6;
-			// 
-			// label3
-			// 
-			this.label3.Location = new System.Drawing.Point(8, 72);
-			this.label3.Name = "label3";
-			this.label3.Size = new System.Drawing.Size(96, 16);
-			this.label3.TabIndex = 10;
-			this.label3.Text = "Namespace";
-			// 
-			// ViewGroup
-			// 
-			this.ViewGroup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ViewGroup.Controls.Add(this.CreateViewButton);
-			this.ViewGroup.Controls.Add(this.label4);
-			this.ViewGroup.Controls.Add(this.SQLText);
-			this.ViewGroup.Controls.Add(this.label5);
-			this.ViewGroup.Controls.Add(this.ViewNameText);
-			this.ViewGroup.Enabled = false;
-			this.ViewGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.ViewGroup.Location = new System.Drawing.Point(8, 208);
-			this.ViewGroup.Name = "ViewGroup";
-			this.ViewGroup.Size = new System.Drawing.Size(600, 104);
-			this.ViewGroup.TabIndex = 5;
-			this.ViewGroup.TabStop = false;
-			this.ViewGroup.Text = "Create non updateable view class";
-			// 
-			// CreateViewButton
-			// 
-			this.CreateViewButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.CreateViewButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.CreateViewButton.Location = new System.Drawing.Point(456, 72);
-			this.CreateViewButton.Name = "CreateViewButton";
-			this.CreateViewButton.Size = new System.Drawing.Size(136, 24);
-			this.CreateViewButton.TabIndex = 7;
-			this.CreateViewButton.Text = "Create view class";
-			this.CreateViewButton.Click += new System.EventHandler(this.CreateViewButton_Click);
-			// 
-			// label4
-			// 
-			this.label4.Location = new System.Drawing.Point(8, 48);
-			this.label4.Name = "label4";
-			this.label4.Size = new System.Drawing.Size(88, 16);
-			this.label4.TabIndex = 5;
-			this.label4.Text = "SQL";
-			// 
-			// SQLText
-			// 
-			this.SQLText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.SQLText.Location = new System.Drawing.Point(104, 48);
-			this.SQLText.Name = "SQLText";
-			this.SQLText.Size = new System.Drawing.Size(488, 20);
-			this.SQLText.TabIndex = 6;
-			// 
-			// label5
-			// 
-			this.label5.Location = new System.Drawing.Point(8, 24);
-			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(88, 16);
-			this.label5.TabIndex = 3;
-			this.label5.Text = "Name";
-			// 
-			// ViewNameText
-			// 
-			this.ViewNameText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ViewNameText.Location = new System.Drawing.Point(104, 24);
-			this.ViewNameText.Name = "ViewNameText";
-			this.ViewNameText.Size = new System.Drawing.Size(488, 20);
-			this.ViewNameText.TabIndex = 4;
-			// 
-			// ProviderList
-			// 
-			this.ProviderList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ProviderList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.ProviderList.Location = new System.Drawing.Point(112, 16);
-			this.ProviderList.Name = "ProviderList";
-			this.ProviderList.Size = new System.Drawing.Size(496, 21);
-			this.ProviderList.TabIndex = 9;
-			this.ProviderList.SelectedIndexChanged += new System.EventHandler(this.ProviderList_SelectedIndexChanged_1);
-			// 
-			// label6
-			// 
-			this.label6.FlatStyle = System.Windows.Forms.FlatStyle.System;
-			this.label6.Location = new System.Drawing.Point(8, 16);
-			this.label6.Name = "label6";
-			this.label6.Size = new System.Drawing.Size(88, 16);
-			this.label6.TabIndex = 8;
-			this.label6.Text = "Provider";
-			// 
-			// UseConfigCheckBox
-			// 
-			this.UseConfigCheckBox.AutoSize = true;
-			this.UseConfigCheckBox.Location = new System.Drawing.Point(112, 40);
-			this.UseConfigCheckBox.Name = "UseConfigCheckBox";
-			this.UseConfigCheckBox.Size = new System.Drawing.Size(168, 17);
-			this.UseConfigCheckBox.TabIndex = 14;
-			this.UseConfigCheckBox.Text = "Use a configuration document";
-			this.UseConfigCheckBox.UseVisualStyleBackColor = true;
-			// 
-			// DataClassFileBuilderDialog
-			// 
-			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-			this.ClientSize = new System.Drawing.Size(616, 320);
-			this.Controls.Add(this.UseConfigCheckBox);
-			this.Controls.Add(this.ProviderList);
-			this.Controls.Add(this.label6);
-			this.Controls.Add(this.ViewGroup);
-			this.Controls.Add(this.TableGroup);
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.Name = "DataClassFileBuilderDialog";
-			this.Text = "DataClassBuilder";
-			this.TableGroup.ResumeLayout(false);
-			this.TableGroup.PerformLayout();
-			this.ViewGroup.ResumeLayout(false);
-			this.ViewGroup.PerformLayout();
-			this.ResumeLayout(false);
-			this.PerformLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataClassFileBuilderDialog));
+            this.TableGroup = new System.Windows.Forms.GroupBox();
+            this.BrowseDB = new System.Windows.Forms.Button();
+            this.ConnectionStringText = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.BrowseButton = new System.Windows.Forms.Button();
+            this.DestinationDirText = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.BuildButton = new System.Windows.Forms.Button();
+            this.NamespaceStringText = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.ViewGroup = new System.Windows.Forms.GroupBox();
+            this.CreateViewButton = new System.Windows.Forms.Button();
+            this.label4 = new System.Windows.Forms.Label();
+            this.SQLText = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.ViewNameText = new System.Windows.Forms.TextBox();
+            this.ProviderList = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.UseConfigCheckBox = new System.Windows.Forms.CheckBox();
+            this.EditConfigButton = new System.Windows.Forms.Button();
+            this.TableGroup.SuspendLayout();
+            this.ViewGroup.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // TableGroup
+            // 
+            this.TableGroup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.TableGroup.Controls.Add(this.EditConfigButton);
+            this.TableGroup.Controls.Add(this.BrowseDB);
+            this.TableGroup.Controls.Add(this.ConnectionStringText);
+            this.TableGroup.Controls.Add(this.label1);
+            this.TableGroup.Controls.Add(this.BrowseButton);
+            this.TableGroup.Controls.Add(this.DestinationDirText);
+            this.TableGroup.Controls.Add(this.label2);
+            this.TableGroup.Controls.Add(this.BuildButton);
+            this.TableGroup.Controls.Add(this.NamespaceStringText);
+            this.TableGroup.Controls.Add(this.label3);
+            this.TableGroup.Enabled = false;
+            this.TableGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.TableGroup.Location = new System.Drawing.Point(8, 72);
+            this.TableGroup.Name = "TableGroup";
+            this.TableGroup.Size = new System.Drawing.Size(600, 128);
+            this.TableGroup.TabIndex = 4;
+            this.TableGroup.TabStop = false;
+            this.TableGroup.Text = "Create classes for all tables in datasource";
+            // 
+            // BrowseDB
+            // 
+            this.BrowseDB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.BrowseDB.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.BrowseDB.Location = new System.Drawing.Point(568, 24);
+            this.BrowseDB.Name = "BrowseDB";
+            this.BrowseDB.Size = new System.Drawing.Size(24, 21);
+            this.BrowseDB.TabIndex = 13;
+            this.BrowseDB.Text = "...";
+            this.BrowseDB.Click += new System.EventHandler(this.BrowseDB_Click);
+            // 
+            // ConnectionStringText
+            // 
+            this.ConnectionStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ConnectionStringText.Location = new System.Drawing.Point(104, 24);
+            this.ConnectionStringText.Name = "ConnectionStringText";
+            this.ConnectionStringText.Size = new System.Drawing.Size(464, 20);
+            this.ConnectionStringText.TabIndex = 8;
+            // 
+            // label1
+            // 
+            this.label1.Location = new System.Drawing.Point(8, 24);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(96, 16);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "Connectionstring";
+            // 
+            // BrowseButton
+            // 
+            this.BrowseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.BrowseButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.BrowseButton.Location = new System.Drawing.Point(568, 48);
+            this.BrowseButton.Name = "BrowseButton";
+            this.BrowseButton.Size = new System.Drawing.Size(24, 21);
+            this.BrowseButton.TabIndex = 12;
+            this.BrowseButton.Text = "...";
+            this.BrowseButton.Click += new System.EventHandler(this.BrowseButton_Click);
+            // 
+            // DestinationDirText
+            // 
+            this.DestinationDirText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.DestinationDirText.Location = new System.Drawing.Point(104, 48);
+            this.DestinationDirText.Name = "DestinationDirText";
+            this.DestinationDirText.Size = new System.Drawing.Size(464, 20);
+            this.DestinationDirText.TabIndex = 11;
+            // 
+            // label2
+            // 
+            this.label2.Location = new System.Drawing.Point(8, 48);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(96, 16);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "Dir";
+            // 
+            // BuildButton
+            // 
+            this.BuildButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.BuildButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.BuildButton.Location = new System.Drawing.Point(456, 96);
+            this.BuildButton.Name = "BuildButton";
+            this.BuildButton.Size = new System.Drawing.Size(136, 24);
+            this.BuildButton.TabIndex = 9;
+            this.BuildButton.Text = "Convert DB to classes";
+            this.BuildButton.Click += new System.EventHandler(this.BuildButton_Click);
+            // 
+            // NamespaceStringText
+            // 
+            this.NamespaceStringText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.NamespaceStringText.Location = new System.Drawing.Point(104, 72);
+            this.NamespaceStringText.Name = "NamespaceStringText";
+            this.NamespaceStringText.Size = new System.Drawing.Size(488, 20);
+            this.NamespaceStringText.TabIndex = 6;
+            // 
+            // label3
+            // 
+            this.label3.Location = new System.Drawing.Point(8, 72);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(96, 16);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "Namespace";
+            // 
+            // ViewGroup
+            // 
+            this.ViewGroup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ViewGroup.Controls.Add(this.CreateViewButton);
+            this.ViewGroup.Controls.Add(this.label4);
+            this.ViewGroup.Controls.Add(this.SQLText);
+            this.ViewGroup.Controls.Add(this.label5);
+            this.ViewGroup.Controls.Add(this.ViewNameText);
+            this.ViewGroup.Enabled = false;
+            this.ViewGroup.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.ViewGroup.Location = new System.Drawing.Point(8, 208);
+            this.ViewGroup.Name = "ViewGroup";
+            this.ViewGroup.Size = new System.Drawing.Size(600, 104);
+            this.ViewGroup.TabIndex = 5;
+            this.ViewGroup.TabStop = false;
+            this.ViewGroup.Text = "Create non updateable view class";
+            // 
+            // CreateViewButton
+            // 
+            this.CreateViewButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.CreateViewButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.CreateViewButton.Location = new System.Drawing.Point(456, 72);
+            this.CreateViewButton.Name = "CreateViewButton";
+            this.CreateViewButton.Size = new System.Drawing.Size(136, 24);
+            this.CreateViewButton.TabIndex = 7;
+            this.CreateViewButton.Text = "Create view class";
+            this.CreateViewButton.Click += new System.EventHandler(this.CreateViewButton_Click);
+            // 
+            // label4
+            // 
+            this.label4.Location = new System.Drawing.Point(8, 48);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(88, 16);
+            this.label4.TabIndex = 5;
+            this.label4.Text = "SQL";
+            // 
+            // SQLText
+            // 
+            this.SQLText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.SQLText.Location = new System.Drawing.Point(104, 48);
+            this.SQLText.Name = "SQLText";
+            this.SQLText.Size = new System.Drawing.Size(488, 20);
+            this.SQLText.TabIndex = 6;
+            // 
+            // label5
+            // 
+            this.label5.Location = new System.Drawing.Point(8, 24);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(88, 16);
+            this.label5.TabIndex = 3;
+            this.label5.Text = "Name";
+            // 
+            // ViewNameText
+            // 
+            this.ViewNameText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ViewNameText.Location = new System.Drawing.Point(104, 24);
+            this.ViewNameText.Name = "ViewNameText";
+            this.ViewNameText.Size = new System.Drawing.Size(488, 20);
+            this.ViewNameText.TabIndex = 4;
+            // 
+            // ProviderList
+            // 
+            this.ProviderList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ProviderList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ProviderList.Location = new System.Drawing.Point(112, 16);
+            this.ProviderList.Name = "ProviderList";
+            this.ProviderList.Size = new System.Drawing.Size(496, 21);
+            this.ProviderList.TabIndex = 9;
+            this.ProviderList.SelectedIndexChanged += new System.EventHandler(this.ProviderList_SelectedIndexChanged_1);
+            // 
+            // label6
+            // 
+            this.label6.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.label6.Location = new System.Drawing.Point(8, 16);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(88, 16);
+            this.label6.TabIndex = 8;
+            this.label6.Text = "Provider";
+            // 
+            // UseConfigCheckBox
+            // 
+            this.UseConfigCheckBox.AutoSize = true;
+            this.UseConfigCheckBox.Checked = true;
+            this.UseConfigCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.UseConfigCheckBox.Location = new System.Drawing.Point(112, 40);
+            this.UseConfigCheckBox.Name = "UseConfigCheckBox";
+            this.UseConfigCheckBox.Size = new System.Drawing.Size(168, 17);
+            this.UseConfigCheckBox.TabIndex = 14;
+            this.UseConfigCheckBox.Text = "Use a configuration document";
+            this.UseConfigCheckBox.UseVisualStyleBackColor = true;
+            this.UseConfigCheckBox.CheckedChanged += new System.EventHandler(this.UseConfigCheckBox_CheckedChanged);
+            // 
+            // EditConfigButton
+            // 
+            this.EditConfigButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.EditConfigButton.Location = new System.Drawing.Point(328, 96);
+            this.EditConfigButton.Name = "EditConfigButton";
+            this.EditConfigButton.Size = new System.Drawing.Size(120, 24);
+            this.EditConfigButton.TabIndex = 14;
+            this.EditConfigButton.Text = "Edit configuration";
+            this.EditConfigButton.UseVisualStyleBackColor = true;
+            this.EditConfigButton.Click += new System.EventHandler(this.EditConfigButton_Click);
+            // 
+            // DataClassFileBuilderDialog
+            // 
+            this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
+            this.ClientSize = new System.Drawing.Size(616, 320);
+            this.Controls.Add(this.UseConfigCheckBox);
+            this.Controls.Add(this.ProviderList);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.ViewGroup);
+            this.Controls.Add(this.TableGroup);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "DataClassFileBuilderDialog";
+            this.Text = "DataClassBuilder";
+            this.Load += new System.EventHandler(this.DataClassFileBuilderDialog_Load);
+            this.TableGroup.ResumeLayout(false);
+            this.TableGroup.PerformLayout();
+            this.ViewGroup.ResumeLayout(false);
+            this.ViewGroup.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
 
 		}
 		#endregion
@@ -1170,6 +1188,58 @@ namespace DataClassFileBuilder
 		{
 			TableGroup.Enabled = ViewGroup.Enabled = ProviderList.SelectedIndex >= 0;
 		}
+
+        private void DataClassFileBuilderDialog_Load(object sender, EventArgs e)
+        {
+            EditConfigButton.Enabled = UseConfigCheckBox.Checked;
+        }
+
+        private void UseConfigCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            EditConfigButton.Enabled = UseConfigCheckBox.Checked;
+        }
+
+        private void EditConfigButton_Click(object sender, EventArgs e)
+        {
+
+            try
+            {
+                IDataProvider provider = Providers[ProviderList.SelectedIndex].GetProvider(ConnectionStringText.Text);
+                if (!System.IO.Directory.Exists(DestinationDirText.Text))
+                {
+                    if (MessageBox.Show(this, "Directory \"" + DestinationDirText.Text + "\" doesn't exists. Create it now?", "Create dir?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        System.IO.Directory.CreateDirectory(DestinationDirText.Text);
+                    else
+                        return;
+                }
+
+                List<TypeConfiguration.MappedClass> tables = TypeConfiguration.DescribeDataSource(provider);
+                string mappingFile = System.IO.Path.Combine(DestinationDirText.Text, "LightDataModel.Mapping.xml");
+
+                List<TypeConfiguration.IgnoredClass> ignored = new List<TypeConfiguration.IgnoredClass>();
+                if (System.IO.File.Exists(mappingFile))
+                {
+                    ignored = TypeConfiguration.GetIgnoredTables(mappingFile);
+                    TypeConfiguration.MergeSetups(TypeConfiguration.LoadXml(mappingFile), tables);
+                    foreach (TypeConfiguration.IgnoredClass ic in ignored)
+                        foreach (TypeConfiguration.MappedClass mc in tables)
+                            if (mc.TableName == ic.Tablename)
+                            {
+                                tables.Remove(mc);
+                                break;
+                            }
+                }
+
+                DataClassCustomizer dlg = new DataClassCustomizer(tables, ignored);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    TypeConfiguration.SaveXml(dlg.Tables, dlg.Ignored, mappingFile);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, string.Format("Error occured: {0}.\nChanges may not be correctly saved", ex.Message), Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
 
 
 	}

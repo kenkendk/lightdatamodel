@@ -98,11 +98,31 @@
     <Compile Include="AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DataClassCustomizer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataClassCustomizer.Designer.cs">
+      <DependentUpon>DataClassCustomizer.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataClassFileBuilderDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="DataClassCustomizer.resx">
+      <DependentUpon>DataClassCustomizer.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataClassFileBuilderDialog.resx">
       <DependentUpon>DataClassFileBuilderDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="TemplateAssemblyInfo.txt" />
   </ItemGroup>

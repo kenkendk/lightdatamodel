@@ -285,6 +285,13 @@ namespace System.Data.LightDatamodel
 		}
 
         /// <summary>
+        /// Clears the cache (does nothing, since there is no cache)
+        /// </summary>
+        public virtual void ClearCache()
+        {
+        }
+
+        /// <summary>
         /// Commits an object into the data source
         /// </summary>
         /// <param name="obj"></param>
@@ -326,6 +333,12 @@ namespace System.Data.LightDatamodel
 			//Try to read data back from database
 			RefreshObject(obj);
 		}
+
+        public virtual void Dispose()
+        {
+            m_provider = null;
+            m_transformer = null;
+        }
 
 		protected virtual void obj_BeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
