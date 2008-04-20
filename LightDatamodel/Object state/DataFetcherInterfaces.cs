@@ -26,7 +26,7 @@ namespace System.Data.LightDatamodel
 	/// <summary>
 	/// Interface for all data fetchers
 	/// </summary>
-	public interface IDataFetcher
+	public interface IDataFetcher : IDisposable 
 	{
 		event DataWriteEventHandler BeforeDataChange;
 		event DataWriteEventHandler AfterDataChange;
@@ -46,6 +46,8 @@ namespace System.Data.LightDatamodel
         RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter);
 		void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass;
         void DeleteObject(object item);
+
+        void ClearCache();
 	}
 
 	public interface IDataClass

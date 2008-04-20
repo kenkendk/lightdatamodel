@@ -18,6 +18,63 @@ namespace System.Data.LightDatamodel
             set { m_transformer = value; }
         }
 
+        private class SQLBuilder : QueryModel.OperationOrParameter
+        {
+            public SQLBuilder(GenericDataProvider provider, IDbCommand cmd, QueryModel.Operation op)
+            {
+                m_cmd = cmd;
+                m_provider = provider;
+                m_operation = op;
+            }
+
+            private IDbCommand m_cmd;
+            private GenericDataProvider m_provider;
+            private QueryModel.Operation m_operation;
+
+            public IDbCommand Command
+            {
+                get { return m_cmd; }
+                set { m_cmd = value; }
+            }
+
+            public GenericDataProvider Provider
+            {
+                get { return m_provider; }
+                set { m_provider = value; }
+            }
+
+            protected override string TranslateOperator(System.Data.LightDatamodel.QueryModel.Operators opr)
+            {
+                return m_provider.TranslateOperator(opr);
+            }
+
+            protected override void QuoteColumnName(string columnname, System.Text.StringBuilder sb)
+            {
+                sb.Append(m_provider.QuoteColumnname(columnname));
+            }
+
+            protected override bool AddParameter(object o, bool allowNonprimitives, System.Text.StringBuilder sb)
+            {
+                sb.Append(m_provider.AddParameter(m_cmd, o));
+                return true;
+            }
+
+            public override string ToString()
+            {
+                return m_operation.ToString(false);
+            }
+
+            public override object Evaluate(object item, object[] parameters)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override bool IsOperation
+            {
+                get { throw new NotImplementedException(); }
+            }
+        }
+
 		#region Abstract Members
 
 		public abstract string QuoteTablename(string tablename);
@@ -252,7 +309,10 @@ namespace System.Data.LightDatamodel
 		protected virtual string AddParameter(IDbCommand cmd, object value)
 		{
 			IDataParameter p = cmd.CreateParameter();
-			p.Value = value;
+            if (value == null)
+                p.Value = DBNull.Value;
+            else
+			    p.Value = value;
 			cmd.Parameters.Add(p);
 			return "?";
 		}
@@ -335,7 +395,7 @@ namespace System.Data.LightDatamodel
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
-                string filter = EvalTree(operation, cmd);
+                string filter = new SQLBuilder(this, cmd, operation).ToString();
                 cmd.CommandText = GetSelectString(typeinfo);
 
                 if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
@@ -390,65 +450,6 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
-        /// <summary>
-        /// Private helper to avoid too many nested ( )
-        /// </summary>
-        /// <param name="opm">The operand to translate</param>
-        /// <param name="cmds">The list of parameters</param>
-        /// <returns></returns>
-        private string WrapIfNeeded(QueryModel.OperationOrParameter opm, IDbCommand cmd)
-        {
-            if (opm.IsOperation)
-                return "(" + EvalTree(opm, cmd) + ")";
-            else
-                return EvalTree(opm, cmd);
-        }
-
-		protected virtual string EvalTree(QueryModel.OperationOrParameter opm, IDbCommand cmd)
-		{
-			if (opm.IsOperation)
-			{
-				QueryModel.Operation operation = opm as QueryModel.Operation;
-				switch(operation.Operator)
-				{
-					case QueryModel.Operators.Not:
-						return "Not (" + EvalTree(operation.Parameters[0], cmd) + ") ";
-					case QueryModel.Operators.IIF:
-						return "IIF((" + EvalTree(operation.Parameters[0], cmd) + "),(" + EvalTree(operation.Parameters[1], cmd) + "),(" + EvalTree(operation.Parameters[2], cmd) + ")) ";
-					case QueryModel.Operators.In:
-						string[] tmp = new string[operation.Parameters.Length - 1];
-						for(int i = 0; i < tmp.Length; i++)
-							tmp[i] = EvalTree(operation.Parameters[i+1], cmd);
-						return "(" + EvalTree(operation.Parameters[0], cmd) + ") In (" + string.Join(",", tmp) + ") ";
-                    case System.Data.LightDatamodel.QueryModel.Operators.Between:
-                        {
-                            QueryModel.Operation opr = (QueryModel.Operation)operation.Parameters[1];
-                            return WrapIfNeeded(operation.Parameters[0], cmd) + " BETWEEN " + WrapIfNeeded(opr.Parameters[0], cmd) + " AND " + WrapIfNeeded(opr.Parameters[1], cmd);
-                        }
-                    default:
-                        return WrapIfNeeded(operation.Parameters[0], cmd) + " " + TranslateOperator(operation.Operator) + " " + WrapIfNeeded(operation.Parameters[1], cmd);
-				}
-			}
-			else
-			{
-				QueryModel.Parameter parameter = opm as QueryModel.Parameter;
-				if (parameter.IsColumn)
-					return QuoteColumnname((string)parameter.Value);
-				else if (parameter.Value as IEnumerable != null)
-				{
-					ArrayList lst = new ArrayList();
-					foreach (object o in parameter.Value as IEnumerable)
-						lst.Add(AddParameter(cmd, o));
-
-					if (lst.Count == 0)
-						return AddParameter(cmd, DBNull.Value);
-					else
-						return string.Join(",", (string[])lst.ToArray(typeof(string)));
-				}
-				else
-					return AddParameter(cmd, parameter.Value);
-			}
-		}
 
 		/// <summary>
 		/// Will select multiple rows from the DB

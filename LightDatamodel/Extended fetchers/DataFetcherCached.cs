@@ -33,6 +33,7 @@ namespace System.Data.LightDatamodel
         protected List<IDataClass> m_newobjects = new List<IDataClass>();
         protected List<IDataClass> m_deletedobjects = new List<IDataClass>();
         protected RelationManager m_relationManager;
+        protected Dictionary<Type, Dictionary<string, string>> m_loadreducer;
 
         public IRelationManager RelationManager { get { return m_relationManager; } }
 
@@ -97,13 +98,9 @@ namespace System.Data.LightDatamodel
 
 			try
 			{
-                List<IDataClass> updated = new List<IDataClass>();
-				foreach (SortedList<object, IDataClass> table in m_cache.Values)
-                    foreach (IDataClass obj in table.Values)
-						if(obj.IsDirty)
-							updated.Add(obj);
-
-				m_relationManager.CommitItems(this, m_newobjects, m_deletedobjects, updated);
+                List<IDataClass> updated, added, removed;
+                GetDirty(out added, out updated, out removed);
+                m_relationManager.CommitItems(this, added, removed, updated);
 
 				m_provider.CommitTransaction(transactionID);
                 m_newobjects = new List<IDataClass>();
@@ -181,11 +178,9 @@ namespace System.Data.LightDatamodel
             if (!m_cache.ContainsKey(tablename))
                 m_cache[tablename] = new SortedList<object, IDataClass>();
 
-//          QueryModel.Operation filter = QueryModel.Parser.ParseQuery("Not (" + m_transformer.TypeConfiguration.UniqueColumn(typeof(DATACLASS)) + " IN ?)", m_cache[tablename].Keys);
-//			QueryModel.Operation op = new QueryModel.Operation(QueryModel.Operators.And, new QueryModel.OperationOrParameter[] {filter, operation});
-//			InsertObjectsInCache(LoadObjects(typeof(DATACLASS), op));
+            if (!HasLoaded(typeof(DATACLASS), operation))
+                InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));
 
-			InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));
             //TODO: An enumerable collection that transparently itterates over a number of collections would make this more efficient
             List<DATACLASS> items = new List<DATACLASS>();
             foreach (DATACLASS b in m_cache[tablename].Values)
@@ -213,13 +208,40 @@ namespace System.Data.LightDatamodel
             if (!m_cache.ContainsKey(tablename))
                 m_cache[tablename] = new SortedList<object, IDataClass>();
 
-            QueryModel.Operation filter = QueryModel.Parser.ParseQuery("Not (" + m_transformer.TypeConfiguration.UniqueColumn(type) + " IN ?)", m_cache[tablename].Keys);
+            if (!HasLoaded(type, operation))
+			    InsertObjectsInCache(LoadObjects(type, operation));
 
-            QueryModel.Operation op = new QueryModel.Operation(QueryModel.Operators.And, new QueryModel.OperationOrParameter[] { filter, operation });
+            ArrayList items = new ArrayList();
+            foreach (object b in m_cache[tablename].Values)
+                items.Add(b);
 
-			InsertObjectsInCache(LoadObjects(type, operation));
-			return operation.EvaluateList(m_cache[tablename].Values);
-		}
+            QueryModel.Operation filter = QueryModel.Parser.ParseQuery("GetType.FullName = ?", type.FullName);
+            items.AddRange(filter.EvaluateList(m_newobjects));
+
+            return operation.EvaluateList(items);
+        }
+
+        protected bool HasLoaded(Type type, QueryModel.Operation operation)
+        {
+            string eq = operation.ToString(false);
+            if (eq != null)
+            {
+                if (m_loadreducer == null)
+                    m_loadreducer = new Dictionary<Type, Dictionary<string, string>>();
+                if (!m_loadreducer.ContainsKey(type))
+                    m_loadreducer.Add(type, new Dictionary<string, string>());
+
+                if (m_loadreducer[type].ContainsKey(eq))
+                    return true;
+                else
+                {
+                    m_loadreducer[type][eq] = eq;
+                    return false;
+                }
+            }
+            else
+                return false;
+        }
 
 		/// <summary>
 		/// Discards all changes from the object, and removes it from the internal cache
@@ -228,11 +250,14 @@ namespace System.Data.LightDatamodel
 		public void DiscardObject(IDataClass obj)
 		{
             string tablename = m_transformer.TypeConfiguration.GetTableName(obj);
-
+            
 			if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
 			if (m_relationManager.ExistsInDb(obj))
-				if (m_cache[tablename].ContainsKey(obj.UniqueValue))
-					m_cache[tablename].Remove(obj.UniqueValue);
+                if (m_cache[tablename].ContainsKey(obj.UniqueValue))
+                {
+                    m_cache[tablename].Remove(obj.UniqueValue);
+                    m_loadreducer = null;
+                }
         
             m_relationManager.UnregisterObject(obj);
         }
@@ -270,7 +295,8 @@ namespace System.Data.LightDatamodel
 
 			List<IDataClass> allItems = new List<IDataClass>();
 			if (this as DataFetcherNested != null)
-				InsertObjectsInCache(LoadObjects(type, query));
+                if (!HasLoaded(type, query))
+				    InsertObjectsInCache(LoadObjects(type, query));
 
 			allItems.AddRange(m_cache[tablename].Values);
 			foreach (DataClassBase o in m_newobjects)
@@ -380,11 +406,13 @@ namespace System.Data.LightDatamodel
 			if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
 			if (!m_cache[tablename].ContainsKey(id))
 			{
-                object[] items = LoadObjects(type, QueryModel.Parser.ParseQuery(m_relationManager.GetUniqueColumn(type) + "=?", id));
-                if (items == null || items.Length == 0)
-                    return null;
-                else
-                    InsertObjectsInCache(items);
+                QueryModel.Operation op = QueryModel.Parser.ParseQuery(m_relationManager.GetUniqueColumn(type) + "=?", id);
+                if (!HasLoaded(type, op))
+                {
+                    object[] items = LoadObjects(type, op);
+                    if (items != null && items.Length != 0)
+                        InsertObjectsInCache(items);
+                }
 			}
 
             if (m_cache[tablename].ContainsKey(id))
@@ -479,6 +507,57 @@ namespace System.Data.LightDatamodel
 				m_cache[tablename].Remove(obj.UniqueValue);
 			}
 		}
+
+        /// <summary>
+        /// Clears the cache, and removes all non-modified items 
+        /// </summary>
+        public override void ClearCache()
+        {
+            m_loadreducer = null;
+            foreach (string key in m_cache.Keys)
+            {
+                List<object> toremove = new List<object>();
+                foreach (KeyValuePair<object, IDataClass> item in m_cache[key])
+                    if (!item.Value.IsDirty)
+                        toremove.Add(item.Key);
+
+                foreach (object obj in toremove)
+                {
+                    RelationManager.UnregisterObject(m_cache[key][obj]);
+                    m_cache[key].Remove(obj);
+                }
+            }
+        }
+
+        protected virtual void GetDirty(out List<IDataClass> added, out List<IDataClass> updated, out List<IDataClass> deleted)
+        {
+            updated = new List<IDataClass>();
+            foreach (SortedList<object, IDataClass> table in m_cache.Values)
+                foreach (IDataClass obj in table.Values)
+                    if (obj.IsDirty)
+                        updated.Add(obj);
+
+
+            added = new List<IDataClass>(m_newobjects);
+            deleted = new List<IDataClass>(m_deletedobjects);
+        }
+
+        /*public virtual void CommitAllRecursive()
+        {
+            List<IDataClass> added, deleted, modified;
+            GetDirty(added, updated, deleted);
+        }*/
+
+        public override void Dispose()
+        {
+            base.Dispose();
+		    m_cache = null;
+            m_newobjects = null;
+            m_deletedobjects = null;
+            m_relationManager = null;
+            m_loadreducer = null;
+        }
+
 	}
 
 }

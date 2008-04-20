@@ -19,6 +19,7 @@
 #endregion
 using System;
 using System.Collections;
+using System.Text;
 
 
 //This file implements all aspects of the query model
@@ -42,7 +43,8 @@ namespace System.Data.LightDatamodel.QueryModel
 		Not,
 		IIF,
 		In,
-		Between
+		Between,
+        NOP
 	}
 
 	/// <summary>
@@ -126,7 +128,205 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// <param name="parameters">The (optional) unbound parameters</param>
 		/// <returns>The resulting value</returns>
 		public abstract object Evaluate(object item, object[] parameters);
-	}
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            if (AsStringInternal(this, true, sb))
+                return sb.ToString();
+            else
+                return null;
+        }
+
+        public virtual string ToString(bool allowNonprimitives)
+        {
+            StringBuilder sb = new StringBuilder();
+            if (AsStringInternal(this, allowNonprimitives, sb))
+                return sb.ToString();
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Returns a string representation of the element, or null if the item contains invalid items
+        /// </summary>
+        /// <param name="allowNonprimitives">True if the result may contain non primitive types</param>
+        /// <returns>The string representation</returns>
+        protected virtual bool AsStringInternal(OperationOrParameter opm, bool allowNonprimitives, StringBuilder sb)
+        {
+            if (opm.IsOperation)
+            {
+                QueryModel.Operation operation = opm as QueryModel.Operation;
+                switch (operation.Operator)
+                {
+                    case Operators.NOP:
+                        return true;
+                    case QueryModel.Operators.Not:
+                        sb.Append("Not ");
+                        if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
+                            return false;
+                        break;
+                    case QueryModel.Operators.IIF:
+                        sb.Append("IIF(");
+                        if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
+                            return false;
+                        sb.Append(",");
+
+                        if (!WrapIfNeeded(operation.Parameters[1], allowNonprimitives, sb))
+                            return false;
+                        sb.Append(",");
+
+                        if (!WrapIfNeeded(operation.Parameters[2], allowNonprimitives, sb))
+                            return false;
+
+                        sb.Append(")");
+                        break;
+                    case QueryModel.Operators.In:
+                        if (operation.Parameters.Length == 2 && operation.Parameters[1] as QueryModel.Parameter != null && ((QueryModel.Parameter)operation.Parameters[1]).Value as IEnumerable != null && ((QueryModel.Parameter)operation.Parameters[1]).Value as string == null)
+                        {
+                            if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
+                                return false;
+                            sb.Append(" In (");
+                            int i = 0;
+                            foreach (object o in (IEnumerable)(((QueryModel.Parameter)operation.Parameters[1]).Value))
+                            {
+                                i++;
+                                if (!AddParameter(o, allowNonprimitives, sb))
+                                    return false;
+                            }
+
+                            if (i == 0)
+                               AddParameter(null, allowNonprimitives, sb);
+                        }
+                        else
+                        {
+                            for (int i = 1; i < operation.Parameters.Length; i++)
+                                if (!WrapIfNeeded(operation.Parameters[i], allowNonprimitives, sb))
+                                    return false;
+                        }
+                        sb.Append(")");
+                        break;
+                    case System.Data.LightDatamodel.QueryModel.Operators.Between:
+                        {
+                            if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
+                                return false;
+                            sb.Append(" ");
+                            sb.Append(TranslateOperator(Operators.Between));
+                            sb.Append(" ");
+                            if (!WrapIfNeeded(operation.Parameters[1], allowNonprimitives, sb))
+                                return false;
+                            sb.Append(" AND ");
+                            if (!WrapIfNeeded(operation.Parameters[2], allowNonprimitives, sb))
+                                return false;
+                        }
+                        break;
+                    default:
+                        if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
+                            return false;
+                        sb.Append(" ");
+                        sb.Append(TranslateOperator(operation.Operator));
+                        sb.Append(" ");
+                        if (!WrapIfNeeded(operation.Parameters[1], allowNonprimitives, sb))
+                            return false;
+
+                        break;
+                }
+            }
+            else
+            {
+                QueryModel.Parameter parameter = opm as QueryModel.Parameter;
+                if (parameter.IsColumn)
+                    QuoteColumnName((string)parameter.Value, sb);
+                else
+                    return AddParameter(parameter.Value, allowNonprimitives, sb);
+            }
+
+            return true;
+        }
+
+        protected virtual void QuoteColumnName(string columnname, StringBuilder sb)
+        {
+            sb.Append("[");
+            sb.Append(columnname);
+            sb.Append("]");
+        }
+
+        protected virtual bool AddParameter(object o, bool allowNonprimitives, StringBuilder sb)
+        {
+            if (o == null)
+                sb.Append("NULL");
+            else if (o.GetType().IsPrimitive)
+                sb.Append(o.ToString());
+            else if (o as string != null)
+                sb.Append("'" + (string)o + "'");
+            else if (!allowNonprimitives)
+                return false;
+            else
+                sb.Append(o.GetType() + ":" + o.GetHashCode().ToString());
+
+            return true;
+        }
+
+
+
+        /// <summary>
+        /// Private helper to avoid too many nested ( )
+        /// </summary>
+        /// <param name="opm">The operand to translate</param>
+        /// <param name="cmds">The list of parameters</param>
+        /// <returns></returns>
+        protected virtual bool WrapIfNeeded(QueryModel.OperationOrParameter opm, bool allowNonprimitives, StringBuilder sb)
+        {
+            if (opm.IsOperation)
+            {
+                sb.Append("(");
+                if (!AsStringInternal(opm, allowNonprimitives, sb))
+                    return false;
+                sb.Append(")");
+                return true;
+            }
+            else
+                return AsStringInternal(opm, allowNonprimitives, sb);
+        }
+
+        protected virtual string TranslateOperator(QueryModel.Operators opr)
+        {
+            switch (opr)
+            {
+                case QueryModel.Operators.And:
+                    return "AND";
+                case QueryModel.Operators.Equal:
+                    return "=";
+                case QueryModel.Operators.GreaterThan:
+                    return ">";
+                case QueryModel.Operators.GreaterThanOrEqual:
+                    return ">=";
+                case QueryModel.Operators.IIF:
+                    return "IIF";
+                case QueryModel.Operators.In:
+                    return "IN";
+                case QueryModel.Operators.LessThan:
+                    return "<";
+                case QueryModel.Operators.LessThanOrEqual:
+                    return "<=";
+                case QueryModel.Operators.Like:
+                    return "LIKE";
+                case QueryModel.Operators.Not:
+                    return "NOT";
+                case QueryModel.Operators.NotEqual:
+                    return "<>";
+                case QueryModel.Operators.Or:
+                    return "OR";
+                case QueryModel.Operators.Xor:
+                    return "XOR";
+                case QueryModel.Operators.Between:
+                    return "BETWEEN";
+                default:
+                    throw new Exception("Bad operator: " + opr.ToString());
+
+            }
+        }
+    }
 
 	/// <summary>
 	/// Represents a sortable column and its sorting direction
@@ -214,6 +414,10 @@ namespace System.Data.LightDatamodel.QueryModel
 
 			switch(@operator)
 			{
+                case Operators.NOP:
+                    if (parameters.Length != 0)
+                        throw new Exception("The NOP operator must not have any parameters");
+                    break;
 				case Operators.Not:
 					if (parameters.Length != 1)
 						throw new Exception("The NOT operator must have exactly one parameter");
@@ -301,6 +505,8 @@ namespace System.Data.LightDatamodel.QueryModel
 
 			switch(m_operator)
 			{
+                case Operators.NOP:
+                    return true;
 				case Operators.Not:
 					return !ResAsBool(res[0].Result);
 				case Operators.Equal:
@@ -407,7 +613,6 @@ namespace System.Data.LightDatamodel.QueryModel
 			else
 				return false;
 		}
-
 	}
 
 	/// <summary>
@@ -640,9 +845,9 @@ namespace System.Data.LightDatamodel.QueryModel
         /// <returns>The equvalent query structure</returns>
         public static Operation ParseQuery(string query, params object[] values)
         {
-            //TODO: Add a NOP operation
+            
             if (query == null || query.Trim().Length == 0)
-                return new Operation(Operators.Not, new Parameter(false, false));
+                return new Operation(Operators.NOP);
 
             int bindIndex = 0;
 
@@ -894,7 +1099,7 @@ namespace System.Data.LightDatamodel.QueryModel
 				if (sorted == null)
 					return new OperationOrParameter[] {};
 				else
-					return new OperationOrParameter[] { new SortableOperation(sorted, Operators.Not, new Parameter(false, false)) }; 
+					return new OperationOrParameter[] { new SortableOperation(sorted, Operators.NOP) }; 
 			}
 			else if (parsed.Count == 1 && parsed[0] as Operation != null)
 			{
