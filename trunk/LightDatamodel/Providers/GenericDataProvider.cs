@@ -340,8 +340,28 @@ namespace System.Data.LightDatamodel
 			}
 			catch(Exception ex)
 			{
-                throw new Exception("Couldn't delete row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+                throw new Exception("Couldn't delete row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
 			}
+		}
+
+		private string FullCommandText(IDbCommand cmd)
+		{
+			try
+			{
+				string s = cmd.CommandText;
+				int i = 0;
+				while (s.IndexOf("?") >= 0)
+				{
+					int f = s.IndexOf("?");
+					s = s.Substring(0, f) + ((IDataParameter)cmd.Parameters[i++]).Value.ToString() + s.Substring(f + 1);
+				}
+				return s;
+			}
+			catch
+			{
+				return cmd.CommandText;
+			}
+
 		}
 
 		/// <summary>
@@ -523,7 +543,7 @@ namespace System.Data.LightDatamodel
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Couldn't update row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+                    throw new Exception("Couldn't update row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd) );
                 }
             }
 		}
@@ -552,7 +572,7 @@ namespace System.Data.LightDatamodel
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Couldn't insert row in table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+					throw new Exception("Couldn't insert row in table \"" + typeinfo.TableName + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
                 }
             }
 		}
