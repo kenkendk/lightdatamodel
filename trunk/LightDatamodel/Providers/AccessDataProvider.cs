@@ -48,11 +48,11 @@ namespace System.Data.LightDatamodel
 
 			try
 			{
-				IDataReader dr = cmd.ExecuteReader();
+				IDataReader dr = cmd.ExecuteReader( CommandBehavior.KeyInfo );
 				DataTable schema = dr.GetSchemaTable();
 				dr.Close();
 				DataRow[] row = schema.Select("ColumnName = '" + column + "'");
-				if (row == null || row.Length == 0) throw new Exception("Couldn't column for table");
+				if (row == null || row.Length == 0) throw new Exception("Couldn't find column for table");
 				return (bool)row[0]["IsAutoIncrement"];
 			}
 			catch (Exception ex)
