@@ -409,6 +409,11 @@ namespace DataClassFileBuilder
 							if(name != null) dlg.ViewNameText.Text = name.InnerText;
 							if(sql != null) dlg.SQLText.Text = sql.InnerText;
 							dlg.DestinationDirText.Text = Path.GetDirectoryName(args[0]);
+							string mappingFile = System.IO.Path.Combine(dlg.DestinationDirText.Text, "LightDataModel.Mapping.xml");
+							if (System.IO.File.Exists(mappingFile))
+								dlg.UseConfigCheckBox.Checked = true;
+							else
+								dlg.UseConfigCheckBox.Checked = false;
 						}
 					}
 					catch(Exception ex)
