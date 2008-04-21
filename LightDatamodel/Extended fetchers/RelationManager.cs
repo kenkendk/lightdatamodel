@@ -396,11 +396,11 @@ namespace System.Data.LightDatamodel
                 ((PropertyInfo)s[0]).SetValue(s[1], s[2], null);
                     
             //Step 3, update all items
-			while (modified.Count > 0)
-				fetcher.Commit(modified[0]);
+			foreach(IDataClass update in modified)
+				fetcher.Commit(update);
 
-			while (deleted.Count > 0)
-				fetcher.Commit(deleted[0]);
+			foreach (IDataClass delete in deleted)
+				fetcher.Commit(delete);
         }
 
     }
