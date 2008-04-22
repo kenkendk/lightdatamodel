@@ -28,6 +28,8 @@ namespace System.Data.LightDatamodel
 		DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 		DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass;
 		object[] GetObjectsFromCache(Type type, QueryModel.Operation operation);
+
+		event ObjectStateChangeHandler ObjectAllocation;
 		
 		DATACLASS GetObjectByGuid<DATACLASS>(Guid guid) where DATACLASS : IDataClass;
 		object GetObjectByGuid(Guid guid);
@@ -36,7 +38,17 @@ namespace System.Data.LightDatamodel
 		void Remove(IDataClass obj);
 		void Add(IDataClass obj);
         IRelationManager RelationManager { get; }
+		bool IsDirty { get; }
 	}
+
+	/// <summary>
+	/// Will fire when creating or removing an object
+	/// </summary>
+	/// <param name="sender"></param>
+	/// <param name="obj"></param>
+	/// <param name="oldstate"></param>
+	/// <param name="newstate"></param>
+	public delegate void ObjectStateChangeHandler(object sender, IDataClass obj, ObjectStates oldstate, ObjectStates newstate);
 
 	/// <summary>
 	/// This class is used to transfer data to and from a configureable data provider

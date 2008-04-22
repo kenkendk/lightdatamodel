@@ -61,6 +61,36 @@ namespace System.Data.LightDatamodel
 			}
         }
 
+		public override object GetDefaultValue(string tablename, string columname)
+		{
+			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+
+			//get from schema
+			OleDb.OleDbConnection conn = (OleDb.OleDbConnection)m_connection;
+			DataTable tbl = conn.GetOleDbSchemaTable(OleDb.OleDbSchemaGuid.Columns, new object[] {null, null, tablename, columname });
+			object def = tbl.Rows[0]["COLUMN_DEFAULT"];
+
+			//convert to .net value
+			if (def == DBNull.Value || def == null || def.ToString() == "NULL")
+			{
+				//don't do anything. Let the base handle it
+			}
+			else
+			{
+				try
+				{
+					def = def.ToString().Trim('\"', '\'');
+					return Convert.ChangeType(def, GetTableStructure(tablename)[columname]);
+				}
+				catch
+				{
+					//don't do anything really. If it sucks, it sucks
+				}
+			}
+
+			return base.GetDefaultValue(tablename, columname);
+		}
+
 		public override string GetPrimaryKey(string tablename)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();

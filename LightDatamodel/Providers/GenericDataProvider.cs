@@ -263,7 +263,7 @@ namespace System.Data.LightDatamodel
 			else if(type == typeof(bool))
 				return false;
 			else if(type == typeof(DateTime))
-				new DateTime(1,1,1);
+				return new DateTime(1,1,1);
 
 			return null;
 		}
@@ -401,6 +401,19 @@ namespace System.Data.LightDatamodel
                     throw new Exception("Couldn't load row (" + primarykey.ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
 			    }
             }
+		}
+
+		/// <summary>
+		/// Will return the default value for the given column. Eg. 42
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="columname"></param>
+		/// <returns></returns>
+		public virtual object GetDefaultValue(string tablename, string columname)
+		{
+			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+
+			return GetNullValue( GetTableStructure(tablename)[columname]);
 		}
 
 		/// <summary>
@@ -577,9 +590,9 @@ namespace System.Data.LightDatamodel
             }
 		}
 
-        public virtual List<KeyValuePair<string, Type>> GetStructure(string sql)
+        public virtual Dictionary<string, Type> GetStructure(string sql)
 		{
-            List<KeyValuePair<string, Type>> res = new List<KeyValuePair<string, Type>>();
+			Dictionary<string, Type> res = new Dictionary<string, Type>();
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
@@ -589,7 +602,7 @@ namespace System.Data.LightDatamodel
                     using (IDataReader dr = cmd.ExecuteReader())
                     {
                         for (int i = 0; i < dr.FieldCount; i++)
-                            res.Add(new KeyValuePair<string, Type>(dr.GetName(i), dr.GetFieldType(i)));
+                            res.Add(dr.GetName(i), dr.GetFieldType(i));
                         return res;
                     }
                 }
@@ -600,7 +613,7 @@ namespace System.Data.LightDatamodel
             }
 		}
 
-        public virtual List<KeyValuePair<string, Type>> GetTableStructure(string tablename)
+        public virtual Dictionary<string, Type> GetTableStructure(string tablename)
 		{
 			return GetStructure("SELECT * FROM " + QuoteTablename(tablename) + " WHERE 1 = 0");
 		}

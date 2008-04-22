@@ -998,7 +998,7 @@ namespace DataClassFileBuilder
                         if (mf.IgnoreWithSelect)
                             sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithSelect()]\n");
 
-                        sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + ";\n");
+                        sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName)) + ";\n");
                     }
                     sw.Write("#endregion\n\n");
 
@@ -1078,6 +1078,20 @@ namespace DataClassFileBuilder
 			{
 				throw new Exception("Couldn't write file \"" + path + "\"\nError: " + ex.Message);
 			}
+		}
+
+		private string FormatObjectToCSharp(object obj)
+		{
+			if (obj == null)
+				return "null";
+			else if (obj.GetType() == typeof(string))
+				return "\"" + obj.ToString() + "\"";
+			else if (obj.GetType() == typeof(DateTime))
+			{
+				DateTime d = (DateTime)obj;
+				return "new System.DateTime(" + d.Year.ToString() + ", " + d.Month.ToString() + ", " + d.Day.ToString() + ")";
+			}
+			else return obj.ToString();
 		}
 
 		private void BrowseButton_Click(object sender, System.EventArgs e)

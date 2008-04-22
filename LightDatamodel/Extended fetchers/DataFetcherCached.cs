@@ -35,7 +35,8 @@ namespace System.Data.LightDatamodel
         protected RelationManager m_relationManager;
         protected Dictionary<Type, Dictionary<string, string>> m_loadreducer;
 
-        public IRelationManager RelationManager { get { return m_relationManager; } }
+		public IRelationManager RelationManager { get { return m_relationManager; } }
+		public event ObjectStateChangeHandler ObjectAllocation;
 
         /// <summary>
         /// Gets a value describing if the fetcher contains uncommited changes
@@ -423,6 +424,7 @@ namespace System.Data.LightDatamodel
 
 		public virtual void Remove(IDataClass obj)
 		{
+			ObjectStates oldstate = obj.ObjectState;
             string tablename = m_transformer.TypeConfiguration.GetTableName(obj);
 			if(obj.ObjectState == ObjectStates.New)
 			{
@@ -436,6 +438,7 @@ namespace System.Data.LightDatamodel
 				m_deletedobjects.Add(obj);
 				(obj as DataClassBase).m_state = ObjectStates.Deleted;
 			}
+			if (ObjectAllocation != null) ObjectAllocation(this, obj, oldstate, ObjectStates.Deleted);
 		}
 
 		public virtual void Add(IDataClass newobj)
@@ -454,6 +457,7 @@ namespace System.Data.LightDatamodel
 		{
 			DATACLASS newobj = Activator.CreateInstance<DATACLASS>();
 			Add(newobj);
+			if (ObjectAllocation != null) ObjectAllocation(this, newobj, ObjectStates.New, ObjectStates.New);
 			return newobj;
 		}
 
@@ -461,6 +465,7 @@ namespace System.Data.LightDatamodel
 		{
 			object newobj = Activator.CreateInstance(dataclass);
 			Add((IDataClass)newobj);
+			if (ObjectAllocation != null) ObjectAllocation(this, (IDataClass)newobj, ObjectStates.New, ObjectStates.New);
 			return newobj;
 		}
 

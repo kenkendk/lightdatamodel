@@ -28,8 +28,8 @@ namespace System.Data.LightDatamodel
 	/// </summary>
 	public interface IDataFetcher : IDisposable 
 	{
-		event DataWriteEventHandler BeforeDataChange;
-		event DataWriteEventHandler AfterDataChange;
+		event DataChangeEventHandler BeforeDataChange;
+		event DataChangeEventHandler AfterDataChange;
 		event DataConnectionEventHandler BeforeDataConnection;
 		event DataConnectionEventHandler AfterDataConnection;
 
@@ -59,8 +59,8 @@ namespace System.Data.LightDatamodel
 		string UniqueColumn	{get;}
 		object UniqueValue{get;}
         void SetDirty();
-		event DataWriteEventHandler BeforeDataChange;
-		event DataWriteEventHandler AfterDataChange;
+		event DataChangeEventHandler BeforeDataChange;
+		event DataChangeEventHandler AfterDataChange;
 		event DataConnectionEventHandler BeforeDataCommit;
 		event DataConnectionEventHandler AfterDataCommit;
 
@@ -81,7 +81,7 @@ namespace System.Data.LightDatamodel
 
 
 	public delegate void DataConnectionEventHandler(object sender, DataActions action);
-	public delegate void DataWriteEventHandler(object sender, string propertyname, object oldvalue, object newvalue);
+	public delegate void DataChangeEventHandler(object sender, string propertyname, object oldvalue, object newvalue);
 
 	/// <summary>
 	/// This enum represents the different states an object may have
