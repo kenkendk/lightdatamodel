@@ -1,9 +1,3 @@
-#region " Unsynchronized Includes "
-
-	//Don't put any region sections in here
-
-#endregion
-
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
 /// <provider name="System.Data.LightDatamodel.AccessDataProvider" connectionstring="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=D:\workspace\LightDatamodel\TestBench\TestDB.mdb;" />
@@ -16,15 +10,15 @@
 namespace Datamodel.TestDB
 {
 
-	public class CompanyVisits : System.Data.LightDatamodel.DataClassBase
+	public partial class CompanyVisits : System.Data.LightDatamodel.DataClassBase
 	{
 
 #region " private members "
 
-		private System.Int32 m_ID;
-		private System.Int32 m_CompaniesID;
-		private System.Int32 m_UserAdressesID;
-		private System.DateTime m_VisitDate;
+		private System.Int32 m_ID = 0;
+		private System.Int32 m_CompaniesID = 0;
+		private System.Int32 m_UserAdressesID = 0;
+		private System.DateTime m_VisitDate = new System.DateTime(1, 1, 1);
 #endregion
 
 #region " unique value "
@@ -38,32 +32,30 @@ namespace Datamodel.TestDB
 		public System.Int32 ID
 		{
 			get{return m_ID;}
-			set{object oldvalue = m_ID;OnBeforeDataWrite(this, "ID", oldvalue, value);m_ID = value;OnAfterDataWrite(this, "ID", oldvalue, value);}
+			set{object oldvalue = m_ID;OnBeforeDataChange(this, "ID", oldvalue, value);m_ID = value;OnAfterDataChange(this, "ID", oldvalue, value);}
 		}
 
 		public System.Int32 CompaniesID
 		{
 			get{return m_CompaniesID;}
-			set{object oldvalue = m_CompaniesID;OnBeforeDataWrite(this, "CompaniesID", oldvalue, value);m_CompaniesID = value;OnAfterDataWrite(this, "CompaniesID", oldvalue, value);}
+			set{object oldvalue = m_CompaniesID;OnBeforeDataChange(this, "CompaniesID", oldvalue, value);m_CompaniesID = value;OnAfterDataChange(this, "CompaniesID", oldvalue, value);}
 		}
 
 		public System.Int32 UserAdressesID
 		{
 			get{return m_UserAdressesID;}
-			set{object oldvalue = m_UserAdressesID;OnBeforeDataWrite(this, "UserAdressesID", oldvalue, value);m_UserAdressesID = value;OnAfterDataWrite(this, "UserAdressesID", oldvalue, value);}
+			set{object oldvalue = m_UserAdressesID;OnBeforeDataChange(this, "UserAdressesID", oldvalue, value);m_UserAdressesID = value;OnAfterDataChange(this, "UserAdressesID", oldvalue, value);}
 		}
 
 		public System.DateTime VisitDate
 		{
 			get{return m_VisitDate;}
-			set{object oldvalue = m_VisitDate;OnBeforeDataWrite(this, "VisitDate", oldvalue, value);m_VisitDate = value;OnAfterDataWrite(this, "VisitDate", oldvalue, value);}
+			set{object oldvalue = m_VisitDate;OnBeforeDataChange(this, "VisitDate", oldvalue, value);m_VisitDate = value;OnAfterDataChange(this, "VisitDate", oldvalue, value);}
 		}
 
 #endregion
 
-#region " Unsynchronized Custom Code Region "
-
-	//Don't put any region sections in here
+#region " referenced properties "
 
 #endregion
 
