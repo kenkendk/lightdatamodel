@@ -1089,7 +1089,16 @@ namespace DataClassFileBuilder
 			else if (obj.GetType() == typeof(double) || obj.GetType() == typeof(float))
 			{
 				double d = (double)Convert.ChangeType(obj, typeof(double));
-				return d.ToString(System.Globalization.CultureInfo.InvariantCulture);
+				if (d == double.MinValue)
+					return "double.MinValue";
+				else if (d == double.MaxValue)
+					return "double.MaxValue";
+				else if (d == float.MinValue)
+					return "float.MinValue";
+				else if (d == float.MaxValue)
+					return "float.MaxValue";
+				else
+					return d.ToString(System.Globalization.CultureInfo.InvariantCulture);
 			}
 			else if (obj.GetType() == typeof(DateTime))
 			{
