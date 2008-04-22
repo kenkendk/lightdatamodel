@@ -31,8 +31,8 @@ namespace System.Data.LightDatamodel
 	public abstract class DataClassView : IDataClass
 	{
 		internal protected IDataFetcher m_dataparent;
-		public event DataWriteEventHandler BeforeDataChange;
-		public event DataWriteEventHandler AfterDataChange;
+		public event DataChangeEventHandler BeforeDataChange;
+		public event DataChangeEventHandler AfterDataChange;
 		public event DataConnectionEventHandler BeforeDataCommit;
 		public event DataConnectionEventHandler AfterDataCommit;
 
@@ -90,8 +90,8 @@ namespace System.Data.LightDatamodel
 		internal protected bool m_isdirty = true;
 		internal protected IDataFetcher m_dataparent;
 		internal protected ObjectStates m_state = ObjectStates.Default;
-		public event DataWriteEventHandler BeforeDataChange;
-		public event DataWriteEventHandler AfterDataChange;
+		public event DataChangeEventHandler BeforeDataChange;
+		public event DataChangeEventHandler AfterDataChange;
 		public event DataConnectionEventHandler BeforeDataCommit;
 		public event DataConnectionEventHandler AfterDataCommit;
 

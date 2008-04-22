@@ -31,8 +31,8 @@ namespace System.Data.LightDatamodel
 		protected IDataProvider m_provider;
         protected IObjectTransformer m_transformer;
 
-		public event DataWriteEventHandler BeforeDataChange;
-		public event DataWriteEventHandler AfterDataChange;
+		public event DataChangeEventHandler BeforeDataChange;
+		public event DataChangeEventHandler AfterDataChange;
 		public event DataConnectionEventHandler BeforeDataConnection;
 		public event DataConnectionEventHandler AfterDataConnection;
 
@@ -118,8 +118,8 @@ namespace System.Data.LightDatamodel
         /// <param name="obj"></param>
 		protected virtual void HookObject(IDataClass obj)
 		{
-			(obj as DataClassBase).BeforeDataChange += new DataWriteEventHandler(obj_BeforeDataChange);
-			(obj as DataClassBase).AfterDataChange += new DataWriteEventHandler(obj_AfterDataChange);
+			(obj as DataClassBase).BeforeDataChange += new DataChangeEventHandler(obj_BeforeDataChange);
+			(obj as DataClassBase).AfterDataChange += new DataChangeEventHandler(obj_AfterDataChange);
 		}
 
 		protected virtual DataClassLevels GetDataClassLevel(Type type)
