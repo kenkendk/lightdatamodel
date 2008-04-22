@@ -54,5 +54,3 @@ using System.Runtime.CompilerServices;
 //       documentation for more information on this.
 //
 [assembly: AssemblyDelaySign(false)]
-[assembly: AssemblyKeyFile("..\\..\\LightDatamodel.snk")]
-[assembly: AssemblyKeyName("LightDatamodel")]

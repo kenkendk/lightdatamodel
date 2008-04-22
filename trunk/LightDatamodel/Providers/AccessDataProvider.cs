@@ -80,7 +80,7 @@ namespace System.Data.LightDatamodel
 				try
 				{
 					def = def.ToString().Trim('\"', '\'');
-					return Convert.ChangeType(def, GetTableStructure(tablename)[columname]);
+					return Convert.ChangeType(def, GetTableStructure(tablename)[columname], System.Globalization.CultureInfo.InvariantCulture);
 				}
 				catch
 				{

@@ -1086,12 +1086,20 @@ namespace DataClassFileBuilder
 				return "null";
 			else if (obj.GetType() == typeof(string))
 				return "\"" + obj.ToString() + "\"";
+			else if (obj.GetType() == typeof(double) || obj.GetType() == typeof(float))
+			{
+				double d = (double)Convert.ChangeType(obj, typeof(double));
+				return d.ToString(System.Globalization.CultureInfo.InvariantCulture);
+			}
 			else if (obj.GetType() == typeof(DateTime))
 			{
 				DateTime d = (DateTime)obj;
 				return "new System.DateTime(" + d.Year.ToString() + ", " + d.Month.ToString() + ", " + d.Day.ToString() + ")";
 			}
-			else return obj.ToString();
+			else if (obj.GetType() == typeof(bool))
+				return (bool)obj ? "true" : "false";
+			else
+				return obj.ToString();
 		}
 
 		private void BrowseButton_Click(object sender, System.EventArgs e)
