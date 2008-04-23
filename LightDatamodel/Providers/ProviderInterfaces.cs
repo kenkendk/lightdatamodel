@@ -39,6 +39,7 @@ namespace System.Data.LightDatamodel
 
 		string GetPrimaryKey(string tablename);
         bool IsAutoIncrement(string tablename, string column);
+		bool IsUnique(string tablename, string column);
 		object GetDefaultValue(string tablename, string column);
 		string[] GetTablenames();
         Dictionary<string, Type> GetStructure(string sql);

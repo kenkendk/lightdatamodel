@@ -173,7 +173,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="type">The type of objects to load</param>
 		/// <param name="operation">The filter used to select objects</param>
 		/// <returns>All matching objects</returns>
-		public virtual DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass
+		public override DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation)
 		{
             string tablename = m_transformer.TypeConfiguration.GetTableName(typeof(DATACLASS));
             if (!m_cache.ContainsKey(tablename))
@@ -193,17 +193,22 @@ namespace System.Data.LightDatamodel
             return operation.EvaluateList<DATACLASS>(items);
         }
 
-        public virtual object[] GetObjects(Type type)
+        public override object[] GetObjects(Type type)
         {
             return GetObjects(type, "");
         }
+
+		public override object[] GetObjects(Type type, string filter, params object[] parameters)
+		{
+			return GetObjects(type, QueryModel.Parser.ParseQuery(filter, parameters));
+		}
 
         public virtual object[] GetObjects(Type type, string query)
         {
             return GetObjects(type, QueryModel.Parser.ParseQuery(query));
         }
 
-		public virtual object[] GetObjects(Type type, QueryModel.Operation operation)
+		public override object[] GetObjects(Type type, QueryModel.Operation operation)
 		{
 			string tablename = m_transformer.TypeConfiguration.GetTableName(type);
             if (!m_cache.ContainsKey(tablename))
@@ -305,6 +310,11 @@ namespace System.Data.LightDatamodel
 					allItems.Add(o);
 
 			return query.EvaluateList(allItems);
+		}
+
+		public object[] GetObjectsFromCache(Type type, string filter, params object[] parameters)
+		{
+			return GetObjectsFromCache(type, QueryModel.Parser.ParseQuery(filter, parameters));
 		}
 
         protected object[] InsertObjectsInCache(object[] data)

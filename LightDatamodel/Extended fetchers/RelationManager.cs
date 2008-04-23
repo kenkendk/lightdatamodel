@@ -375,8 +375,6 @@ namespace System.Data.LightDatamodel
                 specialItems.Add(GetGuidForObject(o), null);
 
             //Step 2, re-assign to update internal ID's
-            Dictionary<Type, List<PropertyInfo>> classProperties = new Dictionary<Type, List<PropertyInfo>>();
-
             List<object[]> subUpdates = new List<object[]>();
             foreach (Guid objKey in m_referenceObjects.Keys)
             {
@@ -384,14 +382,12 @@ namespace System.Data.LightDatamodel
                 foreach (KeyValuePair<string, Guid> pair in m_referenceObjects[objKey])
                     if (specialItems.ContainsKey(pair.Value))
                     {
-                        if (!modified.Contains(item))
-                            modified.Add(item);
+                        if (!modified.Contains(item)) modified.Add(item);
 
                         PropertyInfo pi = item.GetType().GetProperty(pair.Key);
                         subUpdates.Add(new object[] { pi, item, specialItems[pair.Value] });
                     }
             }
-            
             foreach(object[] s in subUpdates)
                 ((PropertyInfo)s[0]).SetValue(s[1], s[2], null);
                     
