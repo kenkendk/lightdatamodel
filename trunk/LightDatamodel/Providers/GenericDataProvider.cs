@@ -417,6 +417,18 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
+		/// Will return wheter the given column is unique. Eg. a primary key
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="columname"></param>
+		/// <returns></returns>
+		public virtual bool IsUnique(string tablename, string columname)
+		{
+			if (columname == GetPrimaryKey(tablename)) return true;		//by this we define that primary keys always will be unique ... uh oh
+			else return false;
+		}
+
+		/// <summary>
 		/// Will select multiple rows from the DB through the use of QueryModel
 		/// </summary>
 		/// <param name="tablename"></param>
@@ -545,7 +557,10 @@ namespace System.Data.LightDatamodel
                 cmd.CommandText = GetUpdateString(typeinfo) + GetIdentityWhere(typeinfo);
                 foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
                     if (!mf.IgnoreWithUpdate)
-                        AddParameter(cmd, mf.Field.GetValue(item));
+					{
+						object val = mf.Field.GetValue(item);
+						AddParameter(cmd, mf.DataType == typeof(string) && (string)val == "" ? null : val);		//damn hack. String can't be "" ... at least not for Access
+					}
                 AddParameter(cmd, typeinfo.UniqueValue(item));
 
                 try
@@ -574,8 +589,11 @@ namespace System.Data.LightDatamodel
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
                 cmd.CommandText = GetInsertString(typeinfo);
                 foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
-                    if (!mf.IgnoreWithInsert)
-                        AddParameter(cmd, mf.Field.GetValue(item));
+					if (!mf.IgnoreWithInsert)
+					{
+						object val = mf.Field.GetValue(item);
+						AddParameter(cmd, mf.DataType == typeof(string) && (string)val == "" ? null : val);		//damn hack. String can't be "" ... at least not for Access
+					}
 
                 try
                 {

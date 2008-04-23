@@ -91,6 +91,27 @@ namespace System.Data.LightDatamodel
 			return base.GetDefaultValue(tablename, columname);
 		}
 
+		public override bool IsUnique(string tablename, string columname)
+		{
+			bool unique = base.IsUnique(tablename, columname);
+			if (unique) return true;
+
+			//check if it's a unique index
+			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OleDb.OleDbConnection conn = (OleDb.OleDbConnection)m_connection;
+			DataTable tbl = conn.GetOleDbSchemaTable(OleDb.OleDbSchemaGuid.Indexes, new object[] { null, null, null, null, tablename });
+			if (tbl != null && tbl.Rows.Count > 0)
+			{
+				DataRow[] rows = tbl.Select("COLUMN_NAME = '" + columname + "'");
+				if (rows != null && rows.Length > 0)
+				{
+					foreach (DataRow row in rows)
+						if ((bool)row["UNIQUE"]) unique = true;
+				}
+			}
+			return unique;
+		}
+
 		public override string GetPrimaryKey(string tablename)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();

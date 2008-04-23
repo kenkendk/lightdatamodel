@@ -25,16 +25,15 @@ namespace System.Data.LightDatamodel
 
 	public interface IDataFetcherCached : IDataFetcher
 	{
-		DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
-		DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass;
-		object[] GetObjectsFromCache(Type type, QueryModel.Operation operation);
 
 		event ObjectStateChangeHandler ObjectAllocation;
 		
 		DATACLASS GetObjectByGuid<DATACLASS>(Guid guid) where DATACLASS : IDataClass;
 		object GetObjectByGuid(Guid guid);
-		DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass;
-		object[] GetObjects(Type type, QueryModel.Operation operation);
+		object[] GetObjectsFromCache(Type type, QueryModel.Operation query);
+		object[] GetObjectsFromCache(Type type, string filter, params object[] parameters);
+		DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass;
+		DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 		void Remove(IDataClass obj);
 		void Add(IDataClass obj);
         IRelationManager RelationManager { get; }

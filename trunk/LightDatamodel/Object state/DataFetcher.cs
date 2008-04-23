@@ -153,23 +153,71 @@ namespace System.Data.LightDatamodel
 		/// <returns>All matching objects</returns>
 		public virtual DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
 		{
+			return GetObjects<DATACLASS>(QueryModel.Parser.ParseQuery(filter, parameters));
+		}
+
+		public virtual DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass
+		{
 			Type type = typeof(DATACLASS);
 			string tablename = type.Name;
 
 			OnBeforeDataConnection(null, DataActions.Fetch);
 
-            object[] items = LoadObjects(typeof(DATACLASS), QueryModel.Parser.ParseQuery(filter, parameters));
-            DATACLASS[] res = new DATACLASS[items.Length];
-            for (int i = 0; i < items.Length; i++)
+			object[] items = LoadObjects(type, operation);
+			DATACLASS[] res = new DATACLASS[items.Length];
+			for (int i = 0; i < items.Length; i++)
 			{
 				HookObject((IDataClass)items[i]);
-                (items[i] as DataClassBase).m_dataparent = this;
-                (items[i] as DataClassBase).m_state = ObjectStates.Default;
-                OnAfterDataConnection(items[i], DataActions.Fetch);
-                res[i] = (DATACLASS)items[i];
+				(items[i] as DataClassBase).m_dataparent = this;
+				(items[i] as DataClassBase).m_state = ObjectStates.Default;
+				OnAfterDataConnection(items[i], DataActions.Fetch);
+				res[i] = (DATACLASS)items[i];
 			}
 
 			return res;
+		}
+
+		/// <summary>
+		/// This will load a list of arbitary objects
+		/// </summary>
+		/// <param name="type"></param>
+		/// <returns></returns>
+		public virtual object[] GetObjects(Type type)
+		{
+			return GetObjects(type, "", null);
+		}
+
+		/// <summary>
+		/// This will load a list of arbitary objects
+		/// If the given object is a DataClassBase it will be hooked into the DataFetcher
+		/// DataCustomClassBase will also have it's values filled
+		/// All others will just be filled with the data
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="filter">The filter used to select objects</param>
+		/// <param name="parameters"></param>
+		/// <returns>All matching objects</returns>
+		public virtual object[] GetObjects(Type type, string filter, params object[] parameters)
+		{
+			return GetObjects(type, QueryModel.Parser.ParseQuery(filter, parameters));
+		}
+
+		public virtual object[] GetObjects(Type type, QueryModel.Operation operation)
+		{
+			string tablename = type.Name;
+
+			OnBeforeDataConnection(null, DataActions.Fetch);
+
+			object[] items = LoadObjects(type, operation);
+			for (int i = 0; i < items.Length; i++)
+			{
+				HookObject((IDataClass)items[i]);
+				(items[i] as DataClassBase).m_dataparent = this;
+				(items[i] as DataClassBase).m_state = ObjectStates.Default;
+				OnAfterDataConnection(items[i], DataActions.Fetch);
+			}
+
+			return items;
 		}
 
         /// <summary>

@@ -998,7 +998,7 @@ namespace DataClassFileBuilder
                         if (mf.IgnoreWithSelect)
                             sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithSelect()]\n");
 
-                        sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName)) + ";\n");
+						sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName), provider.IsUnique(mapping.TableName, mf.ColumnName)) + ";\n");
                     }
                     sw.Write("#endregion\n\n");
 
@@ -1080,12 +1080,12 @@ namespace DataClassFileBuilder
 			}
 		}
 
-		private string FormatObjectToCSharp(object obj)
+		private string FormatObjectToCSharp(object obj, bool columnisunique)
 		{
 			if (obj == null)
 				return "null";
 			else if (obj.GetType() == typeof(string))
-				return "\"" + obj.ToString() + "\"";
+				return "\"" + obj.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 			else if (obj.GetType() == typeof(double) || obj.GetType() == typeof(float))
 			{
 				double d = (double)Convert.ChangeType(obj, typeof(double));
@@ -1107,6 +1107,8 @@ namespace DataClassFileBuilder
 			}
 			else if (obj.GetType() == typeof(bool))
 				return (bool)obj ? "true" : "false";
+			else if (obj.GetType() == typeof(int) && columnisunique)
+				return "(new System.Random()).Next(int.MinValue, -1)";
 			else
 				return obj.ToString();
 		}

@@ -35,6 +35,10 @@ namespace System.Data.LightDatamodel
 
 		DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 		DATACLASS[] GetObjects<DATACLASS>() where DATACLASS : IDataClass;
+		DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass;
+		object[] GetObjects(Type type);
+		object[] GetObjects(Type type, string filter, params object[] parameters);
+		object[] GetObjects(Type type, QueryModel.Operation operation);
 		DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass;
 		object GetObjectById(Type type, object id);
 		void Commit(IDataClass obj);
