@@ -1020,10 +1020,19 @@ namespace DataClassFileBuilder
 
                         sw.Write("\t\tpublic " + mf.DataType.FullName + " " + mf.PropertyName + "\n\t\t{\n");
                         sw.Write("\t\t\tget{return " + mf.FieldName + ";}\n");
-                        if (mapping.ViewSQL == null)
-                            sw.Write("\t\t\tset{object oldvalue = " + mf.FieldName + ";OnBeforeDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);" + mf.FieldName + " = value;OnAfterDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);}\n");
-                        else
-                            sw.Write("\t\t\tset{" + mf.FieldName + " = value;}\n");
+						if (mapping.ViewSQL == null)
+						{
+							string setcode = "\t\t\tset{object oldvalue = " + mf.FieldName + ";OnBeforeDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);" + mf.FieldName + " = value;OnAfterDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);}\n";
+							if (mf.DataType == typeof(string))
+							{
+								int length = provider.GetColumnStringLength(mapping.TableName, mf.PropertyName);
+								if (length < int.MaxValue && length > 0)
+									setcode = "\t\t\tset{value = value != null && ((string)value).Length > " + length.ToString() + " ? ((string)value).Substring(0, " + length.ToString() + ") : value;object oldvalue = " + mf.FieldName + ";OnBeforeDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);" + mf.FieldName + " = value;OnAfterDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);}\n";
+							}
+							sw.Write(setcode);
+						}
+						else
+							sw.Write("\t\t\tset{" + mf.FieldName + " = value;}\n");
                         sw.Write("\t\t}\n\n");
                     }
                     sw.Write("#endregion\n\n");

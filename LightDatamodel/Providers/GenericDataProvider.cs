@@ -292,6 +292,44 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
+		/// Will return the length of the given string column. Eg. 20 if it's a Char(20)
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="columnname"></param>
+		/// <returns></returns>
+		public virtual int GetColumnStringLength(string tablename, string columnname)
+		{
+			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+
+			IDbCommand cmd = m_connection.CreateCommand();
+			cmd.CommandText = "SELECT " + QuoteColumnname(columnname) + " FROM " + QuoteTablename(tablename) + " WHERE 1 = 0";
+
+			IDataReader r = null;
+			try
+			{
+				r = cmd.ExecuteReader(CommandBehavior.KeyInfo);
+				DataTable tbl = r.GetSchemaTable();
+				if (tbl != null && tbl.Rows.Count > 0)
+				{
+					int length = (int)tbl.Rows[0]["ColumnSize"];
+					return length < 256 ? length : int.MaxValue;
+				}
+			}
+			catch (Exception ex)
+			{
+
+				throw new Exception("Couldn't get column string length\nError: " + ex.Message);
+			}
+			finally
+			{
+				if (r != null)
+					r.Close();
+			}
+
+			return int.MaxValue;
+		}
+
+		/// <summary>
 		/// Will get or set the connection string. All DBs I've meet is able to connect throug the use a single connection string. Even Oracle! (It can be rather huge though)
 		/// </summary>
 		public virtual string ConnectionString
@@ -309,10 +347,18 @@ namespace System.Data.LightDatamodel
 		protected virtual string AddParameter(IDbCommand cmd, object value)
 		{
 			IDataParameter p = cmd.CreateParameter();
-            if (value == null)
-                p.Value = DBNull.Value;
-            else
-			    p.Value = value;
+			if (value == null)
+				p.Value = DBNull.Value;
+			else if (value.GetType() == typeof(DateTime))
+			{
+				DateTime d = (DateTime)value;
+				if (d.Equals(GetNullValue(typeof(DateTime))))
+					p.Value = DBNull.Value;
+				else
+					p.Value = d.ToOADate();
+			}
+			else
+				p.Value = value;
 			cmd.Parameters.Add(p);
 			return "?";
 		}
