@@ -608,6 +608,21 @@ namespace System.Data.LightDatamodel
                 return m_referenceFields[name];
             }
 
+			/// <summary>
+			/// Will add a reference to the engine
+			/// </summary>
+			/// <param name="reversetable"></param>
+			/// <param name="reversepropertyname"></param>
+			/// <param name="localpropertyname"></param>
+			/// <param name="localiscollection"></param>
+			public void AddReferenceField(string reversetable, string reversekeypropertyname, string localkeypropertyname, string localrelationproperty, bool localiscollection)
+			{
+				string name = localrelationproperty;
+				if(m_referenceFields.ContainsKey(name))m_referenceFields.Remove(name);
+				m_referenceFields.Add(name, new ReferenceField(reversetable, reversekeypropertyname, localkeypropertyname, localiscollection));
+
+			}
+
             /// <summary>
             /// Gets or sets the mapping information
             /// </summary>
@@ -1010,8 +1025,7 @@ namespace System.Data.LightDatamodel
             {
             }
 
-            public ReferenceField(Type type, TypeConfiguration parent, XmlNode node)
-                : this(node)
+            public ReferenceField(Type type, TypeConfiguration parent, XmlNode node) : this(node)
             {
                 m_parent = parent;
                 m_localProperty = type.GetProperty(m_propertyName);
@@ -1031,8 +1045,29 @@ namespace System.Data.LightDatamodel
                     }
             }
 
-            public ReferenceField(XmlNode node)
-                : this()
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="reversetable">These are for the remote table/class</param>
+			/// <param name="reversepropertyname">These are for the remote table/class</param>
+			/// <param name="localpropertyname">These are for the local table/class</param>
+			/// <param name="localiscollection">True if the local property is a collection</param>
+			public ReferenceField(string reversetable, string reversepropertyname, string localpropertyname, bool localiscollection)
+			{
+				//These are for the remote table/class
+				m_reverse_table = reversetable;
+				m_reverse_column = reversepropertyname;
+				m_reverse_propertyName = null;
+
+				//These are for the local table/class
+				m_columnname = localpropertyname;
+				m_propertyName = localpropertyname;
+
+				//True if the local property is a collection
+				m_isCollection = localiscollection;
+			}
+
+            public ReferenceField(XmlNode node) : this()
             {
                 //These are for the remote table/class
                 m_reverse_table = node.Attributes["reverse_table"].Value;

@@ -125,6 +125,8 @@ namespace System.Data.LightDatamodel
         void SetReferenceObject(IDataClass owner, TypeConfiguration.ReferenceField reference, IDataClass value);
         bool HasGuid(Guid g);
 
+		void AddRelation<REVERSEDATACLASS, LOCALDATACLASS>(string reservekeypropertyname, string localkeypropertyname, string localrelationproperty);
+
     }
 
 }
