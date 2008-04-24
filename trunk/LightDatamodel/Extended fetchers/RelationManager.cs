@@ -27,6 +27,12 @@ namespace System.Data.LightDatamodel
             m_typeConfig = typeConfig;
         }
 
+		public void AddRelation<REVERSEDATACLASS, LOCALDATACLASS>(string reservekeypropertyname, string localkeypropertyname, string localrelationproperty)
+		{
+			bool localiscollection = typeof(LOCALDATACLASS).GetProperty(localrelationproperty).PropertyType.GetInterface(typeof(System.Collections.IEnumerable).Name) != null;
+			m_typeConfig.GetTypeInfo(typeof(LOCALDATACLASS)).AddReferenceField(m_typeConfig.GetTableName(typeof(REVERSEDATACLASS)), reservekeypropertyname, localkeypropertyname, localrelationproperty, localiscollection);
+		}
+
         /// <summary>
         /// Returns a value indicating if the given object exists in the database. Throws an exception if the item is not registered
         /// </summary>
@@ -153,8 +159,7 @@ namespace System.Data.LightDatamodel
             rf.SetReferencedItem(owner, value);
         }
 
-        public void SetReferenceObject<T>(IDataClass owner, string propertyname, T value)
-            where T : IDataClass
+        public void SetReferenceObject<T>(IDataClass owner, string propertyname, T value) where T : IDataClass
         {
             SetReferenceObject(owner, propertyname, (IDataClass)value);
         }
@@ -163,7 +168,6 @@ namespace System.Data.LightDatamodel
         {
             return new SyncCollectionBase<T>(owner, m_typeConfig.GetTypeInfo(typeof(T)).GetReferenceField(propertyname));
         }
-
 
         /// <summary>
         /// Returns a reference to an object
