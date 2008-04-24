@@ -79,8 +79,10 @@ namespace System.Data.LightDatamodel
 			{
 				try
 				{
+					Type columntype = GetTableStructure(tablename)[columname];
 					def = def.ToString().Trim('\"', '\'');
-					return Convert.ChangeType(def, GetTableStructure(tablename)[columname], System.Globalization.CultureInfo.InvariantCulture);
+					if (columntype == typeof(DateTime) && def.ToString().ToLower() == "date()" || def.ToString().ToLower() == "curdate()" || def.ToString().ToLower() == "now()") return DateTime.Now;
+					return Convert.ChangeType(def, columntype, System.Globalization.CultureInfo.InvariantCulture);
 				}
 				catch
 				{

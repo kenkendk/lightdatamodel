@@ -1103,6 +1103,8 @@ namespace DataClassFileBuilder
 			else if (obj.GetType() == typeof(DateTime))
 			{
 				DateTime d = (DateTime)obj;
+				DateTime now = DateTime.Now;
+				if (d.Day == now.Day && d.Month == now.Month && d.Year == now.Year) return "System.DateTime.Now";
 				return "new System.DateTime(" + d.Year.ToString() + ", " + d.Month.ToString() + ", " + d.Day.ToString() + ")";
 			}
 			else if (obj.GetType() == typeof(bool))
