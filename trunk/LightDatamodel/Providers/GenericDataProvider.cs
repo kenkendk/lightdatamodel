@@ -250,7 +250,9 @@ namespace System.Data.LightDatamodel
 		{
 			if(type == typeof(int))
 				return int.MinValue;
-			else if(type == typeof(short))
+            else if (type == typeof(long))
+                return long.MinValue;
+            else if (type == typeof(short))
 				return short.MinValue;
 			else if(type == typeof(string))
 				return "";
