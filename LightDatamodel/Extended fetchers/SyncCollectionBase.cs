@@ -191,8 +191,9 @@ namespace System.Data.LightDatamodel
         {
             if (m_baseList.Contains(item))
             {
+                bool b = m_baseList.Remove(item);
                 UnhookItem(item);
-                return m_baseList.Remove(item);
+                return b;
             }
 
             return false;

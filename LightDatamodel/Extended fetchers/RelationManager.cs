@@ -249,7 +249,7 @@ namespace System.Data.LightDatamodel
                 }
 
                 if (m_referenceObjects[g].ContainsKey(reference.PropertyName))
-                    m_referenceObjects[g].Remove(reference.PropertyName);
+                    m_referenceObjects[g][reference.PropertyName] = Guid.Empty;
                 owner.SetDirty();
                 return;
             }
