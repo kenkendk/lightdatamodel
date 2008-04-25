@@ -123,7 +123,9 @@ namespace System.Data.LightDatamodel
 
         protected override void RemoveObject(object obj)
         {
-            m_baseFetcher.DeleteObject(obj);
+            object tmp = m_baseFetcher.GetObjectByGuid(m_relationManager.GetGuidForObject((IDataClass)obj));
+            m_baseFetcher.DeleteObject(tmp);
+            m_relationManager.UnregisterObject((IDataClass)obj);
         }
 
         #endregion

@@ -120,6 +120,9 @@ namespace System.Data.LightDatamodel
         /// </summary>
         public Guid GetGuidForObject(IDataClass item)
         {
+            if(item.RelationManager != this)
+                throw new Exception("Item was registered on another relationmanager");
+
             if (m_reverseGuid.ContainsKey(item))
                 return m_reverseGuid[item];
 
