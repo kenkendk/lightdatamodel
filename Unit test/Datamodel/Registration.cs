@@ -16,11 +16,11 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID;
-		private System.Boolean m_ActiveAcknowledge;
-		private System.Int64 m_NoteID;
-		private System.Int64 m_ProjectID;
-		private System.DateTime m_Time;
+		private System.Int64 m_ID = -9223372036854775808;
+		private System.Boolean m_ActiveAcknowledge = false;
+		private System.Int64 m_NoteID = -9223372036854775808;
+		private System.Int64 m_ProjectID = -9223372036854775808;
+		private System.DateTime m_Time = new System.DateTime(1, 1, 1);
 #endregion
 
 #region " unique value "
@@ -34,31 +34,31 @@ namespace Datamodel.UnitTest
 		public System.Int64 ID
 		{
 			get{return m_ID;}
-			set{object oldvalue = m_ID;OnBeforeDataWrite(this, "ID", oldvalue, value);m_ID = value;OnAfterDataWrite(this, "ID", oldvalue, value);}
+			set{object oldvalue = m_ID;OnBeforeDataChange(this, "ID", oldvalue, value);m_ID = value;OnAfterDataChange(this, "ID", oldvalue, value);}
 		}
 
 		public System.Boolean ActiveAcknowledge
 		{
 			get{return m_ActiveAcknowledge;}
-			set{object oldvalue = m_ActiveAcknowledge;OnBeforeDataWrite(this, "ActiveAcknowledge", oldvalue, value);m_ActiveAcknowledge = value;OnAfterDataWrite(this, "ActiveAcknowledge", oldvalue, value);}
+			set{object oldvalue = m_ActiveAcknowledge;OnBeforeDataChange(this, "ActiveAcknowledge", oldvalue, value);m_ActiveAcknowledge = value;OnAfterDataChange(this, "ActiveAcknowledge", oldvalue, value);}
 		}
 
 		public System.Int64 NoteID
 		{
 			get{return m_NoteID;}
-			set{object oldvalue = m_NoteID;OnBeforeDataWrite(this, "NoteID", oldvalue, value);m_NoteID = value;OnAfterDataWrite(this, "NoteID", oldvalue, value);}
+			set{object oldvalue = m_NoteID;OnBeforeDataChange(this, "NoteID", oldvalue, value);m_NoteID = value;OnAfterDataChange(this, "NoteID", oldvalue, value);}
 		}
 
 		public System.Int64 ProjectID
 		{
 			get{return m_ProjectID;}
-			set{object oldvalue = m_ProjectID;OnBeforeDataWrite(this, "ProjectID", oldvalue, value);m_ProjectID = value;OnAfterDataWrite(this, "ProjectID", oldvalue, value);}
+			set{object oldvalue = m_ProjectID;OnBeforeDataChange(this, "ProjectID", oldvalue, value);m_ProjectID = value;OnAfterDataChange(this, "ProjectID", oldvalue, value);}
 		}
 
 		public System.DateTime Time
 		{
 			get{return m_Time;}
-			set{object oldvalue = m_Time;OnBeforeDataWrite(this, "Time", oldvalue, value);m_Time = value;OnAfterDataWrite(this, "Time", oldvalue, value);}
+			set{object oldvalue = m_Time;OnBeforeDataChange(this, "Time", oldvalue, value);m_Time = value;OnAfterDataChange(this, "Time", oldvalue, value);}
 		}
 
 #endregion

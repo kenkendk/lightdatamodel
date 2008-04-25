@@ -16,9 +16,9 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID;
-		private System.Int64 m_LeftID;
-		private System.Int64 m_RightID;
+		private System.Int64 m_ID = -9223372036854775808;
+		private System.Int64 m_LeftID = -9223372036854775808;
+		private System.Int64 m_RightID = -9223372036854775808;
 #endregion
 
 #region " unique value "
@@ -32,19 +32,19 @@ namespace Datamodel.UnitTest
 		public System.Int64 ID
 		{
 			get{return m_ID;}
-			set{object oldvalue = m_ID;OnBeforeDataWrite(this, "ID", oldvalue, value);m_ID = value;OnAfterDataWrite(this, "ID", oldvalue, value);}
+			set{object oldvalue = m_ID;OnBeforeDataChange(this, "ID", oldvalue, value);m_ID = value;OnAfterDataChange(this, "ID", oldvalue, value);}
 		}
 
 		public System.Int64 LeftID
 		{
 			get{return m_LeftID;}
-			set{object oldvalue = m_LeftID;OnBeforeDataWrite(this, "LeftID", oldvalue, value);m_LeftID = value;OnAfterDataWrite(this, "LeftID", oldvalue, value);}
+			set{object oldvalue = m_LeftID;OnBeforeDataChange(this, "LeftID", oldvalue, value);m_LeftID = value;OnAfterDataChange(this, "LeftID", oldvalue, value);}
 		}
 
 		public System.Int64 RightID
 		{
 			get{return m_RightID;}
-			set{object oldvalue = m_RightID;OnBeforeDataWrite(this, "RightID", oldvalue, value);m_RightID = value;OnAfterDataWrite(this, "RightID", oldvalue, value);}
+			set{object oldvalue = m_RightID;OnBeforeDataChange(this, "RightID", oldvalue, value);m_RightID = value;OnAfterDataChange(this, "RightID", oldvalue, value);}
 		}
 
 #endregion

@@ -284,6 +284,56 @@ namespace Datamodel.UnitTest
 
 			if (p.ProjectNoteID != n.ID)
 				throw new Exception("Failed to update reverse ID");
+
+            hub.ClearCache();
+
+            p = hub.CreateObject<Project>();
+            n = hub.CreateObject<Note>();
+
+            n.ProjectNotes.Add(p);
+
+            if (p.ProjectNote == null)
+                throw new Exception("Failed to update reverse collection");
+
+            hub.CommitAll();
+
+            p.ProjectNote = null;
+            if (n.ProjectNotes.Count != 0)
+                throw new Exception("Failed to update reverse item");
+
+            hub.CommitAll();
+
+            p.ProjectNote = n;
+
+            if (n.ProjectNotes.Count != 1)
+                throw new Exception("Failed to update reverse collection");
+
+            hub.CommitAll();
+
+
+            p.ProjectNote = null;
+            hub.DeleteObject(n);
+
+            hub.CommitAll();
+
+
+            long pid = p.ID;
+            hub.ClearCache();
+
+            nd = new DataFetcherNested(hub);
+            p = nd.GetObjectById<Project>(pid);
+            pg = nd.RelationManager.GetGuidForObject(p);
+            Project test = hub.GetObjectByGuid<Project>(pg);
+            pg = hub.RelationManager.GetGuidForObject(test);
+            nd.DeleteObject(p);
+            pg = nd.RelationManager.GetGuidForObject(p);
+            pg = hub.RelationManager.GetGuidForObject(test);
+            nd.CommitAll();
+            test = (Project)hub.RelationManager.GetObjectByGuid(pg);
+            pg = hub.RelationManager.GetGuidForObject(test);
+            hub.CommitAll();
+
+
 		}
 	}
 }
