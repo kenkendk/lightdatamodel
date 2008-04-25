@@ -360,7 +360,10 @@ namespace System.Data.LightDatamodel
                 UpdateObject(obj);
 				OnAfterDataConnection(obj, DataActions.Update);
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Update);
-			}
+                
+                //Try to read data back from database
+                RefreshObject(obj);
+            }
 			else if (obj.ObjectState == ObjectStates.New)
 			{
 				OnBeforeDataConnection(obj, DataActions.Insert);
@@ -368,7 +371,10 @@ namespace System.Data.LightDatamodel
                 InsertObject(obj);
 				OnAfterDataConnection(obj, DataActions.Insert);
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Insert);
-			}
+
+                //Try to read data back from database
+                RefreshObject(obj);
+            }
 			else if (obj.ObjectState == ObjectStates.Deleted)
 			{
 				OnBeforeDataConnection(obj, DataActions.Delete);
@@ -378,8 +384,6 @@ namespace System.Data.LightDatamodel
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Delete);
 			}
 
-			//Try to read data back from database
-			RefreshObject(obj);
 		}
 
         public virtual void Dispose()
