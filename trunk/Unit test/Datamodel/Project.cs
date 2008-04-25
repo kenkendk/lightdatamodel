@@ -16,10 +16,10 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID;
-		private System.Int64 m_CurrentTaskNoteID;
-		private System.Int64 m_ProjectNoteID;
-		private System.String m_Title;
+		private System.Int64 m_ID = -9223372036854775808;
+		private System.Int64 m_CurrentTaskNoteID = -9223372036854775808;
+		private System.Int64 m_ProjectNoteID = -9223372036854775808;
+		private System.String m_Title = "";
 #endregion
 
 #region " unique value "
@@ -33,25 +33,25 @@ namespace Datamodel.UnitTest
 		public System.Int64 ID
 		{
 			get{return m_ID;}
-			set{object oldvalue = m_ID;OnBeforeDataWrite(this, "ID", oldvalue, value);m_ID = value;OnAfterDataWrite(this, "ID", oldvalue, value);}
+			set{object oldvalue = m_ID;OnBeforeDataChange(this, "ID", oldvalue, value);m_ID = value;OnAfterDataChange(this, "ID", oldvalue, value);}
 		}
 
 		public System.Int64 CurrentTaskNoteID
 		{
 			get{return m_CurrentTaskNoteID;}
-			set{object oldvalue = m_CurrentTaskNoteID;OnBeforeDataWrite(this, "CurrentTaskNoteID", oldvalue, value);m_CurrentTaskNoteID = value;OnAfterDataWrite(this, "CurrentTaskNoteID", oldvalue, value);}
+			set{object oldvalue = m_CurrentTaskNoteID;OnBeforeDataChange(this, "CurrentTaskNoteID", oldvalue, value);m_CurrentTaskNoteID = value;OnAfterDataChange(this, "CurrentTaskNoteID", oldvalue, value);}
 		}
 
 		public System.Int64 ProjectNoteID
 		{
 			get{return m_ProjectNoteID;}
-			set{object oldvalue = m_ProjectNoteID;OnBeforeDataWrite(this, "ProjectNoteID", oldvalue, value);m_ProjectNoteID = value;OnAfterDataWrite(this, "ProjectNoteID", oldvalue, value);}
+			set{object oldvalue = m_ProjectNoteID;OnBeforeDataChange(this, "ProjectNoteID", oldvalue, value);m_ProjectNoteID = value;OnAfterDataChange(this, "ProjectNoteID", oldvalue, value);}
 		}
 
 		public System.String Title
 		{
 			get{return m_Title;}
-			set{object oldvalue = m_Title;OnBeforeDataWrite(this, "Title", oldvalue, value);m_Title = value;OnAfterDataWrite(this, "Title", oldvalue, value);}
+			set{object oldvalue = m_Title;OnBeforeDataChange(this, "Title", oldvalue, value);m_Title = value;OnAfterDataChange(this, "Title", oldvalue, value);}
 		}
 
 #endregion

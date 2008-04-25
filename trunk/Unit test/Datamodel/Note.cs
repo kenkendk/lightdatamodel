@@ -16,8 +16,8 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID;
-		private System.String m_NoteText;
+		private System.Int64 m_ID = -9223372036854775808;
+		private System.String m_NoteText = "";
 #endregion
 
 #region " unique value "
@@ -31,13 +31,13 @@ namespace Datamodel.UnitTest
 		public System.Int64 ID
 		{
 			get{return m_ID;}
-			set{object oldvalue = m_ID;OnBeforeDataWrite(this, "ID", oldvalue, value);m_ID = value;OnAfterDataWrite(this, "ID", oldvalue, value);}
+			set{object oldvalue = m_ID;OnBeforeDataChange(this, "ID", oldvalue, value);m_ID = value;OnAfterDataChange(this, "ID", oldvalue, value);}
 		}
 
 		public System.String NoteText
 		{
 			get{return m_NoteText;}
-			set{object oldvalue = m_NoteText;OnBeforeDataWrite(this, "NoteText", oldvalue, value);m_NoteText = value;OnAfterDataWrite(this, "NoteText", oldvalue, value);}
+			set{object oldvalue = m_NoteText;OnBeforeDataChange(this, "NoteText", oldvalue, value);m_NoteText = value;OnAfterDataChange(this, "NoteText", oldvalue, value);}
 		}
 
 #endregion

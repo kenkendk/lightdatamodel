@@ -16,11 +16,11 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID;
-		private System.String m_Data;
-		private System.Int64 m_RegistrationID;
-		private System.DateTime m_Time;
-		private System.Int64 m_EventType;
+		private System.Int64 m_ID = -9223372036854775808;
+		private System.String m_Data = "";
+		private System.Int64 m_RegistrationID = -9223372036854775808;
+		private System.DateTime m_Time = new System.DateTime(1, 1, 1);
+		private System.Int64 m_EventType = -9223372036854775808;
 #endregion
 
 #region " unique value "
@@ -34,31 +34,31 @@ namespace Datamodel.UnitTest
 		public System.Int64 ID
 		{
 			get{return m_ID;}
-			set{object oldvalue = m_ID;OnBeforeDataWrite(this, "ID", oldvalue, value);m_ID = value;OnAfterDataWrite(this, "ID", oldvalue, value);}
+			set{object oldvalue = m_ID;OnBeforeDataChange(this, "ID", oldvalue, value);m_ID = value;OnAfterDataChange(this, "ID", oldvalue, value);}
 		}
 
 		public System.String Data
 		{
 			get{return m_Data;}
-			set{object oldvalue = m_Data;OnBeforeDataWrite(this, "Data", oldvalue, value);m_Data = value;OnAfterDataWrite(this, "Data", oldvalue, value);}
+			set{object oldvalue = m_Data;OnBeforeDataChange(this, "Data", oldvalue, value);m_Data = value;OnAfterDataChange(this, "Data", oldvalue, value);}
 		}
 
 		public System.Int64 RegistrationID
 		{
 			get{return m_RegistrationID;}
-			set{object oldvalue = m_RegistrationID;OnBeforeDataWrite(this, "RegistrationID", oldvalue, value);m_RegistrationID = value;OnAfterDataWrite(this, "RegistrationID", oldvalue, value);}
+			set{object oldvalue = m_RegistrationID;OnBeforeDataChange(this, "RegistrationID", oldvalue, value);m_RegistrationID = value;OnAfterDataChange(this, "RegistrationID", oldvalue, value);}
 		}
 
 		public System.DateTime Time
 		{
 			get{return m_Time;}
-			set{object oldvalue = m_Time;OnBeforeDataWrite(this, "Time", oldvalue, value);m_Time = value;OnAfterDataWrite(this, "Time", oldvalue, value);}
+			set{object oldvalue = m_Time;OnBeforeDataChange(this, "Time", oldvalue, value);m_Time = value;OnAfterDataChange(this, "Time", oldvalue, value);}
 		}
 
 		public System.Int64 EventType
 		{
 			get{return m_EventType;}
-			set{object oldvalue = m_EventType;OnBeforeDataWrite(this, "EventType", oldvalue, value);m_EventType = value;OnAfterDataWrite(this, "EventType", oldvalue, value);}
+			set{object oldvalue = m_EventType;OnBeforeDataChange(this, "EventType", oldvalue, value);m_EventType = value;OnAfterDataChange(this, "EventType", oldvalue, value);}
 		}
 
 #endregion
