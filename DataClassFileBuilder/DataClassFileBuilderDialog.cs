@@ -982,6 +982,9 @@ namespace DataClassFileBuilder
                     else
                         sw.Write("namespace " + namespacestring + "\n{\n\n");
 
+					if (!String.IsNullOrEmpty(mapping.ViewSQL))
+						sw.Write("\t[System.Data.LightDatamodel.ViewSQL(\"" + mapping.ViewSQL + "\")]\n");
+
                     //class
                     sw.Write("\tpublic partial class " + classname + " : System.Data.LightDatamodel." + inheritclass.Name + "\n\t{\n\n");
 
@@ -998,7 +1001,7 @@ namespace DataClassFileBuilder
                         if (mf.IgnoreWithSelect)
                             sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithSelect()]\n");
 
-						sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName), provider.IsUnique(mapping.TableName, mf.ColumnName)) + ";\n");
+						sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName, mapping.ViewSQL), provider.IsUnique(mapping.TableName, mf.ColumnName)) + ";\n");
                     }
                     sw.Write("#endregion\n\n");
 
@@ -1156,7 +1159,7 @@ namespace DataClassFileBuilder
 				BuildClassFile(config, System.IO.Path.Combine(DestinationDirText.Text, ViewNameText.Text + ".cs"), NamespaceStringText.Text, provider, typeof(DataClassView), new Dictionary<string,TypeConfiguration.MappedClass>());
 
 				//Build datahub
-				BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, null, new string[]{ViewNameText.Text}, new string[]{SQLText.Text});
+				//BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, null, new string[]{ViewNameText.Text}, new string[]{SQLText.Text});
 
 				//Build project
 				BuildProjectFile(assemblyname, NamespaceStringText.Text, System.IO.Path.Combine(DestinationDirText.Text, assemblyname + ".csproj"), null, System.IO.Path.Combine(DestinationDirText.Text, ViewNameText.Text + ".cs"));
@@ -1165,21 +1168,21 @@ namespace DataClassFileBuilder
 				//copy LightDatamodel
 				try
 				{
-					File.Copy(Application.StartupPath + "\\LightDatamodel.dll", DestinationDirText.Text + "\\LightDatamodel.dll", true);
+					File.Copy(Path.Combine(Application.StartupPath, "LightDatamodel.dll"), Path.Combine(DestinationDirText.Text, "LightDatamodel.dll"), true);
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					throw new Exception("Couldn't copy LightDatamodel.dll\nError: " + ex.Message);
 				}
 
-				//copy certificat
+				//copy certificate
 				try
 				{
-					File.Copy(Application.StartupPath + "\\..\\..\\GEOGRAF.snk", DestinationDirText.Text + "\\GEOGRAF.snk", true);
+					File.Copy(Path.Combine(Application.StartupPath, "LightDataModel.snk"), Path.Combine(DestinationDirText.Text, "LightDataModel.snk"), true);
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
-					throw new Exception("Couldn't copy LightDatamodel.dll\nError: " + ex.Message);
+					throw new Exception("Couldn't copy LightDataModel.snk\nError: " + ex.Message);
 				}
 			}
 			catch(Exception ex)

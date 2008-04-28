@@ -80,6 +80,7 @@ namespace System.Data.LightDatamodel
 		public object UniqueValue { get	{ return null; } }
 
 		#endregion
+
 	}
 
 	/// <summary>
