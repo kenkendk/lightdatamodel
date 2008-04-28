@@ -509,9 +509,15 @@ namespace System.Data.LightDatamodel
             {
                 m_fields = new Dictionary<string, MappedField>();
                 m_tablename = type.Name;
-                //TODO: How do we read this?
-                if (typeof(DataClassView).IsAssignableFrom(type))
-                    m_viewSql = "?";
+				if (typeof(DataClassView).IsAssignableFrom(type))
+				{
+					object[] tmp = type.GetCustomAttributes(typeof(ViewSQL), true);
+					if (tmp != null && tmp.Length > 0)
+					{
+						ViewSQL vs = (ViewSQL)tmp[0];
+						m_viewSql = vs.SQL;
+					}
+				}
 
                 m_type = type;
                 FieldInfo[] fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
@@ -1211,42 +1217,47 @@ namespace System.Data.LightDatamodel
 
 	public class MemberModifierIgnoreWithInsert : MemberModifier
 	{
-		public MemberModifierIgnoreWithInsert()
-			: base(MemberModifierEnum.IgnoreWithInsert)
+		public MemberModifierIgnoreWithInsert() : base(MemberModifierEnum.IgnoreWithInsert)
 		{
 		}
 	}
 
 	public class MemberModifierIgnoreWithUpdate : MemberModifier
 	{
-		public MemberModifierIgnoreWithUpdate()
-			: base(MemberModifierEnum.IgnoreWithUpdate)
+		public MemberModifierIgnoreWithUpdate() : base(MemberModifierEnum.IgnoreWithUpdate)
 		{
 		}
 	}
 
 	public class MemberModifierIgnoreWithSelect : MemberModifier
 	{
-		public MemberModifierIgnoreWithSelect()
-			: base(MemberModifierEnum.IgnoreWithSelect)
+		public MemberModifierIgnoreWithSelect()	: base(MemberModifierEnum.IgnoreWithSelect)
 		{
 		}
 	}
 
 	public class MemberModifierIgnoreAll : MemberModifier
 	{
-		public MemberModifierIgnoreAll()
-			: base(MemberModifierEnum.IgnoreAll)
+		public MemberModifierIgnoreAll() : base(MemberModifierEnum.IgnoreAll)
 		{
 		}
 	}
 
 	public class MemberModifierAutoIncrement : MemberModifier
 	{
-		public MemberModifierAutoIncrement()
-			: base(MemberModifierEnum.AutoIncrement)
+		public MemberModifierAutoIncrement() : base(MemberModifierEnum.AutoIncrement)
 		{
 		}
+	}
+
+	public class ViewSQL : Attribute
+	{
+		string m_viewsql = "";
+		public ViewSQL(string sql)
+		{
+			m_viewsql = sql;
+		}
+		public string SQL { get { return m_viewsql; } }
 	}
 
 	#endregion

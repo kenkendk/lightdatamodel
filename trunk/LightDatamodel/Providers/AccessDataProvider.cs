@@ -68,7 +68,8 @@ namespace System.Data.LightDatamodel
 			//get from schema
 			OleDb.OleDbConnection conn = (OleDb.OleDbConnection)m_connection;
 			DataTable tbl = conn.GetOleDbSchemaTable(OleDb.OleDbSchemaGuid.Columns, new object[] {null, null, tablename, columname });
-			object def = tbl.Rows[0]["COLUMN_DEFAULT"];
+			object def = null;
+			if(tbl != null && tbl.Rows.Count > 0) def = tbl.Rows[0]["COLUMN_DEFAULT"];
 
 			//convert to .net value
 			if (def == DBNull.Value || def == null || def.ToString() == "NULL")

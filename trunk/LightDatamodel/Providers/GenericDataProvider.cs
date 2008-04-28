@@ -152,6 +152,9 @@ namespace System.Data.LightDatamodel
         {
             if (!m_cachedSelect.ContainsKey(typeinfo.Type))
             {
+				//check for view
+				if (!String.IsNullOrEmpty(typeinfo.ViewSQL) && typeinfo.ViewSQL != "?") return typeinfo.ViewSQL;
+
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
                 sb.Append("SELECT ");
                 foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
@@ -465,6 +468,19 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
+		/// Will return the default value for the given column. Eg. 42
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="columname"></param>
+		/// <returns></returns>
+		public virtual object GetDefaultValue(string tablename, string columname, string sql)
+		{
+			if (String.IsNullOrEmpty(sql)) return GetDefaultValue(tablename, columname);
+			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			return GetNullValue(GetStructure(sql)[columname]);
+		}
+
+		/// <summary>
 		/// Will return wheter the given column is unique. Eg. a primary key
 		/// </summary>
 		/// <param name="tablename"></param>
@@ -495,8 +511,7 @@ namespace System.Data.LightDatamodel
 
                 try
                 {
-                    using (IDataReader dr = cmd.ExecuteReader())
-                        return m_transformer.TransformToObjects(type, dr, this);
+                    using (IDataReader dr = cmd.ExecuteReader()) return m_transformer.TransformToObjects(type, dr, this);
                 }
                 catch (Exception ex)
                 {
@@ -542,7 +557,6 @@ namespace System.Data.LightDatamodel
 								   
 			}
 		}
-
 
 		/// <summary>
 		/// Will select multiple rows from the DB
