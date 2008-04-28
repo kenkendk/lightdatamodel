@@ -318,7 +318,7 @@ namespace System.Data.LightDatamodel
         /// Refreshes all values with those read from the datasource
         /// </summary>
         /// <param name="obj"></param>
-		protected virtual void RefreshObject(IDataClass obj)
+		public virtual void RefreshObject(IDataClass obj)
 		{
 			if(obj.ObjectState == ObjectStates.Deleted) return;
 

@@ -50,6 +50,7 @@ namespace System.Data.LightDatamodel
         RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter);
 		void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass;
         void DeleteObject(object item);
+		void RefreshObject(IDataClass obj);
 
         void ClearCache();
 	}
