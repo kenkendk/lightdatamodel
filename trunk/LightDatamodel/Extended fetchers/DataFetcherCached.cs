@@ -102,7 +102,16 @@ namespace System.Data.LightDatamodel
                 List<IDataClass> updated, added, removed;
 				do
 				{
-					GetDirty(out added, out updated, out removed);
+					//GetDirty
+					updated = new List<IDataClass>();
+					foreach (SortedList<object, IDataClass> table in m_cache.Values)
+						foreach (IDataClass obj in table.Values)
+							if (obj.IsDirty)
+								updated.Add(obj);
+					added = new List<IDataClass>(m_newobjects);
+					removed = new List<IDataClass>(m_deletedobjects);
+
+					//commit
 					m_relationManager.CommitItems(this, added, removed, updated);
 				}
 				while (m_newobjects.Count > 0 || m_deletedobjects.Count > 0);		//in case the save procedures alters something
@@ -580,18 +589,6 @@ namespace System.Data.LightDatamodel
                     m_cache[key].Remove(obj);
                 }
             }
-        }
-
-        protected virtual void GetDirty(out List<IDataClass> added, out List<IDataClass> updated, out List<IDataClass> deleted)
-        {
-            updated = new List<IDataClass>();
-            foreach (SortedList<object, IDataClass> table in m_cache.Values)
-                foreach (IDataClass obj in table.Values)
-                    if (obj.IsDirty)
-                        updated.Add(obj);
-
-            added = new List<IDataClass>(m_newobjects);
-            deleted = new List<IDataClass>(m_deletedobjects);
         }
 
         /*public virtual void CommitAllRecursive()
