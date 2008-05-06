@@ -180,8 +180,8 @@ namespace System.Data.LightDatamodel
             if (!m_cache.ContainsKey(tablename))
                 m_cache[tablename] = new SortedList<object, IDataClass>();
 
-            if (!HasLoaded(typeof(DATACLASS), operation))
-                InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));
+			if (!HasLoaded(typeof(DATACLASS), operation))
+				InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));
 
             //TODO: An enumerable collection that transparently itterates over a number of collections would make this more efficient
             List<DATACLASS> items = new List<DATACLASS>();
@@ -353,7 +353,10 @@ namespace System.Data.LightDatamodel
                 }
                 else if (item as DataClassView != null)
                 {
+					string viewname = m_transformer.TypeConfiguration.GetTableName(item);
                     (item as DataClassView).m_dataparent = this;
+					m_cache[viewname][item.GetHashCode()] = (IDataClass)item;
+					toAdd = m_cache[viewname][item.GetHashCode()];
                 }
 
                 if (toAdd != null)
@@ -366,13 +369,17 @@ namespace System.Data.LightDatamodel
             return res.ToArray();
         }
 
+		/// <summary>
+		/// This will delete the object ... same as RemoveObject
+		/// </summary>
+		/// <param name="item"></param>
 		public override void DeleteObject(object item)
 		{
 			Remove((IDataClass)item);
 		}
 
 		/// <summary>
-		/// Marks an object for deletion
+		/// Marks an object for deletion ... same as RemoveObject
 		/// </summary>
 		/// <param name="id">ID of the item</param>
 		/// <param name="type">Type of the item to delete</param>
@@ -409,6 +416,12 @@ namespace System.Data.LightDatamodel
 			return (DATACLASS)GetObjectById(typeof(DATACLASS), id);
 		}
 
+		/// <summary>
+		/// This will load the given DataClassBase object
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="id"></param>
+		/// <returns></returns>
 		public override object GetObjectById(Type type, object id)
 		{
 			string tablename = m_transformer.TypeConfiguration.GetTableName(type);
@@ -433,6 +446,10 @@ namespace System.Data.LightDatamodel
                 return null;
 		}
 
+		/// <summary>
+		/// This will mark an object for deletion
+		/// </summary>
+		/// <param name="obj"></param>
 		public virtual void Remove(IDataClass obj)
 		{
 			ObjectStates oldstate = obj.ObjectState;
@@ -452,6 +469,10 @@ namespace System.Data.LightDatamodel
 			if (ObjectAllocation != null) ObjectAllocation(this, obj, oldstate, ObjectStates.Deleted);
 		}
 
+		/// <summary>
+		/// Will hook an object to the internal system
+		/// </summary>
+		/// <param name="newobj"></param>
 		public virtual void Add(IDataClass newobj)
 		{
 			(newobj as DataClassBase).m_dataparent = this;
@@ -462,24 +483,39 @@ namespace System.Data.LightDatamodel
                 m_relationManager.RegisterObject(newobj);
                 m_relationManager.SetExistsInDb(newobj, false);
             }
+			if (ObjectAllocation != null) ObjectAllocation(this, newobj, ObjectStates.New, ObjectStates.New);
 		}
 
+		/// <summary>
+		/// Will create a new instance
+		/// Instead of using this you can create a new object yourself and then use the Add function
+		/// </summary>
+		/// <typeparam name="DATACLASS"></typeparam>
+		/// <returns></returns>
 		public override DATACLASS CreateObject<DATACLASS>()
 		{
 			DATACLASS newobj = Activator.CreateInstance<DATACLASS>();
 			Add(newobj);
-			if (ObjectAllocation != null) ObjectAllocation(this, newobj, ObjectStates.New, ObjectStates.New);
 			return newobj;
 		}
 
+		/// <summary>
+		/// Will create a new instance
+		/// Instead of using this you can create a new object yourself and then use the Add function
+		/// </summary>
+		/// <param name="dataclass"></param>
+		/// <returns></returns>
 		public override object CreateObject(Type dataclass)
 		{
 			object newobj = Activator.CreateInstance(dataclass);
 			Add((IDataClass)newobj);
-			if (ObjectAllocation != null) ObjectAllocation(this, (IDataClass)newobj, ObjectStates.New, ObjectStates.New);
 			return newobj;
 		}
 
+		/// <summary>
+		/// This will reload the object values from the DB
+		/// </summary>
+		/// <param name="obj"></param>
 		public override void RefreshObject(IDataClass obj)
 		{
 			if(obj.ObjectState == ObjectStates.Deleted) return;
@@ -553,7 +589,6 @@ namespace System.Data.LightDatamodel
                 foreach (IDataClass obj in table.Values)
                     if (obj.IsDirty)
                         updated.Add(obj);
-
 
             added = new List<IDataClass>(m_newobjects);
             deleted = new List<IDataClass>(m_deletedobjects);
