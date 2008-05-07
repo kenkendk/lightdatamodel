@@ -53,11 +53,11 @@ namespace System.Data.LightDatamodel
                 sb.Append(m_provider.QuoteColumnname(columnname));
             }
 
-            protected override bool AddParameter(object o, bool allowNonprimitives, System.Text.StringBuilder sb)
-            {
-                sb.Append(m_provider.AddParameter(m_cmd, o));
-                return true;
-            }
+			//protected override bool AddParameter(object o, bool allowNonprimitives, System.Text.StringBuilder sb)
+			//{
+			//    sb.Append(m_provider.AddParameter(m_cmd, o));
+			//    return true;
+			//}
 
             public override string ToString()
             {
@@ -136,7 +136,7 @@ namespace System.Data.LightDatamodel
                 sb.Append(" WHERE ");
                 sb.Append(QuoteColumnname(typeinfo.UniqueColumn));
                 sb.Append("=");
-                sb.Append(AddParameter(cmd, null));
+				sb.Append(AddParameter(cmd, typeinfo.UniqueColumn, null));
                 m_identityWhere[typeinfo.Type] = sb.ToString();
             }
 
@@ -193,7 +193,7 @@ namespace System.Data.LightDatamodel
                     {
                         sb.Append(QuoteColumnname(mf.ColumnName));
                         sb.Append("=");
-                        sb.Append(AddParameter(cmd, null));
+                        sb.Append(AddParameter(cmd, mf.ColumnName, null));
                         sb.Append(",");
                     }
                 sb.Length--;
@@ -219,13 +219,13 @@ namespace System.Data.LightDatamodel
                 System.Text.StringBuilder sb2 = new System.Text.StringBuilder();
                 sb.Append("INSERT INTO ");
                 sb.Append(QuoteTablename(typeinfo.TableName));
-                sb.Append("(");
+                sb.Append(" (");
                 foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
                     if (!mf.IgnoreWithInsert)
                     {
                         sb.Append(QuoteColumnname(mf.ColumnName));
                         sb.Append(",");
-                        sb2.Append(AddParameter(cmd, null));
+                        sb2.Append(AddParameter(cmd, mf.ColumnName, null));
                         sb2.Append(",");
                     }
                 sb.Length--;
@@ -348,10 +348,12 @@ namespace System.Data.LightDatamodel
         /// <param name="cmd">The command to use</param>
         /// <param name="value">The value to insert</param>
         /// <returns>A placeholder for the value, to be used in the SQL command</returns>
-		protected virtual string AddParameter(IDbCommand cmd, object value)
+		protected virtual string AddParameter(IDbCommand cmd, string columnname, object value)
 		{
 			IDataParameter p = cmd.CreateParameter();
 			if (value == null)
+				p.Value = DBNull.Value;
+			else if (value.GetType() == typeof(string) && (string)value == "")
 				p.Value = DBNull.Value;
 			else if (value.GetType() == typeof(DateTime))
 			{
@@ -380,7 +382,7 @@ namespace System.Data.LightDatamodel
             TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
 
             cmd.CommandText = GetDeleteString(typeinfo) + GetIdentityWhere(typeinfo);
-            AddParameter(cmd, typeinfo.UniqueValue(item));
+			AddParameter(cmd, typeinfo.UniqueColumn, typeinfo.UniqueValue(item));
             
             try
 			{
@@ -430,7 +432,7 @@ namespace System.Data.LightDatamodel
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
                 
                 cmd.CommandText = GetSelectString(typeinfo) + GetIdentityWhere(typeinfo);
-                AddParameter(cmd, primarykey);
+                AddParameter(cmd, typeinfo.PrimaryKey.ColumnName, primarykey);
 
 			    try
 			    {
@@ -569,36 +571,36 @@ namespace System.Data.LightDatamodel
 		/// <param name="filter"></param>
 		/// <param name="values">Used if the filter is parametized. Eg. ... MyCol = ? AND YourCol = ? ...</param>
 		/// <returns></returns>
-		public virtual object[] SelectRows(Type type, string filter, object[] values)
-		{
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
-            using (IDbCommand cmd = m_connection.CreateCommand())
-            {
-                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
+		//public virtual object[] SelectRows(Type type, string filter, object[] values)
+		//{
+		//    if(m_connection.State != ConnectionState.Open) m_connection.Open();
+		//    using (IDbCommand cmd = m_connection.CreateCommand())
+		//    {
+		//        TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
 
-                cmd.CommandText = GetSelectString(typeinfo);
-                cmd.Parameters.Clear();
+		//        cmd.CommandText = GetSelectString(typeinfo);
+		//        cmd.Parameters.Clear();
 
-                if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
-                if (values != null)
-                    foreach (object o in values)
-                        AddParameter(cmd, o);
+		//        if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
+		//        if (values != null)
+		//            foreach (object o in values)
+		//                AddParameter(cmd, , o);
 
-                try
-                {
-					using (IDataReader dr = cmd.ExecuteReader())
-					{
-						object[] ret= m_transformer.TransformToObjects(type, dr, this);
-						dr.Close();
-						return ret;
-					}
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
-                }
-            }
-		}
+		//        try
+		//        {
+		//            using (IDataReader dr = cmd.ExecuteReader())
+		//            {
+		//                object[] ret= m_transformer.TransformToObjects(type, dr, this);
+		//                dr.Close();
+		//                return ret;
+		//            }
+		//        }
+		//        catch (Exception ex)
+		//        {
+		//            throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+		//        }
+		//    }
+		//}
 
 		/// <summary>
 		/// Selects multiple rows from DB. 
@@ -608,7 +610,32 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public virtual object[] SelectRows(Type type, string filter)
 		{
-			return SelectRows(type, filter, null);
+			//return SelectRows(type, filter, null);
+
+			    if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			    using (IDbCommand cmd = m_connection.CreateCommand())
+			    {
+			        TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
+
+			        cmd.CommandText = GetSelectString(typeinfo);
+			        cmd.Parameters.Clear();
+
+			        if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
+
+			        try
+			        {
+			            using (IDataReader dr = cmd.ExecuteReader())
+			            {
+			                object[] ret= m_transformer.TransformToObjects(type, dr, this);
+			                dr.Close();
+			                return ret;
+			            }
+			        }
+			        catch (Exception ex)
+			        {
+			            throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+			        }
+			    }
 		}
 
 		/// <summary>
@@ -629,9 +656,9 @@ namespace System.Data.LightDatamodel
                     if (!mf.IgnoreWithUpdate)
 					{
 						object val = mf.Field.GetValue(item);
-						AddParameter(cmd, mf.DataType == typeof(string) && (string)val == "" ? null : val);		//damn hack. String can't be "" ... at least not for Access
+						AddParameter(cmd, mf.ColumnName, val);
 					}
-                AddParameter(cmd, typeinfo.UniqueValue(item));
+                AddParameter(cmd, typeinfo.UniqueColumn, typeinfo.UniqueValue(item));
 
                 try
                 {
@@ -662,7 +689,7 @@ namespace System.Data.LightDatamodel
 					if (!mf.IgnoreWithInsert)
 					{
 						object val = mf.Field.GetValue(item);
-						AddParameter(cmd, mf.DataType == typeof(string) && (string)val == "" ? null : val);		//damn hack. String can't be "" ... at least not for Access
+						AddParameter(cmd, mf.ColumnName, val);		//damn hack. String can't be "" ... at least not for Access
 					}
 
                 try

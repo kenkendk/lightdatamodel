@@ -47,7 +47,7 @@ namespace System.Data.LightDatamodel
 
             if (m_connection.State != ConnectionState.Open) m_connection.Open();
             IDbCommand cmd = m_connection.CreateCommand();
-            cmd.CommandText = "SELECT SQL FROM SQLITE_MASTER WHERE name=" + AddParameter(cmd, tablename) + " AND type='table'";
+            cmd.CommandText = "SELECT SQL FROM SQLITE_MASTER WHERE name=" + AddParameter(cmd, "name", tablename) + " AND type='table'";
             IDataReader rd = null;
             try
             {
@@ -89,7 +89,7 @@ namespace System.Data.LightDatamodel
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
 			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "SELECT SQL FROM SQLITE_MASTER WHERE name=" + AddParameter(cmd, tablename) + " AND type='table'";
+			cmd.CommandText = "SELECT SQL FROM SQLITE_MASTER WHERE name=" + AddParameter(cmd, "name", tablename) + " AND type='table'";
 			IDataReader rd = null; 
 			try
 			{

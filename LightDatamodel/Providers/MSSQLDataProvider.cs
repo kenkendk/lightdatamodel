@@ -237,6 +237,28 @@ namespace System.Data.LightDatamodel
 				throw new Exception("Couldn't load last autonumber from table \"" + tablename + "\"\nError: " + ex.Message);
 			}
 		}
+
+		protected override string AddParameter(IDbCommand cmd, string columnname, object value)
+		{
+			IDataParameter p = cmd.CreateParameter();
+			if (value == null)
+				p.Value = DBNull.Value;
+			else if (value.GetType() == typeof(string) && (string)value == "")
+				p.Value = DBNull.Value;
+			else if (value.GetType() == typeof(DateTime))
+			{
+				DateTime d = (DateTime)value;
+				if (d.Equals(GetNullValue(typeof(DateTime))))
+					p.Value = DBNull.Value;
+				else
+					p.Value = d.ToOADate();
+			}
+			else
+				p.Value = value;
+			p.ParameterName = columnname;
+			cmd.Parameters.Add(p);
+			return "@" + columnname;
+		}
 	}
 
 	public class MSSQLProviderConfiguration : IConfigureableDataProvider
