@@ -1108,6 +1108,14 @@ namespace DataClassFileBuilder
 				else
 					return d.ToString(System.Globalization.CultureInfo.InvariantCulture);
 			}
+			else if (obj.GetType() == typeof(Decimal))
+			{
+				Decimal d = (Decimal)obj;
+				if (d == Decimal.MinValue)
+					return "System.Decimal.MinValue";
+				else
+					return d.ToString(System.Globalization.CultureInfo.InvariantCulture)+ "m";
+			}
 			else if (obj.GetType() == typeof(DateTime))
 			{
 				DateTime d = (DateTime)obj;
