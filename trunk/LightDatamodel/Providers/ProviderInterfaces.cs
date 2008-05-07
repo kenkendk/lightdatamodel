@@ -30,7 +30,7 @@ namespace System.Data.LightDatamodel
         void DeleteRow(object item);
         object SelectRow(Type type, object primarykey);
         object[] SelectRows(Type type, string filter);
-        object[] SelectRows(Type type, string filter, object[] values);
+        //object[] SelectRows(Type type, string filter, object[] values);
         object[] SelectRows(Type type, QueryModel.Operation operation);
         void UpdateRow(object item);
 		void InsertRow(object item);
