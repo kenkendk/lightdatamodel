@@ -322,7 +322,6 @@ namespace System.Data.LightDatamodel
 			}
 			catch (Exception ex)
 			{
-
 				throw new Exception("Couldn't get column string length\nError: " + ex.Message);
 			}
 			finally
@@ -428,7 +427,6 @@ namespace System.Data.LightDatamodel
             
 			using(IDbCommand cmd = m_connection.CreateCommand())
             {
-
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
                 
                 cmd.CommandText = GetSelectString(typeinfo) + GetIdentityWhere(typeinfo);
@@ -439,6 +437,7 @@ namespace System.Data.LightDatamodel
 				    using(IDataReader dr = cmd.ExecuteReader())
                     {
                         object[] results = m_transformer.TransformToObjects(type, dr, this);
+						dr.Close();
                         if (results.Length == 0)
                             return null;
                         else if (results.Length == 1)
@@ -511,7 +510,12 @@ namespace System.Data.LightDatamodel
 
                 try
                 {
-                    using (IDataReader dr = cmd.ExecuteReader()) return m_transformer.TransformToObjects(type, dr, this);
+					using (IDataReader dr = cmd.ExecuteReader())
+					{
+						object[] ret = m_transformer.TransformToObjects(type, dr, this);
+						dr.Close();
+						return ret;
+					}
                 }
                 catch (Exception ex)
                 {
@@ -582,8 +586,12 @@ namespace System.Data.LightDatamodel
 
                 try
                 {
-                    using (IDataReader dr = cmd.ExecuteReader())
-                        return m_transformer.TransformToObjects(type, dr, this);
+					using (IDataReader dr = cmd.ExecuteReader())
+					{
+						object[] ret= m_transformer.TransformToObjects(type, dr, this);
+						dr.Close();
+						return ret;
+					}
                 }
                 catch (Exception ex)
                 {
@@ -683,6 +691,7 @@ namespace System.Data.LightDatamodel
                     {
                         for (int i = 0; i < dr.FieldCount; i++)
                             res.Add(dr.GetName(i), dr.GetFieldType(i));
+						dr.Close();
                         return res;
                     }
                 }
