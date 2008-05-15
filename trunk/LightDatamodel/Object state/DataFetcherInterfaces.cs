@@ -39,12 +39,14 @@ namespace System.Data.LightDatamodel
 		object[] GetObjects(Type type);
 		object[] GetObjects(Type type, string filter, params object[] parameters);
 		object[] GetObjects(Type type, QueryModel.Operation operation);
+		DATACLASS GetObject<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 		DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass;
 		object GetObjectById(Type type, object id);
 		void Commit(IDataClass obj);
         void CommitAll();
-		DATACLASS CreateObject<DATACLASS>() where DATACLASS : IDataClass;
-		object CreateObject(Type type);
+		DATACLASS Add<DATACLASS>() where DATACLASS : IDataClass;
+		object Add(Type type);
+		IDataClass Add(IDataClass newobj);
 		IDataProvider Provider { get; }
         IObjectTransformer ObjectTransformer { get; }
         RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter);
@@ -57,7 +59,7 @@ namespace System.Data.LightDatamodel
 
 	public interface IDataClass
 	{
-		IDataFetcher DataParent { get ; }
+		IDataFetcher DataParent { get; set;}
         IRelationManager RelationManager { get; }
 		bool IsDirty{get;}
 		ObjectStates ObjectState{get;}

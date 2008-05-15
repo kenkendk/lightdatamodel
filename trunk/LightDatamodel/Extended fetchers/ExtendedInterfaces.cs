@@ -26,7 +26,7 @@ namespace System.Data.LightDatamodel
 	public interface IDataFetcherCached : IDataFetcher
 	{
 
-		event ObjectStateChangeHandler ObjectAllocation;
+		event ObjectStateChangeHandler ObjectAddRemove;
 		
 		DATACLASS GetObjectByGuid<DATACLASS>(Guid guid) where DATACLASS : IDataClass;
 		object GetObjectByGuid(Guid guid);
@@ -35,7 +35,6 @@ namespace System.Data.LightDatamodel
 		DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass;
 		DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 		void Remove(IDataClass obj);
-		void Add(IDataClass obj);
         IRelationManager RelationManager { get; }
 		bool IsDirty { get; }
 	}

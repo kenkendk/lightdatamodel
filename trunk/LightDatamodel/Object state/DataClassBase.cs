@@ -60,7 +60,7 @@ namespace System.Data.LightDatamodel
 			if (AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
 		}
 
-		public IDataFetcher DataParent { get { return m_dataparent;	} }
+		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
         public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
 		public bool IsDirty { get {	return false; } }
 
@@ -96,7 +96,7 @@ namespace System.Data.LightDatamodel
 		public event DataConnectionEventHandler BeforeDataCommit;
 		public event DataConnectionEventHandler AfterDataCommit;
 
-        public IDataFetcher DataParent { get { return m_dataparent; } }
+		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
         public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
 		public bool IsDirty{get{return m_isdirty;}}
 		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}

@@ -112,17 +112,7 @@ namespace System.Data.LightDatamodel
 
         #endregion
 
-        /// <summary>
-        /// Registers an object as beloning to this data fetcher
-        /// </summary>
-        /// <param name="obj"></param>
-		protected virtual void HookObject(IDataClass obj)
-		{
-			(obj as DataClassBase).BeforeDataChange += new DataChangeEventHandler(obj_BeforeDataChange);
-			(obj as DataClassBase).AfterDataChange += new DataChangeEventHandler(obj_AfterDataChange);
-		}
-
-		protected virtual DataClassLevels GetDataClassLevel(Type type)
+ 		protected virtual DataClassLevels GetDataClassLevel(Type type)
 		{
 			do
 			{
@@ -131,6 +121,20 @@ namespace System.Data.LightDatamodel
 				type = type.BaseType;
 			} while (type != null);
 			return DataClassLevels.NoInheritance;
+		}
+
+		/// <summary>
+		/// Returns 1 object given by filter
+		/// </summary>
+		/// <typeparam name="DATACLASS"></typeparam>
+		/// <param name="filter"></param>
+		/// <param name="parameters"></param>
+		/// <returns></returns>
+		public virtual DATACLASS GetObject<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
+		{
+			DATACLASS[] ret = GetObjects<DATACLASS>(filter, parameters);
+			if (ret != null && ret.Length > 0) return ret[0];
+			return default(DATACLASS);
 		}
 
         /// <summary>
@@ -167,8 +171,7 @@ namespace System.Data.LightDatamodel
 			DATACLASS[] res = new DATACLASS[items.Length];
 			for (int i = 0; i < items.Length; i++)
 			{
-				HookObject((IDataClass)items[i]);
-				(items[i] as DataClassBase).m_dataparent = this;
+				Add((IDataClass)items[i]);
 				(items[i] as DataClassBase).m_state = ObjectStates.Default;
 				OnAfterDataConnection(items[i], DataActions.Fetch);
 				res[i] = (DATACLASS)items[i];
@@ -211,8 +214,7 @@ namespace System.Data.LightDatamodel
 			object[] items = LoadObjects(type, operation);
 			for (int i = 0; i < items.Length; i++)
 			{
-				HookObject((IDataClass)items[i]);
-				(items[i] as DataClassBase).m_dataparent = this;
+				Add((IDataClass)items[i]);
 				(items[i] as DataClassBase).m_state = ObjectStates.Default;
 				OnAfterDataConnection(items[i], DataActions.Fetch);
 			}
@@ -277,8 +279,7 @@ namespace System.Data.LightDatamodel
             if (items == null || items.Length == 0)
                 return null;
 
-            HookObject((IDataClass)items[0]);
-            (items[0] as DataClassBase).m_dataparent = this;
+			Add((IDataClass)items[0]);
             (items[0] as DataClassBase).m_state = ObjectStates.Default;
             OnAfterDataConnection(items[0], DataActions.Fetch);
 
@@ -290,19 +291,35 @@ namespace System.Data.LightDatamodel
         /// </summary>
         /// <typeparam name="DATACLASS"></typeparam>
         /// <returns></returns>
-		public virtual DATACLASS CreateObject<DATACLASS>() where DATACLASS : IDataClass
+		public virtual DATACLASS Add<DATACLASS>() where DATACLASS : IDataClass
 		{
 			DATACLASS newobj = Activator.CreateInstance<DATACLASS>();
-			HookObject((IDataClass)newobj);
+			Add((IDataClass)newobj);
 			return newobj;
 		}
 
-        /// Creates a new object, but does not commit it?
-        public virtual object CreateObject(Type type)
+        /// <summary>
+		/// Creates a new object, but does not commit it?
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public virtual object Add(Type type)
 		{
 			object newobj = Activator.CreateInstance(type);
-			HookObject((IDataClass)newobj);
+			Add((IDataClass)newobj);
 			return newobj;
+		}
+
+		/// <summary>
+		/// Registers an object as beloning to this data fetcher
+		/// </summary>
+		/// <param name="obj"></param>
+		public virtual IDataClass Add(IDataClass obj)
+		{
+			(obj as DataClassBase).BeforeDataChange += new DataChangeEventHandler(obj_BeforeDataChange);
+			(obj as DataClassBase).AfterDataChange += new DataChangeEventHandler(obj_AfterDataChange);
+			(obj as DataClassBase).m_dataparent = this;
+			return obj;
 		}
 
 		public virtual RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter)

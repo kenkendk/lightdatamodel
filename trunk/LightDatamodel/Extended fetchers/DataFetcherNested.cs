@@ -112,7 +112,7 @@ namespace System.Data.LightDatamodel
 
         protected override void InsertObject(object obj)
         {
-            object item = m_baseFetcher.CreateObject(obj.GetType());
+            object item = m_baseFetcher.Add(obj.GetType());
             ObjectTransformer.CopyObject(obj, item);
         }
 
