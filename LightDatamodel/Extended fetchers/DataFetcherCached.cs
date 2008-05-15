@@ -99,7 +99,7 @@ namespace System.Data.LightDatamodel
 
 			try
 			{
-                List<IDataClass> updated, added, removed;
+				List<IDataClass> updated, added, removed;
 				do
 				{
 					//GetDirty
