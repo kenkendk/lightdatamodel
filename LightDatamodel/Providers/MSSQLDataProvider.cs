@@ -73,7 +73,7 @@ namespace System.Data.LightDatamodel
 
         public override bool IsAutoIncrement(string tablename, string column)
         {
-            if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 
 			IDbCommand cmd = m_connection.CreateCommand();
 			cmd.CommandText = "SELECT * FROM " + QuoteTablename(tablename) + " WHERE 1 = 0";
@@ -95,7 +95,7 @@ namespace System.Data.LightDatamodel
 
 		public override object GetDefaultValue(string tablename, string columname)
 		{
-			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 
 			//get from schema
 			SqlConnection conn = (SqlConnection)m_connection;
@@ -145,7 +145,7 @@ namespace System.Data.LightDatamodel
 		{
 			try
 			{
-				if(m_connection.State != ConnectionState.Open) m_connection.Open();
+				OpenConnection();
 				IDbCommand cmd = m_connection.CreateCommand();
 				cmd.CommandText = "SELECT sysobjects.name as TABLE_NAME, syscolumns.name as COLUMN_NAME, syscolumns.colid as COLUMN_ORDINAL FROM ((sysobjects INNER JOIN sysindexes ON sysobjects.id = sysindexes.id) INNER JOIN sysindexkeys ON sysindexes.indid = sysindexkeys.indid AND sysindexes.id = sysindexkeys.id) INNER JOIN syscolumns ON sysindexkeys.colid = syscolumns.colid AND sysindexkeys.id = syscolumns.id WHERE sysobjects.name = '" + tablename + "' AND sysindexes.name Like 'PK__%'";
 				IDataReader r = cmd.ExecuteReader();
@@ -164,7 +164,7 @@ namespace System.Data.LightDatamodel
 		{
 			try
 			{
-				if (m_connection.State != ConnectionState.Open) m_connection.Open();
+				OpenConnection();
 				DataTable tablesschema = ((SqlConnection)m_connection).GetSchema("Tables", new string[] { null, null, null, "BASE TABLE" });
 				string[] tablenames = new string[tablesschema.Rows.Count];
 				for (int i = 0; i < tablenames.Length; i++)

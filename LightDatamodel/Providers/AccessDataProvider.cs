@@ -32,7 +32,14 @@ namespace System.Data.LightDatamodel
 		
 		public AccessDataProvider(string connectionstring)
 		{
-			m_connection = new OleDb.OleDbConnection(connectionstring);
+			try
+			{
+				m_connection = new OleDb.OleDbConnection(connectionstring);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Couldn't create OleDb connection\nError: " + ex.Message);
+			}
 		}
 
 		public AccessDataProvider() : this("")
@@ -41,7 +48,7 @@ namespace System.Data.LightDatamodel
 
         public override bool IsAutoIncrement(string tablename, string column)
         {
-            if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 
 			IDbCommand cmd = m_connection.CreateCommand();
 			cmd.CommandText = "SELECT * FROM " + QuoteTablename(tablename) + " WHERE 1 = 0";
@@ -63,7 +70,7 @@ namespace System.Data.LightDatamodel
 
 		public override object GetDefaultValue(string tablename, string columname)
 		{
-			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 
 			//get from schema
 			OleDb.OleDbConnection conn = (OleDb.OleDbConnection)m_connection;
@@ -100,7 +107,7 @@ namespace System.Data.LightDatamodel
 			if (unique) return true;
 
 			//check if it's a unique index
-			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 			OleDb.OleDbConnection conn = (OleDb.OleDbConnection)m_connection;
 			DataTable tbl = conn.GetOleDbSchemaTable(OleDb.OleDbSchemaGuid.Indexes, new object[] { null, null, null, null, tablename });
 			if (tbl != null && tbl.Rows.Count > 0)
@@ -117,7 +124,7 @@ namespace System.Data.LightDatamodel
 
 		public override string GetPrimaryKey(string tablename)
 		{
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 			DataTable primsch = ((OleDb.OleDbConnection)m_connection).GetOleDbSchemaTable(OleDbSchemaGuid.Primary_Keys, new object[] {null, null, tablename});
 			if( primsch == null || primsch.Rows.Count == 0) return "";
 			return primsch.Rows[0].ItemArray[3].ToString();
@@ -125,7 +132,7 @@ namespace System.Data.LightDatamodel
 
 		public override string[] GetTablenames()
 		{
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 			DataTable tablesschema = ((OleDb.OleDbConnection)m_connection).GetOleDbSchemaTable(OleDbSchemaGuid.Tables, new object[] {null, null, null, "TABLE"});
 			string[] tablenames = new string[tablesschema.Rows.Count];
 			for(int i = 0; i< tablenames.Length; i++)

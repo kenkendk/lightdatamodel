@@ -337,9 +337,12 @@ namespace System.Data.LightDatamodel
         /// <param name="item">The item to unregister</param>
         public void UnregisterObject(IDataClass item)
         {
-            Guid g = GetGuidForObject(item);
-            m_guid.Remove(g);
-            m_reverseGuid.Remove(item);
+			if (item.GetType().IsSubclassOf(typeof(DataClassBase)))
+			{
+				Guid g = GetGuidForObject(item);
+				m_guid.Remove(g);
+				m_reverseGuid.Remove(item);
+			}
         }
 
         /// <summary>

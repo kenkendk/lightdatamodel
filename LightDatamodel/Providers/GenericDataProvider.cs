@@ -282,7 +282,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public virtual object Compute(string tablename, string expression, string filter)
 		{
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 			IDbCommand cmd = m_connection.CreateCommand();
 			cmd.CommandText = "SELECT " + expression + " FROM " + QuoteTablename(tablename) + ( filter != null && filter != "" ? " WHERE " + filter : "");
 
@@ -304,7 +304,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public virtual int GetColumnStringLength(string tablename, string columnname)
 		{
-			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 
 			IDbCommand cmd = m_connection.CreateCommand();
 			cmd.CommandText = "SELECT " + QuoteColumnname(columnname) + " FROM " + QuoteTablename(tablename) + " WHERE 1 = 0";
@@ -377,7 +377,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="primaryvalue"></param>
 		public virtual void DeleteRow(object item)
 		{
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 			IDbCommand cmd = m_connection.CreateCommand();
             TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
 
@@ -425,7 +425,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public virtual object SelectRow(Type type, object primarykey)
 		{
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
             
 			using(IDbCommand cmd = m_connection.CreateCommand())
             {
@@ -463,7 +463,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public virtual object GetDefaultValue(string tablename, string columname)
 		{
-			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 
 			return GetNullValue( GetTableStructure(tablename)[columname]);
 		}
@@ -477,7 +477,7 @@ namespace System.Data.LightDatamodel
 		public virtual object GetDefaultValue(string tablename, string columname, string sql)
 		{
 			if (String.IsNullOrEmpty(sql)) return GetDefaultValue(tablename, columname);
-			if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
 			return GetNullValue(GetStructure(sql)[columname]);
 		}
 
@@ -494,6 +494,21 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
+		/// Will open the connection to the DB
+		/// </summary>
+		protected virtual void OpenConnection()
+		{
+			try
+			{
+				if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Couldn't open the connection to the database\nError: " + ex.Message);
+			}
+		}
+
+		/// <summary>
 		/// Will select multiple rows from the DB through the use of QueryModel
 		/// </summary>
 		/// <param name="tablename"></param>
@@ -501,7 +516,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public virtual object[] SelectRows(Type type, QueryModel.Operation operation)
 		{
-            if (m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
@@ -612,30 +627,30 @@ namespace System.Data.LightDatamodel
 		{
 			//return SelectRows(type, filter, null);
 
-			    if(m_connection.State != ConnectionState.Open) m_connection.Open();
-			    using (IDbCommand cmd = m_connection.CreateCommand())
-			    {
-			        TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
+			OpenConnection();
+		    using (IDbCommand cmd = m_connection.CreateCommand())
+		    {
+		        TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
 
-			        cmd.CommandText = GetSelectString(typeinfo);
-			        cmd.Parameters.Clear();
+		        cmd.CommandText = GetSelectString(typeinfo);
+		        cmd.Parameters.Clear();
 
-			        if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
+		        if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
 
-			        try
-			        {
-			            using (IDataReader dr = cmd.ExecuteReader())
-			            {
-			                object[] ret= m_transformer.TransformToObjects(type, dr, this);
-			                dr.Close();
-			                return ret;
-			            }
-			        }
-			        catch (Exception ex)
-			        {
-			            throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
-			        }
-			    }
+		        try
+		        {
+		            using (IDataReader dr = cmd.ExecuteReader())
+		            {
+		                object[] ret= m_transformer.TransformToObjects(type, dr, this);
+		                dr.Close();
+		                return ret;
+		            }
+		        }
+		        catch (Exception ex)
+		        {
+		            throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+		        }
+		    }
 		}
 
 		/// <summary>
@@ -647,7 +662,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="values"></param>
 		public virtual void UpdateRow(object item)
 		{
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
@@ -680,7 +695,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="values"></param>
 		public virtual void InsertRow(object item)
 		{
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
@@ -708,7 +723,7 @@ namespace System.Data.LightDatamodel
         public virtual Dictionary<string, Type> GetStructure(string sql)
 		{
 			Dictionary<string, Type> res = new Dictionary<string, Type>();
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
+			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
                 cmd.CommandText = sql;
