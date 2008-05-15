@@ -328,7 +328,14 @@ namespace System.Data.LightDatamodel
 			object ret = m_provider.Compute(typeof(DATACLASS).Name, expression, filter);
 			OnAfterDataConnection(ret, DataActions.Fetch);
 			if (ret == null || ret == DBNull.Value) return default(RETURNVALUE);
-			return (RETURNVALUE)ret;
+			try
+			{
+				return (RETURNVALUE)ret;
+			}
+			catch 
+			{
+				throw new Exception("Compute couldn't convert \"" + ret.ToString() + "\" (" + ret.GetType().Name + ") to " + typeof(RETURNVALUE).Name);
+			}
 		}
 
         /// <summary>
