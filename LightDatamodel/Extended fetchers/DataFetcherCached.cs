@@ -318,16 +318,13 @@ namespace System.Data.LightDatamodel
                 if (item as DataClassBase != null)
                 {
                     string tablename = m_transformer.TypeConfiguration.GetTableName(item);
-                    if (!m_cache.ContainsKey(tablename))
-                        m_cache.Add(tablename, new SortedList<object, IDataClass>());
+                    if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
                     DataClassBase dbitem = item as DataClassBase;
                     if (!m_cache[tablename].ContainsKey(dbitem.UniqueValue))
                     {
-
                         QueryModel.Operation opdeleted = QueryModel.Parser.ParseQuery("GetType.FullName = ? AND UniqueValue = ?", item.GetType().FullName, dbitem.UniqueValue);
 
-                        if (opdeleted.EvaluateList(m_deletedobjects).Length > 0)
-                            continue;
+                        if (opdeleted.EvaluateList(m_deletedobjects).Length > 0) continue;
 
                         dbitem.m_dataparent = this;
                         dbitem.m_state = ObjectStates.Default;
@@ -365,7 +362,22 @@ namespace System.Data.LightDatamodel
 		/// <param name="item"></param>
 		public override void DeleteObject(object item)
 		{
-			Remove((IDataClass)item);
+			IDataClass obj = (IDataClass)item;
+			ObjectStates oldstate = obj.ObjectState;
+			string tablename = m_transformer.TypeConfiguration.GetTableName(obj);
+			if (obj.ObjectState == ObjectStates.New)
+			{
+				m_newobjects.Remove(obj);
+				m_relationManager.UnregisterObject(obj);
+			}
+			else
+			{
+				if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
+				m_cache[tablename].Remove(obj.UniqueValue);
+				m_deletedobjects.Add(obj);
+				(obj as DataClassBase).m_state = ObjectStates.Deleted;
+			}
+			if (ObjectAddRemove != null) ObjectAddRemove(this, obj, oldstate, ObjectStates.Deleted);
 		}
 
 		/// <summary>
@@ -376,7 +388,7 @@ namespace System.Data.LightDatamodel
 		public override void DeleteObject<DATACLASS>(object id) 
 		{
 			DATACLASS tobedeleted = GetObjectById<DATACLASS>(id);
-			if(tobedeleted != null) Remove((IDataClass)tobedeleted);
+			if (tobedeleted != null) DeleteObject((IDataClass)tobedeleted);
 		}
 
 		/// <summary>
@@ -392,7 +404,6 @@ namespace System.Data.LightDatamodel
 		public virtual object GetObjectByGuid(Guid key)
 		{
 			if (key == Guid.Empty) return null;
-
             return m_relationManager.GetObjectByGuid(key);
 		}
 
@@ -443,28 +454,28 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
-		/// <summary>
-		/// This will mark an object for deletion
-		/// </summary>
-		/// <param name="obj"></param>
-		public virtual void Remove(IDataClass obj)
-		{
-			ObjectStates oldstate = obj.ObjectState;
-            string tablename = m_transformer.TypeConfiguration.GetTableName(obj);
-			if(obj.ObjectState == ObjectStates.New)
-			{
-				m_newobjects.Remove(obj);
-                m_relationManager.UnregisterObject(obj);
-			}
-			else
-			{
-				if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
-				m_cache[tablename].Remove(obj.UniqueValue);
-				m_deletedobjects.Add(obj);
-				(obj as DataClassBase).m_state = ObjectStates.Deleted;
-			}
-			if (ObjectAddRemove != null) ObjectAddRemove(this, obj, oldstate, ObjectStates.Deleted);
-		}
+		///// <summary>
+		///// This will mark an object for deletion
+		///// </summary>
+		///// <param name="obj"></param>
+		//protected virtual void Remove(IDataClass obj)
+		//{
+		//    ObjectStates oldstate = obj.ObjectState;
+		//    string tablename = m_transformer.TypeConfiguration.GetTableName(obj);
+		//    if(obj.ObjectState == ObjectStates.New)
+		//    {
+		//        m_newobjects.Remove(obj);
+		//        m_relationManager.UnregisterObject(obj);
+		//    }
+		//    else
+		//    {
+		//        if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
+		//        m_cache[tablename].Remove(obj.UniqueValue);
+		//        m_deletedobjects.Add(obj);
+		//        (obj as DataClassBase).m_state = ObjectStates.Deleted;
+		//    }
+		//    if (ObjectAddRemove != null) ObjectAddRemove(this, obj, oldstate, ObjectStates.Deleted);
+		//}
 
 		/// <summary>
 		/// Will hook an object to the internal system

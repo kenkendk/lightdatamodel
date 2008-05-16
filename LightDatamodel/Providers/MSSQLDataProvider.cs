@@ -26,8 +26,34 @@ using System.IO;
 
 namespace System.Data.LightDatamodel
 {
-	public class MSSQLDataProvider : GenericDataProvider
+	public class MSSQLDataProvider : GenericDataProvider, IConfigureableDataProvider
 	{
+
+		#region " IConfigureableDataProvider "
+
+		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
+		{
+			ConfigureProperties prop = new ConfigureProperties();
+			prop.Connectionstring = "Data Source=Kursus24;Initial Catalog=Byggesag;User Id=mkv;Password=kvist;";
+			return prop;
+		}
+
+		public string FriendlyName { get { return "MSSQL database"; } }
+
+		public string Name { get { return new MSSQLDataProvider().ToString(); } }
+
+		public ConfigureProperties AutoConfigure(string[] args)
+		{
+			return null;
+		}
+
+		public IDataProvider GetProvider(string connectionstring)
+		{
+			return new MSSQLDataProvider(connectionstring);
+		}
+
+		#endregion
+
 		Stack m_transactions = new Stack();
 		
 		public MSSQLDataProvider(string connectionstring)
@@ -258,30 +284,6 @@ namespace System.Data.LightDatamodel
 			p.ParameterName = columnname;
 			cmd.Parameters.Add(p);
 			return "@" + columnname;
-		}
-	}
-
-	public class MSSQLProviderConfiguration : IConfigureableDataProvider
-	{
-		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
-		{
-			ConfigureProperties prop = new ConfigureProperties();
-			prop.Connectionstring = "Data Source=Kursus24;Initial Catalog=Byggesag;User Id=mkv;Password=kvist;";
-			return prop;
-		}
-
-		public string FriendlyName { get { return "MSSQL database"; } }
-
-		public string Name { get { return new MSSQLDataProvider().ToString(); } }
-
-		public ConfigureProperties AutoConfigure(string[] args)
-		{
-			return null;
-		}
-
-		public IDataProvider GetProvider(string connectionstring)
-		{
-			return new MSSQLDataProvider(connectionstring);
 		}
 	}
 }
