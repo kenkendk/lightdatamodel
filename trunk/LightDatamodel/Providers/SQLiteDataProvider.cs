@@ -7,8 +7,52 @@ namespace System.Data.LightDatamodel
 	/// <summary>
 	/// Summary description for SQLiteDataProvider.
 	/// </summary>
-	public class SQLiteDataProvider : GenericDataProvider
+	public class SQLiteDataProvider : GenericDataProvider, IConfigureableDataProvider
 	{
+		#region " IConfigureableDataProvider "
+
+		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
+		{
+			System.Windows.Forms.OpenFileDialog dlg = new System.Windows.Forms.OpenFileDialog();
+			dlg.Filter = "SQLite database (*.sqlite;*.sqlite3)|*.sqlite;*.sqlite3|Alle filer (*.*)|*.*";
+
+			if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+			{
+				ConfigureProperties prop = new ConfigureProperties();
+				prop.Connectionstring = "Version=3;Data Source=" + dlg.FileName + ";";
+				prop.DestinationDir = Path.GetDirectoryName(dlg.FileName);
+				prop.Namespace = "Datamodel." + Path.GetFileNameWithoutExtension(dlg.FileName);
+				return prop;
+			}
+			else
+				return previousConnectionProperties;
+		}
+
+		public string FriendlyName { get { return "SQLite database"; } }
+
+		public string Name { get { return new SQLiteDataProvider().ToString(); } }
+
+		public ConfigureProperties AutoConfigure(string[] args)
+		{
+			if (args.Length > 0 && File.Exists(args[0]) && (Path.GetExtension(args[0]).ToLower() == ".sqlite" || Path.GetExtension(args[0]).ToLower() == ".sqlite3"))
+			{
+				ConfigureProperties prop = new ConfigureProperties();
+				prop.Connectionstring = "Version=3;Data Source=" + args[0] + ";";
+				prop.DestinationDir = Path.GetDirectoryName(args[0]);
+				prop.Namespace = "Datamodel." + Path.GetFileNameWithoutExtension(args[0]);
+				return prop;
+			}
+
+			return null;
+		}
+
+		public IDataProvider GetProvider(string connectionstring)
+		{
+			return new SQLiteDataProvider(connectionstring);
+		}
+
+		#endregion
+
 		/// <summary>
 		/// To create a provider, using just a connectionstring, the SQLite provider must know what Connection class to create. SQLite is not part of the standard distribution, so we check that it was loaded by the caller.
 		/// </summary>
@@ -20,7 +64,6 @@ namespace System.Data.LightDatamodel
 
 		public SQLiteDataProvider(string connectionstring)
 		{
-
 			if (SQLiteConnectionType == null)
                 SQLiteConnectionType = Type.GetType("System.Data.SQLite.SQLiteConnection");
 			if (SQLiteConnectionType == null)
@@ -204,48 +247,5 @@ namespace System.Data.LightDatamodel
             return o;
 		}
 
-	}
-
-	public class SQLiteProviderConfiguration : IConfigureableDataProvider
-	{
-		public ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties)
-		{
-			System.Windows.Forms.OpenFileDialog dlg = new System.Windows.Forms.OpenFileDialog();
-			dlg.Filter = "SQLite database (*.sqlite;*.sqlite3)|*.sqlite;*.sqlite3|Alle filer (*.*)|*.*";
-
-			if(dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-			{
-				ConfigureProperties prop = new ConfigureProperties();
-				prop.Connectionstring = "Version=3;Data Source=" + dlg.FileName + ";";
-				prop.DestinationDir = Path.GetDirectoryName(dlg.FileName);
-				prop.Namespace = "Datamodel." + Path.GetFileNameWithoutExtension(dlg.FileName);
-				return prop;
-			}
-			else
-				return previousConnectionProperties;
-		}
-
-		public string FriendlyName { get { return "SQLite database"; } }
-
-		public string Name { get { return new SQLiteDataProvider().ToString(); } }
-
-		public ConfigureProperties AutoConfigure(string[] args)
-		{
-			if(args.Length > 0 && File.Exists(args[0]) && (Path.GetExtension(args[0]).ToLower() == ".sqlite" || Path.GetExtension(args[0]).ToLower() == ".sqlite3"))
-			{
-				ConfigureProperties prop = new ConfigureProperties();
-				prop.Connectionstring = "Version=3;Data Source=" + args[0] + ";";
-				prop.DestinationDir = Path.GetDirectoryName(args[0]);
-				prop.Namespace = "Datamodel." + Path.GetFileNameWithoutExtension(args[0]);
-				return prop;
-			}
-
-			return null;
-		}
-
-		public IDataProvider GetProvider(string connectionstring)
-		{
-			return new SQLiteDataProvider(connectionstring);
-		}
 	}
 }

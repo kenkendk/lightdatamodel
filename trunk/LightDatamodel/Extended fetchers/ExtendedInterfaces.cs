@@ -25,7 +25,6 @@ namespace System.Data.LightDatamodel
 
 	public interface IDataFetcherCached : IDataFetcher
 	{
-
 		event ObjectStateChangeHandler ObjectAddRemove;
 		
 		DATACLASS GetObjectByGuid<DATACLASS>(Guid guid) where DATACLASS : IDataClass;
@@ -34,7 +33,7 @@ namespace System.Data.LightDatamodel
 		object[] GetObjectsFromCache(Type type, string filter, params object[] parameters);
 		DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass;
 		DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
-		void Remove(IDataClass obj);
+		//void Remove(IDataClass obj);
         IRelationManager RelationManager { get; }
 		bool IsDirty { get; }
 	}
@@ -47,55 +46,6 @@ namespace System.Data.LightDatamodel
 	/// <param name="oldstate"></param>
 	/// <param name="newstate"></param>
 	public delegate void ObjectStateChangeHandler(object sender, IDataClass obj, ObjectStates oldstate, ObjectStates newstate);
-
-	/// <summary>
-	/// This class is used to transfer data to and from a configureable data provider
-	/// </summary>
-	public class ConfigureProperties
-	{
-		public string Connectionstring;
-		public string DestinationDir;
-		public string Namespace;
-	}
-
-	/// <summary>
-	/// If a data provider supports assisted configuration, it must implement this interface.
-	/// Must also have a default constructor.
-	/// </summary>
-	public interface IConfigureableDataProvider
-	{
-		/// <summary>
-		/// This method should present a dialog for the user to configure the data provider.
-		/// </summary>
-		/// <param name="owner">The owner dialog</param>
-		/// <param name="previousConnectionString">Any previously configured properties</param>
-		/// <returns>The new connection properties, or null if the setup was cancelled</returns>
-		ConfigureProperties Configure(System.Windows.Forms.Form owner, ConfigureProperties previousConnectionProperties);
-
-		/// <summary>
-		/// Returns a user identifiable name for the provider.
-		/// </summary>
-		string FriendlyName { get; }
-
-		/// <summary>
-		/// Return system name
-		/// </summary>
-		string Name { get; }
-
-		/// <summary>
-		/// This method should return a configuration for the provider, given the commandline arguments, or return null if the commandline was not meaningfull to the provider.
-		/// </summary>
-		/// <param name="arguments">The commandline arguments</param>
-		/// <returns>A configuration for the provider, or null if the arguments where not meaningfull for the provider</returns>
-		ConfigureProperties AutoConfigure(string[] arguments);
-
-		/// <summary>
-		/// Returns a dataprovider, given the connectionstring
-		/// </summary>
-		/// <param name="connectionstring"></param>
-		/// <returns></returns>
-		IDataProvider GetProvider(string connectionstring);
-	}
 
     public interface IRelationManager
     {
