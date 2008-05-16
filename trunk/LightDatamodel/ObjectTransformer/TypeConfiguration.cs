@@ -435,8 +435,7 @@ namespace System.Data.LightDatamodel
             /// <param name="mapping">The mapping information</param>
             public MappedClass(XmlNode mapping)
             {
-                if (mapping.Attributes["tablename"] == null || mapping.Attributes["classname"] == null)
-                    throw new Exception("All \"class\" nodes must have the columnname and fieldname attributes");
+                if (mapping.Attributes["tablename"] == null || mapping.Attributes["classname"] == null) throw new Exception("All \"class\" nodes must have the columnname and fieldname attributes");
                 m_tablename = mapping.Attributes["tablename"].Value;
                 m_className = mapping.Attributes["classname"].Value;
                 m_type = null;
@@ -603,8 +602,7 @@ namespace System.Data.LightDatamodel
             /// <returns>The matching reference field</returns>
             public ReferenceField GetReferenceField(string name)
             {
-                if (!m_referenceFields.ContainsKey(name))
-                    throw new Exception(string.Format("Failed to locate a reference property name {0} in class {1}", name, this.m_type.FullName));
+                if (!m_referenceFields.ContainsKey(name)) throw new Exception(string.Format("Failed to locate a reference property name {0} in class {1}", name, this.m_type.FullName));
                 return m_referenceFields[name];
             }
 
@@ -763,8 +761,7 @@ namespace System.Data.LightDatamodel
             /// </summary>
             /// <param name="type">The type containing the field</param>
             /// <param name="mapping">The mapping information</param>
-            public MappedField(Type type, XmlNode mapping)
-                : this(mapping)
+            public MappedField(Type type, XmlNode mapping) : this(mapping)
             {
                 m_field = type.GetField(m_fieldName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
                 if (m_field == null)
