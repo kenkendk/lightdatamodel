@@ -29,17 +29,9 @@ namespace System.Data.LightDatamodel
 	/// </summary>
 	public class ObjectTransformer : IObjectTransformer
 	{
-        private TypeConfiguration m_configuration;
+		private TypeConfiguration m_configuration = new TypeConfiguration();
 
         public TypeConfiguration TypeConfiguration { get { return m_configuration; } }
-
-        /// <summary>
-        /// Constructs a new object transformer
-        /// </summary>
-        public ObjectTransformer()
-        {
-            m_configuration = new TypeConfiguration();
-        }
 
         /// <summary>
         /// Creates a new copy of the given item
@@ -71,12 +63,8 @@ namespace System.Data.LightDatamodel
         /// <param name="target">The object to copy to</param>
         public void CopyObject(object source, object target)
         {
-            if (source == null)
-                throw new ArgumentNullException("source");
-            if (target == null)
-                throw new ArgumentNullException("target");
-            if (target.GetType() != source.GetType())
-                throw new Exception("Objects must be of same type");
+			if (source == null || target == null) throw new ArgumentNullException("source and target can't be null");
+            if (target.GetType() != source.GetType()) throw new Exception("Objects must be of same type");
 
             FieldInfo[] fields = m_configuration.GetFields(source.GetType());
             foreach (FieldInfo fi in fields)
@@ -86,16 +74,12 @@ namespace System.Data.LightDatamodel
             IRelationManager targetManager = null;
 
             //take care of relations
-            if (source as IDataClass != null)
-                sourceManager = ((IDataClass)source).RelationManager;
-            if (target as IDataClass != null)
-                targetManager = ((IDataClass)target).RelationManager;
+            if (source as IDataClass != null) sourceManager = ((IDataClass)source).RelationManager;
+            if (target as IDataClass != null) targetManager = ((IDataClass)target).RelationManager;
             if (sourceManager != null && targetManager != null)
             {
-                if (targetManager.IsRegistered(target as IDataClass))
-                    targetManager.ReassignGuid(targetManager.GetGuidForObject(target as IDataClass), sourceManager.GetGuidForObject(source as IDataClass));
-                else
-                    targetManager.RegisterObject(sourceManager.GetGuidForObject(source as IDataClass), target as IDataClass);
+                if (targetManager.IsRegistered(target as IDataClass)) targetManager.ReassignGuid(targetManager.GetGuidForObject(target as IDataClass), sourceManager.GetGuidForObject(source as IDataClass));
+                else targetManager.RegisterObject(sourceManager.GetGuidForObject(source as IDataClass), target as IDataClass);
 
                 targetManager.SetExistsInDb(target as IDataClass, sourceManager.ExistsInDb(source as IDataClass));
                 targetManager.SetReferenceObjects(target as IDataClass, sourceManager.GetReferenceObjects(source as IDataClass));
@@ -120,10 +104,8 @@ namespace System.Data.LightDatamodel
                     if (mf != null && !mf.IgnoreWithSelect)
                     {
                         object value = reader.GetValue(i);
-                        if (value != DBNull.Value)
-                            mf.Field.SetValue(obj, value);
-                        else
-                            mf.Field.SetValue(obj, provider.GetNullValue(mf.Field.FieldType));
+                        if (value != DBNull.Value) mf.Field.SetValue(obj, value);
+                        else mf.Field.SetValue(obj, provider.GetNullValue(mf.Field.FieldType));
                     }
                 }
                 catch (Exception ex)
