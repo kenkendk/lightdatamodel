@@ -46,6 +46,12 @@ namespace Datamodel.UnitTest
 			Operation op3 = new Operation(Operators.And, new OperationOrParameter[] {op1, op2});
 
 			object[] f = hub.GetObjects(typeof(Project), "");
+            foreach (Project p in f)
+                if (p.ID > 3)
+                    hub.DeleteObject(p);
+            hub.CommitAll();
+            f = hub.GetObjects<Project>();
+
 			object[] q = hub.GetObjects(typeof(Project), op3);
 			if (q.Length != f.Length)
 				throw new Exception("Bad evaluation, should have returned " + f.Length.ToString() + " objects");
@@ -112,10 +118,14 @@ namespace Datamodel.UnitTest
 		{
             DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
 
+            //Avoid ID's being equal with note and project
+            for(int i = 0; i < 100; i++)
+                hub.Add(new Project());
+
             DataFetcherNested nd = new DataFetcherNested(hub);
 
-			Note n = (Note)nd.CreateObject(typeof(Note));
-			Project p = (Project)nd.CreateObject(typeof(Project));
+            Note n = (Note)nd.Add(new Note());
+            Project p = (Project)nd.Add(new Project());
 			p.ProjectNote = n;
 			Guid pg = p.Guid;
             Guid ng = n.Guid;
@@ -124,6 +134,14 @@ namespace Datamodel.UnitTest
                 throw new Exception("Bad dataparent");
             if (n.DataParent != nd)
                 throw new Exception("Bad dataparent");
+
+            if (p.ProjectNote != n)
+                throw new Exception("Bad relation");
+            if (n.ProjectNotes.Count != 1)
+                throw new Exception("Bad relation");
+            if (n.ProjectNotes[0] != p)
+                throw new Exception("Bad relation");
+
 
 			nd.CommitAll();
 
@@ -166,12 +184,14 @@ namespace Datamodel.UnitTest
 			if (p.ProjectNoteID != n.ID)
 				throw new Exception("Failed to update reverse ID");
 
-			long id = p.ID;
-			hub.DiscardObject(p);
-			hub.DiscardObject(n);
+			long pid = p.ID;
+            long nid = n.ID;
+
+			hub.DiscardObject(hub.GetObjectByGuid(p.Guid) as IDataClass);
+			hub.DiscardObject(hub.GetObjectByGuid(n.Guid) as IDataClass);
 
             nd = new DataFetcherNested(hub);
-			p = (Project)nd.GetObjectById(typeof(Project), id);
+			p = (Project)nd.GetObjectById(typeof(Project), pid);
 			if (p == null)
 				throw new Exception("Failed to load item from DB");
             if (p.DataParent != nd)
@@ -179,8 +199,33 @@ namespace Datamodel.UnitTest
 			if (!p.ExistsInDB)
 				throw new Exception("Project has wrong flag");
 
-			n = (Note)nd.CreateObject(typeof(Note));
+            if (p.ProjectNote == null)
+                throw new Exception("Failed to load relation from DB");
+            if (p.ProjectNote.ID != nid)
+                throw new Exception("Loaded wrong relation");
+
+            n = p.ProjectNote;
+
+            hub.DiscardObject(hub.GetObjectByGuid(p.Guid) as IDataClass);
+            hub.DiscardObject(hub.GetObjectByGuid(n.Guid) as IDataClass);
+            nd = new DataFetcherNested(hub);
+            n = (Note)nd.GetObjectById(typeof(Note), nid);
+            if (n == null)
+                throw new Exception("Failed to load item from DB");
+            if (n.DataParent != nd)
+                throw new Exception("Invalid dataparent");
+            if (!n.ExistsInDB)
+                throw new Exception("Note has wrong flag");
+            if (n.ProjectNotes.Count != 1)
+                throw new Exception("Failed to load relation from DB");
+            if (n.ProjectNotes[0].ID != pid)
+                throw new Exception("Loaded wrong relation");
+
+            p = n.ProjectNotes[0];
+			n = (Note)nd.Add(new Note());
 			n.NoteText = "Newly created link";
+            if (p.CurrentTaskNote != null)
+                throw new Exception("Assignment before actual, this usually means you have caught the default object");
 			p.CurrentTaskNote = n;
 			if (p.CurrentTaskNote == null)
 				throw new Exception("Failed to assign a new object on an existing project");
@@ -190,6 +235,9 @@ namespace Datamodel.UnitTest
 				throw new Exception("Project has wrong flag");
 			if (n.ExistsInDB)
 				throw new Exception("Note has wrong flag");
+
+            if (!n.TaskNotes.Contains(p))
+                throw new Exception("Failed to contain reverse");
 
 			pg = p.Guid;
 			ng = n.Guid;
@@ -204,6 +252,13 @@ namespace Datamodel.UnitTest
 			if (n.ExistsInDB)
 				throw new Exception("Note has wrong flag");
 
+            if (p.CurrentTaskNote == null)
+                throw new Exception("Failed to assign a new object on an existing project");
+            if (p.CurrentTaskNote.NoteText != "Newly created link")
+                throw new Exception("Failed to assign a new object on an existing project");
+            if (!n.TaskNotes.Contains(p))
+                throw new Exception("Failed to contain reverse");
+
 			hub.CommitAll();
 
 			if (!p.ExistsInDB)
@@ -214,16 +269,19 @@ namespace Datamodel.UnitTest
 			if (p.CurrentTaskNoteID != n.ID)
 				throw new Exception("Failed to update reverse ID");
 
-			id = p.ProjectNoteID;
+			nid = p.CurrentTaskNoteID;
 
             nd = new System.Data.LightDatamodel.DataFetcherNested(hub);
 
-			n = (Note)nd.GetObjectById(typeof(Note), id);
-			p = (Project)nd.CreateObject(typeof(Project));
+			n = (Note)nd.GetObjectById(typeof(Note), nid);
+            p = (Project)nd.Add(new Project());
 			p.Title = "A new project";
 			p.ProjectNote = n;
 
-			pg = p.Guid;
+            if (n.ProjectNotes == null || n.ProjectNotes.Count == 0)
+                throw new Exception("Reverse property failed on create");
+
+            pg = p.Guid;
 			ng = n.Guid;
 
 			nd.CommitAll();
@@ -251,8 +309,8 @@ namespace Datamodel.UnitTest
 			if (p.ProjectNoteID != n.ID)
 				throw new Exception("Failed to update reverse ID");
 
-			p = (Project)hub.CreateObject(typeof(Project));
-			n = (Note)hub.CreateObject(typeof(Note));
+			p = (Project)hub.Add(new Project());
+            n = (Note)hub.Add(new Note());
 			n.NoteText = "1";
 			p.Title = "2";
 			p.ProjectNote = n;
@@ -287,8 +345,8 @@ namespace Datamodel.UnitTest
 
             hub.ClearCache();
 
-            p = hub.CreateObject<Project>();
-            n = hub.CreateObject<Note>();
+            p = (Project)hub.Add(new Project());
+            n = (Note)hub.Add(new Note());
 
             n.ProjectNotes.Add(p);
 
@@ -297,9 +355,24 @@ namespace Datamodel.UnitTest
 
             hub.CommitAll();
 
+            nid = p.ProjectNoteID;
             p.ProjectNote = null;
             if (n.ProjectNotes.Count != 0)
                 throw new Exception("Failed to update reverse item");
+
+            if (p.ProjectNoteID == nid)
+                throw new Exception("Failed to set reverse ID after removal");
+
+            n = hub.GetObjectById<Note>(nid);
+            p.ProjectNote = n;
+            n.ProjectNotes.Remove(p);
+
+            if (p.ProjectNote != null)
+                throw new Exception("Failed to update reverse item");
+            if (p.ProjectNoteID == nid)
+                throw new Exception("Failed to set reverse ID after removal");
+
+            
 
             hub.CommitAll();
 
@@ -317,7 +390,7 @@ namespace Datamodel.UnitTest
             hub.CommitAll();
 
 
-            long pid = p.ID;
+            pid = p.ID;
             hub.ClearCache();
 
             nd = new DataFetcherNested(hub);
@@ -333,6 +406,13 @@ namespace Datamodel.UnitTest
             pg = hub.RelationManager.GetGuidForObject(test);
             hub.CommitAll();
 
+            p = (Project)hub.Add(new Project());
+            p.ProjectNoteID = 1;
+            if (p.ProjectNote == null)
+                throw new Exception("Failed to set relation through ID update");
+            p.ProjectNoteID = -1;
+            if (p.ProjectNote != null)
+                throw new Exception("Failed to set relation through ID update");
 
 		}
 	}

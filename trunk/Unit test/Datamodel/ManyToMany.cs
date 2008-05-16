@@ -16,9 +16,9 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID = -9223372036854775808;
-		private System.Int64 m_LeftID = -9223372036854775808;
-		private System.Int64 m_RightID = -9223372036854775808;
+		private System.Int64 m_ID = 0;
+		private System.Int64 m_LeftID = 0;
+		private System.Int64 m_RightID = 0;
 #endregion
 
 #region " unique value "

@@ -16,10 +16,10 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID = -9223372036854775808;
+		private System.Int64 m_ID = 0;
 		private System.Boolean m_ActiveAcknowledge = false;
-		private System.Int64 m_NoteID = -9223372036854775808;
-		private System.Int64 m_ProjectID = -9223372036854775808;
+		private System.Int64 m_NoteID = 0;
+		private System.Int64 m_ProjectID = 0;
 		private System.DateTime m_Time = new System.DateTime(1, 1, 1);
 #endregion
 

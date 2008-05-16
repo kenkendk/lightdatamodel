@@ -16,7 +16,7 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID = -9223372036854775808;
+		private System.Int64 m_ID = 0;
 		private System.String m_NoteText = "";
 #endregion
 
@@ -44,24 +44,24 @@ namespace Datamodel.UnitTest
 
 #region " referenced properties "
 
-		private System.Data.LightDatamodel.SyncCollectionBase<Project> m_ProjectNotes;
-		public System.Data.LightDatamodel.SyncCollectionBase<Project> ProjectNotes
+		private System.Collections.Generic.IList<Project> m_ProjectNotes;
+		public System.Collections.Generic.IList<Project> ProjectNotes
 		{
 			get
 			{
 				if (m_ProjectNotes == null)
-					m_ProjectNotes = base.RelationManager.GetReferenceCollection<Project>(this, "ProjectNote");
+					m_ProjectNotes = base.RelationManager.GetReferenceCollection<Project>("ProjectNote", this);
 				return m_ProjectNotes;
 			}
 		}
 
-		private System.Data.LightDatamodel.SyncCollectionBase<Project> m_TaskNotes;
-		public System.Data.LightDatamodel.SyncCollectionBase<Project> TaskNotes
+		private System.Collections.Generic.IList<Project> m_TaskNotes;
+		public System.Collections.Generic.IList<Project> TaskNotes
 		{
 			get
 			{
 				if (m_TaskNotes == null)
-					m_TaskNotes = base.RelationManager.GetReferenceCollection<Project>(this, "CurrentTaskNote");
+					m_TaskNotes = base.RelationManager.GetReferenceCollection<Project>("CurrentTaskNote", this);
 				return m_TaskNotes;
 			}
 		}
