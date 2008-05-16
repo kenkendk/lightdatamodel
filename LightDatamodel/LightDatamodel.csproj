@@ -34,7 +34,7 @@
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;TRACE_RELATION</DefineConstants>
     <DocumentationFile>
     </DocumentationFile>
     <DebugSymbols>true</DebugSymbols>
@@ -103,8 +103,6 @@
     <Compile Include="Extended fetchers\QueryModel.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\RelationManager.cs" />
-    <Compile Include="Extended fetchers\SyncCollectionBase.cs" />
     <Compile Include="Object state\DataClassBase.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -129,6 +127,10 @@
     <Compile Include="Providers\SQLiteDataProvider.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="RelationManager\GenericListWrapper.cs" />
+    <Compile Include="RelationManager\GuidProxyCollection.cs" />
+    <Compile Include="RelationManager\RelationManager.cs" />
+    <Compile Include="RelationManager\RelationManagerConfig.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

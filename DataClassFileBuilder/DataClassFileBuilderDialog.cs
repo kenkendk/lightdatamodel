@@ -997,7 +997,13 @@ namespace DataClassFileBuilder
                         if (mf.IgnoreWithSelect)
                             sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithSelect()]\n");
 
-						sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName, mapping.ViewSQL), provider.IsUnique(mapping.TableName, mf.ColumnName)) + ";\n");
+                        string defaultValue;
+                        if (mf.DefaultValue == null)
+                            defaultValue = FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName, mapping.ViewSQL), provider.IsUnique(mapping.TableName, mf.ColumnName));
+                        else
+                            defaultValue = FormatObjectToCSharp(mf.GetDefaultValue(provider), false);
+
+						sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + defaultValue + ";\n");
                     }
                     sw.Write("#endregion\n\n");
 
@@ -1041,8 +1047,8 @@ namespace DataClassFileBuilder
                     foreach (TypeConfiguration.ReferenceField rf in mapping.ReferenceColumns.Values)
                     {
                         sw.Write("\t\tpublic " + tableLookup[rf.ReverseTablename].ClassName + " " + rf.PropertyName + "\n\t\t{\n");
-                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(this, \"" + rf.PropertyName + "\"); }\n");
-                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(this, \"" + rf.PropertyName + "\", value); }\n");
+                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(\"" + rf.PropertyName + "\", this); }\n");
+                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(\"" + rf.PropertyName + "\", this, value); }\n");
                         sw.Write("\t\t}\n\n");
                     }
 
@@ -1055,11 +1061,11 @@ namespace DataClassFileBuilder
                                 {
                                     if (rf.IsCollection)
                                     {
-                                        sw.Write("\t\tprivate System.Data.LightDatamodel.SyncCollectionBase<" + mc.ClassName + "> m_" + rf.ReversePropertyName + ";\n");
-                                        sw.Write("\t\tpublic System.Data.LightDatamodel.SyncCollectionBase<" + mc.ClassName + "> " + rf.ReversePropertyName + "\n\t\t{\n");
+                                        sw.Write("\t\tprivate System.Collections.Generic.IList<" + mc.ClassName + "> m_" + rf.ReversePropertyName + ";\n");
+                                        sw.Write("\t\tpublic System.Collections.Generic.IList<" + mc.ClassName + "> " + rf.ReversePropertyName + "\n\t\t{\n");
                                         sw.Write("\t\t\tget\n\t\t\t{\n");
                                         sw.Write("\t\t\t\tif (m_" + rf.ReversePropertyName + " == null)\n");
-                                        sw.Write("\t\t\t\t\tm_" + rf.ReversePropertyName + " = base.RelationManager.GetReferenceCollection<" + mc.ClassName + ">(this, \"" + rf.PropertyName + "\");\n");
+                                        sw.Write("\t\t\t\t\tm_" + rf.ReversePropertyName + " = base.RelationManager.GetReferenceCollection<" + mc.ClassName + ">(\"" + rf.PropertyName + "\", this);\n");
                                         sw.Write("\t\t\t\treturn m_" + rf.ReversePropertyName + ";\n");
                                         sw.Write("\t\t\t}\n");
                                         sw.Write("\t\t}\n\n");
@@ -1067,8 +1073,8 @@ namespace DataClassFileBuilder
                                     else
                                     {
                                         sw.Write("\t\tpublic " + mc.ClassName + " " + rf.ReversePropertyName + "\n\t\t{\n");
-                                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + mc.ClassName + ">(this, \"" + rf.PropertyName + "\"); }\n");
-                                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + mc.ClassName + ">(this, \"" + rf.PropertyName + "\", value); }\n");
+                                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + mc.ClassName + ">(\"" + rf.PropertyName + "\", this); }\n");
+                                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + mc.ClassName + ">(\"" + rf.PropertyName + "\", this, value); }\n");
                                         sw.Write("\t\t}\n\n");
                                     }
                                 }

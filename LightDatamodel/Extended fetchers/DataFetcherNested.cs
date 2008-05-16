@@ -33,7 +33,9 @@ namespace System.Data.LightDatamodel
 		public DataFetcherNested(IDataFetcherCached basefetcher) : base(basefetcher.Provider)
 		{
             m_transformer = basefetcher.ObjectTransformer;
+            m_relationManager = new RelationManager(this);
             m_baseFetcher = basefetcher;
+
 		}
 
         /// <summary>

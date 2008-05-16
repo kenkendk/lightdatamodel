@@ -82,7 +82,7 @@ namespace System.Data.LightDatamodel
                 else targetManager.RegisterObject(sourceManager.GetGuidForObject(source as IDataClass), target as IDataClass);
 
                 targetManager.SetExistsInDb(target as IDataClass, sourceManager.ExistsInDb(source as IDataClass));
-                targetManager.SetReferenceObjects(target as IDataClass, sourceManager.GetReferenceObjects(source as IDataClass));
+                targetManager.SetReferenceObjects(target.GetType(), targetManager.GetGuidForObject(target as IDataClass), sourceManager.GetReferenceObjects(source.GetType(), sourceManager.GetGuidForObject(source as IDataClass)));
             }
         }
 

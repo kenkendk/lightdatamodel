@@ -16,9 +16,9 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID = -9223372036854775808;
-		private System.Int64 m_CurrentTaskNoteID = -9223372036854775808;
-		private System.Int64 m_ProjectNoteID = -9223372036854775808;
+		private System.Int64 m_ID = 0;
+		private System.Int64 m_CurrentTaskNoteID = 0;
+		private System.Int64 m_ProjectNoteID = 0;
 		private System.String m_Title = "";
 #endregion
 
@@ -51,7 +51,7 @@ namespace Datamodel.UnitTest
 		public System.String Title
 		{
 			get{return m_Title;}
-			set{object oldvalue = m_Title;OnBeforeDataChange(this, "Title", oldvalue, value);m_Title = value;OnAfterDataChange(this, "Title", oldvalue, value);}
+			set{value = value != null && ((string)value).Length > 255 ? ((string)value).Substring(0, 255) : value;object oldvalue = m_Title;OnBeforeDataChange(this, "Title", oldvalue, value);m_Title = value;OnAfterDataChange(this, "Title", oldvalue, value);}
 		}
 
 #endregion
@@ -60,14 +60,14 @@ namespace Datamodel.UnitTest
 
 		public Note ProjectNote
 		{
-			get{ return base.RelationManager.GetReferenceObject<Note>(this, "ProjectNote"); }
-			set{ base.RelationManager.SetReferenceObject<Note>(this, "ProjectNote", value); }
+			get{ return base.RelationManager.GetReferenceObject<Note>("ProjectNote", this); }
+			set{ base.RelationManager.SetReferenceObject<Note>("ProjectNote", this, value); }
 		}
 
 		public Note CurrentTaskNote
 		{
-			get{ return base.RelationManager.GetReferenceObject<Note>(this, "CurrentTaskNote"); }
-			set{ base.RelationManager.SetReferenceObject<Note>(this, "CurrentTaskNote", value); }
+			get{ return base.RelationManager.GetReferenceObject<Note>("CurrentTaskNote", this); }
+			set{ base.RelationManager.SetReferenceObject<Note>("CurrentTaskNote", this, value); }
 		}
 
 #endregion

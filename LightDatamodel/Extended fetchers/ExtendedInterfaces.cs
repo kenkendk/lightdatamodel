@@ -49,19 +49,17 @@ namespace System.Data.LightDatamodel
 
     public interface IRelationManager
     {
-        void CommitItems(IDataFetcher fetcher, List<IDataClass> added, List<IDataClass> deleted, List<IDataClass> modified);
         bool ExistsInDb(IDataClass item);
         Guid GetGuidForObject(IDataClass item);
         IDataClass GetObjectByGuid(Guid g);
-        object GetReferenceObject(IDataClass owner, TypeConfiguration.ReferenceField reference);
-        T GetReferenceObject<T>(IDataClass owner, string propertyname);
-        object GetReferenceObject(IDataClass owner, string propertyname);
-        SyncCollectionBase<T> GetReferenceCollection<T>(IDataClass owner, string propertyname) where T : IDataClass;
+        T GetReferenceObject<T>(string propertyname, IDataClass owner);
+        IDataClass GetReferenceObject(string propertyname, IDataClass owner);
+        GenericListWrapper<T, IDataClass> GetReferenceCollection<T>(string propertyname, IDataClass owner) where T : IDataClass;
 
-        void SetReferenceObject(IDataClass owner, string propertyname, IDataClass value);
-        void SetReferenceObject<T>(IDataClass owner, string propertyname, T value) where T : IDataClass;
+        void SetReferenceObject(string propertyname, IDataClass owner, IDataClass value);
+        void SetReferenceObject<T>(string propertyname, IDataClass owner, T value) where T : IDataClass;
 
-        string GetUniqueColumn(Type type);
+        //string GetUniqueColumn(Type type);
         bool IsRegistered(IDataClass item);
         void ReassignGuid(Guid oldGuid, Guid newGuid);
         Guid RegisterObject(Guid g, IDataClass item);
@@ -69,13 +67,10 @@ namespace System.Data.LightDatamodel
         void UnregisterObject(IDataClass item);
         void UnregisterObject(Guid g);
         void SetExistsInDb(IDataClass item, bool state);
-        Dictionary<string, Guid> GetReferenceObjects(IDataClass item);
-        void SetReferenceObjects(IDataClass item, Dictionary<string, Guid> references);
-        void SetReferenceObject(IDataClass owner, TypeConfiguration.ReferenceField reference, IDataClass value);
+
+        Dictionary<string, List<Guid>> GetReferenceObjects(Type type, Guid item);
+        void SetReferenceObjects(Type type, Guid item, Dictionary<string, List<Guid>> references);
         bool HasGuid(Guid g);
-
-		void AddRelation<REVERSEDATACLASS, LOCALDATACLASS>(string reservekeypropertyname, string localkeypropertyname, string localrelationproperty);
-
     }
 
 }

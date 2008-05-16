@@ -42,6 +42,9 @@
             this.RemoveButton = new System.Windows.Forms.ToolStripButton();
             this.treeView = new System.Windows.Forms.TreeView();
             this.imageList = new System.Windows.Forms.ImageList(this.components);
+            this.IgnoredFieldProperties = new System.Windows.Forms.GroupBox();
+            this.IgnoredFieldName = new System.Windows.Forms.TextBox();
+            this.label11 = new System.Windows.Forms.Label();
             this.ReferenceProperties = new System.Windows.Forms.GroupBox();
             this.ReferenceIsCollection = new System.Windows.Forms.CheckBox();
             this.ReferenceReversePropertyname = new System.Windows.Forms.ComboBox();
@@ -58,6 +61,8 @@
             this.TableTablename = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.FieldProperties = new System.Windows.Forms.GroupBox();
+            this.FieldDefaultValue = new System.Windows.Forms.TextBox();
+            this.label12 = new System.Windows.Forms.Label();
             this.FieldPropertyname = new System.Windows.Forms.ComboBox();
             this.FieldFieldname = new System.Windows.Forms.ComboBox();
             this.FieldDatatype = new System.Windows.Forms.ComboBox();
@@ -69,18 +74,17 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.IgnoredFieldProperties = new System.Windows.Forms.GroupBox();
-            this.IgnoredFieldName = new System.Windows.Forms.TextBox();
-            this.label11 = new System.Windows.Forms.Label();
+            this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.panel1.SuspendLayout();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.toolStrip.SuspendLayout();
+            this.IgnoredFieldProperties.SuspendLayout();
             this.ReferenceProperties.SuspendLayout();
             this.TableProperties.SuspendLayout();
             this.FieldProperties.SuspendLayout();
-            this.IgnoredFieldProperties.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -220,6 +224,38 @@
             this.imageList.Images.SetKeyName(4, "application_link.png");
             this.imageList.Images.SetKeyName(5, "application_delete.png");
             // 
+            // IgnoredFieldProperties
+            // 
+            this.IgnoredFieldProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.IgnoredFieldProperties.Controls.Add(this.IgnoredFieldName);
+            this.IgnoredFieldProperties.Controls.Add(this.label11);
+            this.IgnoredFieldProperties.Location = new System.Drawing.Point(8, 464);
+            this.IgnoredFieldProperties.Name = "IgnoredFieldProperties";
+            this.IgnoredFieldProperties.Size = new System.Drawing.Size(335, 48);
+            this.IgnoredFieldProperties.TabIndex = 2;
+            this.IgnoredFieldProperties.TabStop = false;
+            this.IgnoredFieldProperties.Text = "Field properties";
+            // 
+            // IgnoredFieldName
+            // 
+            this.IgnoredFieldName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.IgnoredFieldName.Location = new System.Drawing.Point(88, 16);
+            this.IgnoredFieldName.Name = "IgnoredFieldName";
+            this.IgnoredFieldName.Size = new System.Drawing.Size(239, 20);
+            this.IgnoredFieldName.TabIndex = 1;
+            this.IgnoredFieldName.TextChanged += new System.EventHandler(this.IgnoredFieldName_TextChanged);
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(16, 16);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(35, 13);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "Name";
+            // 
             // ReferenceProperties
             // 
             this.ReferenceProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
@@ -235,7 +271,7 @@
             this.ReferenceProperties.Controls.Add(this.label6);
             this.ReferenceProperties.Controls.Add(this.label7);
             this.ReferenceProperties.Controls.Add(this.label8);
-            this.ReferenceProperties.Location = new System.Drawing.Point(8, 184);
+            this.ReferenceProperties.Location = new System.Drawing.Point(8, 224);
             this.ReferenceProperties.Name = "ReferenceProperties";
             this.ReferenceProperties.Size = new System.Drawing.Size(335, 176);
             this.ReferenceProperties.TabIndex = 0;
@@ -361,7 +397,7 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.TableProperties.Controls.Add(this.TableTablename);
             this.TableProperties.Controls.Add(this.label1);
-            this.TableProperties.Location = new System.Drawing.Point(8, 368);
+            this.TableProperties.Location = new System.Drawing.Point(8, 408);
             this.TableProperties.Name = "TableProperties";
             this.TableProperties.Size = new System.Drawing.Size(335, 48);
             this.TableProperties.TabIndex = 1;
@@ -391,6 +427,8 @@
             // 
             this.FieldProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.FieldProperties.Controls.Add(this.FieldDefaultValue);
+            this.FieldProperties.Controls.Add(this.label12);
             this.FieldProperties.Controls.Add(this.FieldPropertyname);
             this.FieldProperties.Controls.Add(this.FieldFieldname);
             this.FieldProperties.Controls.Add(this.FieldDatatype);
@@ -404,10 +442,29 @@
             this.FieldProperties.Controls.Add(this.label2);
             this.FieldProperties.Location = new System.Drawing.Point(8, 8);
             this.FieldProperties.Name = "FieldProperties";
-            this.FieldProperties.Size = new System.Drawing.Size(335, 168);
+            this.FieldProperties.Size = new System.Drawing.Size(335, 192);
             this.FieldProperties.TabIndex = 1;
             this.FieldProperties.TabStop = false;
             this.FieldProperties.Text = "Field properties";
+            // 
+            // FieldDefaultValue
+            // 
+            this.FieldDefaultValue.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.FieldDefaultValue.Location = new System.Drawing.Point(96, 112);
+            this.FieldDefaultValue.Name = "FieldDefaultValue";
+            this.FieldDefaultValue.Size = new System.Drawing.Size(216, 20);
+            this.FieldDefaultValue.TabIndex = 14;
+            this.FieldDefaultValue.TextChanged += new System.EventHandler(this.FieldDefaultValue_TextChanged);
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(16, 112);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(70, 13);
+            this.label12.TabIndex = 13;
+            this.label12.Text = "Default value";
             // 
             // FieldPropertyname
             // 
@@ -464,7 +521,7 @@
             // FieldExcludeSelect
             // 
             this.FieldExcludeSelect.AutoSize = true;
-            this.FieldExcludeSelect.Location = new System.Drawing.Point(16, 144);
+            this.FieldExcludeSelect.Location = new System.Drawing.Point(16, 168);
             this.FieldExcludeSelect.Name = "FieldExcludeSelect";
             this.FieldExcludeSelect.Size = new System.Drawing.Size(131, 17);
             this.FieldExcludeSelect.TabIndex = 5;
@@ -475,7 +532,7 @@
             // FieldExcludeUpdate
             // 
             this.FieldExcludeUpdate.AutoSize = true;
-            this.FieldExcludeUpdate.Location = new System.Drawing.Point(16, 128);
+            this.FieldExcludeUpdate.Location = new System.Drawing.Point(16, 152);
             this.FieldExcludeUpdate.Name = "FieldExcludeUpdate";
             this.FieldExcludeUpdate.Size = new System.Drawing.Size(134, 17);
             this.FieldExcludeUpdate.TabIndex = 4;
@@ -486,7 +543,7 @@
             // FieldAutogenerate
             // 
             this.FieldAutogenerate.AutoSize = true;
-            this.FieldAutogenerate.Location = new System.Drawing.Point(16, 112);
+            this.FieldAutogenerate.Location = new System.Drawing.Point(16, 136);
             this.FieldAutogenerate.Name = "FieldAutogenerate";
             this.FieldAutogenerate.Size = new System.Drawing.Size(213, 17);
             this.FieldAutogenerate.TabIndex = 3;
@@ -521,37 +578,9 @@
             this.label2.TabIndex = 0;
             this.label2.Text = "Columnname";
             // 
-            // IgnoredFieldProperties
+            // errorProvider1
             // 
-            this.IgnoredFieldProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.IgnoredFieldProperties.Controls.Add(this.IgnoredFieldName);
-            this.IgnoredFieldProperties.Controls.Add(this.label11);
-            this.IgnoredFieldProperties.Location = new System.Drawing.Point(8, 424);
-            this.IgnoredFieldProperties.Name = "IgnoredFieldProperties";
-            this.IgnoredFieldProperties.Size = new System.Drawing.Size(335, 48);
-            this.IgnoredFieldProperties.TabIndex = 2;
-            this.IgnoredFieldProperties.TabStop = false;
-            this.IgnoredFieldProperties.Text = "Field properties";
-            // 
-            // IgnoredFieldName
-            // 
-            this.IgnoredFieldName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.IgnoredFieldName.Location = new System.Drawing.Point(88, 16);
-            this.IgnoredFieldName.Name = "IgnoredFieldName";
-            this.IgnoredFieldName.Size = new System.Drawing.Size(239, 20);
-            this.IgnoredFieldName.TabIndex = 1;
-            this.IgnoredFieldName.TextChanged += new System.EventHandler(this.IgnoredFieldName_TextChanged);
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(16, 16);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(35, 13);
-            this.label11.TabIndex = 0;
-            this.label11.Text = "Name";
+            this.errorProvider1.ContainerControl = this;
             // 
             // DataClassCustomizer
             // 
@@ -570,14 +599,15 @@
             this.splitContainer1.ResumeLayout(false);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
+            this.IgnoredFieldProperties.ResumeLayout(false);
+            this.IgnoredFieldProperties.PerformLayout();
             this.ReferenceProperties.ResumeLayout(false);
             this.ReferenceProperties.PerformLayout();
             this.TableProperties.ResumeLayout(false);
             this.TableProperties.PerformLayout();
             this.FieldProperties.ResumeLayout(false);
             this.FieldProperties.PerformLayout();
-            this.IgnoredFieldProperties.ResumeLayout(false);
-            this.IgnoredFieldProperties.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -626,6 +656,9 @@
         private System.Windows.Forms.GroupBox IgnoredFieldProperties;
         private System.Windows.Forms.TextBox IgnoredFieldName;
         private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.TextBox FieldDefaultValue;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.ErrorProvider errorProvider1;
 
     }
 }

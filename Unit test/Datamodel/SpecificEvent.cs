@@ -16,11 +16,11 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID = -9223372036854775808;
+		private System.Int64 m_ID = 0;
 		private System.String m_Data = "";
-		private System.Int64 m_RegistrationID = -9223372036854775808;
+		private System.Int64 m_RegistrationID = 0;
 		private System.DateTime m_Time = new System.DateTime(1, 1, 1);
-		private System.Int64 m_EventType = -9223372036854775808;
+		private System.Int64 m_EventType = -1;
 #endregion
 
 #region " unique value "
@@ -40,7 +40,7 @@ namespace Datamodel.UnitTest
 		public System.String Data
 		{
 			get{return m_Data;}
-			set{object oldvalue = m_Data;OnBeforeDataChange(this, "Data", oldvalue, value);m_Data = value;OnAfterDataChange(this, "Data", oldvalue, value);}
+			set{value = value != null && ((string)value).Length > 255 ? ((string)value).Substring(0, 255) : value;object oldvalue = m_Data;OnBeforeDataChange(this, "Data", oldvalue, value);m_Data = value;OnAfterDataChange(this, "Data", oldvalue, value);}
 		}
 
 		public System.Int64 RegistrationID
