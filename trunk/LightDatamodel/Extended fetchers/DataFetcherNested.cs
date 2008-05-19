@@ -99,7 +99,7 @@ namespace System.Data.LightDatamodel
         {
             object res = null;
             Guid g = (tmp as IDataClass).RelationManager.GetGuidForObject(tmp as IDataClass);
-            if (m_relationManager.HasGuid(g))
+			if (m_relationManager != null && m_relationManager.HasGuid(g))
                 res = m_relationManager.GetObjectByGuid(g);
             else
             {
