@@ -93,7 +93,9 @@ namespace System.Data.LightDatamodel
 
         public string[] GetPropKeysByID(Type type)
         {
-            List<string> tmp = new List<string>();
+			if (!m_propertyKeys.ContainsKey(type))
+				return new string[0];
+			List<string> tmp = new List<string>();
             foreach(string s in m_propertyKeys[type].Values)
                 //if (m_relations[s].Value.Field.DeclaringType == type)
                     tmp.Add(s);

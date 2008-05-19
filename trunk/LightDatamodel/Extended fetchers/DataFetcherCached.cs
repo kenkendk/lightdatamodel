@@ -63,7 +63,10 @@ namespace System.Data.LightDatamodel
         /// <param name="provider">The provider to use</param>
 		public DataFetcherCached(IDataProvider provider) : base(provider)
 		{
-            //m_relationManager = new RelationManager(this);		//TODO: Byggesag will suffer a horrible and most fearsome cruel death if this is enabled
+			if (base.ObjectTransformer.TypeConfiguration.RelationConfig.GetAvaliblePropKeys().Length != 0)
+				m_relationManager = new RelationManager(this);
+			else
+				m_relationManager = null;
 		}
 
         #region Provider interactions
