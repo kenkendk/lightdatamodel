@@ -63,11 +63,21 @@ namespace System.Data.LightDatamodel
         /// <param name="provider">The provider to use</param>
 		public DataFetcherCached(IDataProvider provider) : base(provider)
 		{
-			if (base.ObjectTransformer.TypeConfiguration.RelationConfig.GetAvaliblePropKeys().Length != 0)
-				m_relationManager = new RelationManager(this);
-			else
-				m_relationManager = null;
+            if (base.ObjectTransformer.TypeConfiguration.RelationConfig.GetAvaliblePropKeys().Length != 0)
+                m_relationManager = new RelationManager(this);
+            else
+            {
+                //If the user creates the relations later, we need to create it
+                base.ObjectTransformer.TypeConfiguration.RelationConfig.AddedRelation += new EventHandler(RelationConfig_AddedRelation);
+                m_relationManager = null;
+            }
 		}
+
+        void RelationConfig_AddedRelation(object sender, EventArgs e)
+        {
+            if (m_relationManager == null)
+                m_relationManager = new RelationManager(this);
+        }
 
         #region Provider interactions
         /* The methods in this regions does all interaction with the provider.

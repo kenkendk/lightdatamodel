@@ -122,6 +122,8 @@ namespace Datamodel.UnitTest
             for(int i = 0; i < 100; i++)
                 hub.Add(new Project());
 
+            //hub.CommitAll();
+
             DataFetcherNested nd = new DataFetcherNested(hub);
 
             Note n = (Note)nd.Add(new Note());
@@ -141,7 +143,6 @@ namespace Datamodel.UnitTest
                 throw new Exception("Bad relation");
             if (n.ProjectNotes[0] != p)
                 throw new Exception("Bad relation");
-
 
 			nd.CommitAll();
 
