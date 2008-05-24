@@ -32,6 +32,8 @@ namespace System.Data.LightDatamodel
         /// Gets a reference to the typeconfiguration this manager is using
         /// </summary>
         public TypeConfiguration TypeConfiguration { get { return m_typeConfig; } }
+
+        public event EventHandler AddedRelation;
         
         public RelationManagerConfig(TypeConfiguration typeconfig)
         {
@@ -86,9 +88,8 @@ namespace System.Data.LightDatamodel
             m_isCollection[owner.Field.DeclaringType].Add(relationkey, ownerCollection);
             m_isCollection[child.Field.DeclaringType].Add(relationkey, childCollection);
 
-            //TODO: Handle this properly
-            /*m_lookups[owner.Field.DeclaringType].Add(owner.ColumnName, propKey);
-            m_lookups[child.Field.DeclaringType].Add(child.ColumnName, propKey);*/
+            if (AddedRelation != null)
+                AddedRelation(this, null);
         }
 
         public string[] GetPropKeysByID(Type type)

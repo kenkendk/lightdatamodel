@@ -350,6 +350,7 @@ namespace System.Data.LightDatamodel
 			OnBeforeDataConnection(obj, DataActions.Fetch);
             object[] items = LoadObjects(obj.GetType(), QueryModel.Parser.ParseQuery(obj.UniqueColumn + "=?", obj.UniqueValue));
             if (items == null || items.Length == 0) throw new Exception("Row (" + obj.UniqueValue + ") from table \"" + tablename + "\" can't be fetched");
+            if (items.Length != 1) throw new Exception("Row (" + obj.UniqueValue + ") from table \"" + tablename + "\" gave " + items.Length.ToString() + " rows");
             ObjectTransformer.CopyObject(items[0], obj);
 			(obj as DataClassBase).m_state = ObjectStates.Default;
 			(obj as DataClassBase).m_isdirty = false;
@@ -384,9 +385,10 @@ namespace System.Data.LightDatamodel
                 UpdateObject(obj);
 				OnAfterDataConnection(obj, DataActions.Update);
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Update);
-                
-                //Try to read data back from database
-                RefreshObject(obj);
+
+                //Try to read data back from database, but not from a nested
+                if (this as DataFetcherNested == null)
+                    RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.New)
 			{
@@ -396,8 +398,9 @@ namespace System.Data.LightDatamodel
 				OnAfterDataConnection(obj, DataActions.Insert);
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Insert);
 
-                //Try to read data back from database
-                RefreshObject(obj);
+                //Try to read data back from database, but not from a nested
+                if (this as DataFetcherNested == null)
+                    RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.Deleted)
 			{
