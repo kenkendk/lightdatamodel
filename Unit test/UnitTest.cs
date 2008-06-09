@@ -117,6 +117,7 @@ namespace Datamodel.UnitTest
 		public static void TestRelations(IDbConnection con)
 		{
             DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
+			hub.ObjectTransformer.TypeConfiguration.RelationConfig.AddRelation(
 
             //Avoid ID's being equal with note and project
             for(int i = 0; i < 100; i++)

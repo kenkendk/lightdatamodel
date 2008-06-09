@@ -238,7 +238,7 @@ namespace System.Data.LightDatamodel
                             if (newval != prevval || (newval != null && !newval.Equals(prevval)))
                             {
                                 mapping.Key.Field.SetValue(GetObjectByGuid(o), newval);
-                                GetObjectByGuid(o).SetDirty();
+                                ((DataClassBase)GetObjectByGuid(o)).m_isdirty = true;// .SetDirty();
                             }
                         }
             }

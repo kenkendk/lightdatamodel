@@ -96,7 +96,13 @@ namespace System.Data.LightDatamodel
         /// <param name="obj"></param>
         protected virtual void UpdateObject(object obj)
         {
-            m_provider.UpdateRow(obj);
+			DataClassBase baseobj = obj as DataClassBase;
+			if (baseobj != null && baseobj.m_originalprimaryvalue != null)
+			{
+				m_provider.UpdateRow(baseobj, baseobj.m_originalprimaryvalue);		//in case of changed primary value
+			}
+			else
+				m_provider.UpdateRow(obj);
         }
 
         /// <summary>
@@ -354,6 +360,7 @@ namespace System.Data.LightDatamodel
             ObjectTransformer.CopyObject(items[0], obj);
 			(obj as DataClassBase).m_state = ObjectStates.Default;
 			(obj as DataClassBase).m_isdirty = false;
+			(obj as DataClassBase).m_originalprimaryvalue = null;
 			OnAfterDataConnection(obj, DataActions.Fetch);
 		}
 
