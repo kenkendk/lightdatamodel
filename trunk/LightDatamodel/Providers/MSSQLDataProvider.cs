@@ -264,7 +264,15 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
-		protected override string AddParameter(IDbCommand cmd, string columnname, object value)
+
+		/// <summary>
+		/// The MSSQL param is very different from the Access-version
+		/// </summary>
+		/// <param name="cmd"></param>
+		/// <param name="columnname"></param>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		protected override string AddParameter(IDbCommand cmd, string paramname, object value)
 		{
 			IDataParameter p = cmd.CreateParameter();
 			if (value == null)
@@ -277,13 +285,13 @@ namespace System.Data.LightDatamodel
 				if (d.Equals(GetNullValue(typeof(DateTime))))
 					p.Value = DBNull.Value;
 				else
-					p.Value = d.ToOADate();
+					p.Value = d;
 			}
 			else
 				p.Value = value;
-			p.ParameterName = columnname;
-			cmd.Parameters.Add(p);
-			return "@" + columnname;
+			p.ParameterName = paramname;
+			if(!cmd.Parameters.Contains(p.ParameterName)) cmd.Parameters.Add(p);		//TODO: hmm
+			return "@" + paramname;
 		}
 	}
 }

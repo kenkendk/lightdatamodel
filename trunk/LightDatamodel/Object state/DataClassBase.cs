@@ -26,6 +26,53 @@ namespace System.Data.LightDatamodel
 {
 
 	/// <summary>
+	/// Base class for all 'database classes'
+	/// </summary>
+	public abstract class DataClassBase : IDataClass
+	{
+		internal protected bool m_isdirty = true;
+		internal protected IDataFetcher m_dataparent;
+		internal protected ObjectStates m_state = ObjectStates.Default;
+		internal protected object m_originalprimaryvalue = null;
+		public event DataChangeEventHandler BeforeDataChange;
+		public event DataChangeEventHandler AfterDataChange;
+		public event DataConnectionEventHandler BeforeDataCommit;
+		public event DataConnectionEventHandler AfterDataCommit;
+
+		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
+        public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
+		public bool IsDirty{get{return m_isdirty;}}
+		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
+		public abstract string UniqueColumn	{get;}
+		public abstract object UniqueValue{get;}
+        public void SetDirty() { m_isdirty = true; }
+
+		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
+		{
+			if(object.Equals(oldvalue, newvalue)) return;
+			if(BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
+		}
+
+		protected virtual void OnAfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
+		{
+			if(object.Equals(oldvalue, newvalue)) return;
+			if (propertyname == UniqueColumn && m_originalprimaryvalue == null) m_originalprimaryvalue = oldvalue;		//preserve original primary key
+			m_isdirty=true;
+			if(AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
+		}
+
+		protected virtual internal void OnAfterDataCommit(object obj, DataActions action)
+		{
+			if (AfterDataCommit != null) AfterDataCommit(obj, action);
+		}
+
+		protected virtual internal void OnBeforeDataCommit(object obj, DataActions action)
+		{
+			if (BeforeDataCommit != null) BeforeDataCommit(obj, action);
+		}
+	}
+
+	/// <summary>
 	/// Base class for non updateable data classes (views)
 	/// </summary>
 	public abstract class DataClassView : IDataClass
@@ -50,81 +97,36 @@ namespace System.Data.LightDatamodel
 
 		protected void OnBeforeDataCommit(object sender, string propertyname, object oldvalue, object newvalue)
 		{
-			if (oldvalue == newvalue) return;
+			if(object.Equals(oldvalue, newvalue)) return;
 			if (BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
 		}
 
 		protected void OnAfterDataWrite(object sender, string propertyname, object oldvalue, object newvalue)
 		{
-			if (oldvalue == newvalue) return;
+			if(object.Equals(oldvalue, newvalue)) return;
 			if (AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
 		}
 
 		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
-        public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
-		public bool IsDirty { get {	return false; } }
+		public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
+		public bool IsDirty { get { return false; } }
 
-        public void SetDirty()
-        {
-        }
+		public void SetDirty()
+		{
+		}
 
 		public System.Data.LightDatamodel.ObjectStates ObjectState
 		{
-			get	{ return ObjectStates.Default; }
-			set	
-            {
+			get { return ObjectStates.Default; }
+			set
+			{
 				//meh
 			}
 		}
 		public string UniqueColumn { get { return null; } }
-		public object UniqueValue { get	{ return null; } }
+		public object UniqueValue { get { return null; } }
 
 		#endregion
 
-	}
-
-	/// <summary>
-	/// Base class for all 'database classes'
-	/// </summary>
-	public abstract class DataClassBase : IDataClass
-	{
-		internal protected bool m_isdirty = true;
-		internal protected IDataFetcher m_dataparent;
-		internal protected ObjectStates m_state = ObjectStates.Default;
-		public event DataChangeEventHandler BeforeDataChange;
-		public event DataChangeEventHandler AfterDataChange;
-		public event DataConnectionEventHandler BeforeDataCommit;
-		public event DataConnectionEventHandler AfterDataCommit;
-
-		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
-        public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
-		public bool IsDirty{get{return m_isdirty;}}
-		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
-		public abstract string UniqueColumn	{get;}
-		public abstract object UniqueValue{get;}
-        public void SetDirty() { m_isdirty = true; }
-
-		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
-		{
-			if(object.Equals(oldvalue, newvalue)) return;
-			if(BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
-		}
-
-		protected virtual void OnAfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
-		{
-            if (object.Equals(oldvalue, newvalue)) return;
-			m_isdirty=true;
-			if(AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
-		}
-
-		protected virtual internal void OnAfterDataCommit(object obj, DataActions action)
-		{
-			if (AfterDataCommit != null) AfterDataCommit(obj, action);
-		}
-
-		protected virtual internal void OnBeforeDataCommit(object obj, DataActions action)
-		{
-			if (BeforeDataCommit != null) BeforeDataCommit(obj, action);
-		}
 	}
 }

@@ -12,6 +12,12 @@ namespace System.Data.LightDatamodel
 		protected IDbConnection m_connection;
         protected IObjectTransformer m_transformer;
 
+		public IDbConnection Connection
+		{
+			get { return m_connection;}
+			set { m_connection = value; }
+		}
+
         public IObjectTransformer Transformer
         {
             get { return m_transformer; }
@@ -136,7 +142,7 @@ namespace System.Data.LightDatamodel
                 sb.Append(" WHERE ");
                 sb.Append(QuoteColumnname(typeinfo.UniqueColumn));
                 sb.Append("=");
-				sb.Append(AddParameter(cmd, typeinfo.UniqueColumn, null));
+				sb.Append(AddParameter(cmd, "where" + typeinfo.UniqueColumn, null));
                 m_identityWhere[typeinfo.Type] = sb.ToString();
             }
 
@@ -348,7 +354,7 @@ namespace System.Data.LightDatamodel
         /// <param name="cmd">The command to use</param>
         /// <param name="value">The value to insert</param>
         /// <returns>A placeholder for the value, to be used in the SQL command</returns>
-		protected virtual string AddParameter(IDbCommand cmd, string columnname, object value)
+		protected virtual string AddParameter(IDbCommand cmd, string paramname, object value)
 		{
 			IDataParameter p = cmd.CreateParameter();
 			if (value == null)
@@ -382,7 +388,7 @@ namespace System.Data.LightDatamodel
             TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
 
             cmd.CommandText = GetDeleteString(typeinfo) + GetIdentityWhere(typeinfo);
-			AddParameter(cmd, typeinfo.UniqueColumn, typeinfo.UniqueValue(item));
+			AddParameter(cmd, "where" + typeinfo.UniqueColumn, typeinfo.UniqueValue(item));
             
             try
 			{
@@ -437,7 +443,7 @@ namespace System.Data.LightDatamodel
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
                 
                 cmd.CommandText = GetSelectString(typeinfo) + GetIdentityWhere(typeinfo);
-                AddParameter(cmd, typeinfo.PrimaryKey.ColumnName, primarykey);
+                AddParameter(cmd, "where" + typeinfo.PrimaryKey.ColumnName, primarykey);
 
 			    try
 			    {
@@ -660,11 +666,9 @@ namespace System.Data.LightDatamodel
 		/// <summary>
 		/// Will update a given row in the DB. Will throw an exception if none or more than 1 are updated
 		/// </summary>
-		/// <param name="tablename"></param>
-		/// <param name="primarycolumnname"></param>
+		/// <param name="item"></param>
 		/// <param name="primaryvalue"></param>
-		/// <param name="values"></param>
-		public virtual void UpdateRow(object item)
+		public virtual void UpdateRow(object item, object primaryvalue)
 		{
 			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())
@@ -677,7 +681,7 @@ namespace System.Data.LightDatamodel
 						object val = mf.Field.GetValue(item);
 						AddParameter(cmd, mf.ColumnName, val);
 					}
-                AddParameter(cmd, typeinfo.UniqueColumn, typeinfo.UniqueValue(item));
+				AddParameter(cmd, "where" + typeinfo.UniqueColumn, primaryvalue);
 
                 try
                 {
@@ -690,6 +694,16 @@ namespace System.Data.LightDatamodel
                     throw new Exception("Couldn't update row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd) );
                 }
             }
+		}
+
+		/// <summary>
+		/// Will update a given row in the DB. Will throw an exception if none or more than 1 are updated
+		/// </summary>
+		/// <param name="item"></param>
+		public virtual void UpdateRow(object item)
+		{
+			TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
+			UpdateRow(item, typeinfo.UniqueValue(item));
 		}
 
 		/// <summary>
@@ -708,7 +722,7 @@ namespace System.Data.LightDatamodel
 					if (!mf.IgnoreWithInsert)
 					{
 						object val = mf.Field.GetValue(item);
-						AddParameter(cmd, mf.ColumnName, val);		//damn hack. String can't be "" ... at least not for Access
+						AddParameter(cmd, mf.ColumnName, val);
 					}
 
                 try
