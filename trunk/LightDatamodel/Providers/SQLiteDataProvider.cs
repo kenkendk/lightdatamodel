@@ -203,6 +203,23 @@ namespace System.Data.LightDatamodel
 			return (string[])tb.ToArray(typeof(string));
 		}
 
+        /// <summary>
+        /// Helper funtion that will insert a parameter in the commands parameter collection, and return a place holder for the value, to be used in the SQL string
+        /// </summary>
+        /// <param name="cmd">The command to use</param>
+        /// <param name="value">The value to insert</param>
+        /// <returns>A placeholder for the value, to be used in the SQL command</returns>
+        protected override string AddParameter(IDbCommand cmd, string columnname, object value)
+        {
+            //This method is overridden because SQLite does not have to do tricks 
+            // SQLite correctly handles dates, times, null's and empty strings!
+            IDataParameter p = cmd.CreateParameter();
+            p.Value = value;
+            cmd.Parameters.Add(p);
+            return "?";
+        }
+
+
 		public override string QuoteColumnname(string columnname)
 		{
 			return "\"" + columnname.Replace("\"", "\\\"") + "\"";

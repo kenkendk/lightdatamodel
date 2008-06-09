@@ -15,10 +15,12 @@ namespace System.Data.LightDatamodel
         //where Ty : class
     {
         private IList<Ty> m_list;
+        private Enumerator<Tx> m_enum;
 
         public GenericListWrapper(IList<Ty> inner)
         {
             m_list = inner;
+            m_enum = new Enumerator<Tx>(m_list.GetEnumerator());
         }
 
         #region IList<Tx> Members
@@ -96,7 +98,7 @@ namespace System.Data.LightDatamodel
 
         public IEnumerator<Tx> GetEnumerator()
         {
-            throw new NotImplementedException();
+            return m_enum;
         }
 
         #endregion

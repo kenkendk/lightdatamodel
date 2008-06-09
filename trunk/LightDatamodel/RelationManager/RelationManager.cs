@@ -85,8 +85,9 @@ namespace System.Data.LightDatamodel
         {
             if (item == null)
                 return Guid.Empty;
-            else
+            else if (m_revHookedObjects.ContainsKey(item))
                 return m_revHookedObjects[item];
+            else throw new Exception("The given object is not registered in the current context. Please add it or load it through the correct datafetcher");
         }
 
         public Guid RegisterObject(IDataClass item)

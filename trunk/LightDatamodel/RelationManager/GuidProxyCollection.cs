@@ -42,7 +42,13 @@ namespace System.Data.LightDatamodel
         {
             get
             {
-                return m_manager.GetObjectByGuid(m_list[index]);
+                if (m_manager.HasGuid(m_list[index]))
+                    return m_manager.GetObjectByGuid(m_list[index]);
+                else
+                {
+                    IDataClass ic = m_manager.GetObjectByGuid(m_owner);
+                    return (IDataClass)((IDataFetcherCached)ic.DataParent).GetObjectByGuid(m_list[index]);
+                }
             }
             set
             {
