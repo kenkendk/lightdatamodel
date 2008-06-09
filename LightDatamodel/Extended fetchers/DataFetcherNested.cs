@@ -121,6 +121,8 @@ namespace System.Data.LightDatamodel
         protected override void UpdateObject(object obj)
         {
             ObjectTransformer.CopyObject(obj, m_baseFetcher.GetObjectByGuid(this.RelationManager.GetGuidForObject((IDataClass)obj)));
+            if (((IDataClass)obj).IsDirty)
+                ((IDataClass)m_baseFetcher.GetObjectByGuid(this.RelationManager.GetGuidForObject((IDataClass)obj))).SetDirty();
         }
 
         protected override void RemoveObject(object obj)

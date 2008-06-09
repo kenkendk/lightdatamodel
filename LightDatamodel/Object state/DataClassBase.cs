@@ -106,13 +106,13 @@ namespace System.Data.LightDatamodel
 
 		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
-			if(oldvalue == newvalue) return;
+			if(object.Equals(oldvalue, newvalue)) return;
 			if(BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
 		}
 
 		protected virtual void OnAfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
-			if(oldvalue == newvalue) return;
+            if (object.Equals(oldvalue, newvalue)) return;
 			m_isdirty=true;
 			if(AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
 		}
