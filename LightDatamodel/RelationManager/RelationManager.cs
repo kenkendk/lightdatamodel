@@ -42,7 +42,6 @@ namespace System.Data.LightDatamodel
             m_owner = owner;
 
             m_owner.AfterDataChange += new DataChangeEventHandler(UpdateIDValue);
-            m_owner.ObjectAddRemove += new ObjectStateChangeHandler(owner_ObjectAllocation);
             m_owner.AfterDataConnection += new DataConnectionEventHandler(owner_AfterDataConnection);
 
             /*foreach (TypeConfiguration.MappedClass mc in owner.ObjectTransformer.TypeConfiguration.MappedClasses)
@@ -98,6 +97,7 @@ namespace System.Data.LightDatamodel
         public Guid RegisterObject(Guid guid, IDataClass item)
         {
             m_hookedObjects.Add(guid, item);
+
             m_revHookedObjects.Add(item, guid);
             if (!m_existsInDb.ContainsKey(guid))
                 m_existsInDb[guid] = false;
@@ -118,25 +118,21 @@ namespace System.Data.LightDatamodel
             RegisterObject(n, item);
         }
 
-        private void owner_ObjectAllocation(object sender, IDataClass obj, ObjectStates oldstate, ObjectStates newstate)
+        public void DeleteObject(IDataClass itm)
         {
-            IDataClass itm = sender as IDataClass;
             if (itm == null || !m_revHookedObjects.ContainsKey(itm))
                 return;
 
-            if (newstate == ObjectStates.Deleted)
+            Guid g = GetGuidForObject(itm);
+            UnregisterObject(itm);
+            foreach (Dictionary<Guid, List<Guid>> ix in m_references.Values)
             {
-                Guid g = GetGuidForObject(itm);
-                UnregisterObject(itm);
-                foreach (Dictionary<Guid, List<Guid>> ix in m_references.Values)
-                {
-                    if (ix.ContainsKey(g))
-                        ix.Remove(g);
+                if (ix.ContainsKey(g))
+                    ix.Remove(g);
 
-                    foreach (List<Guid> ixm in ix.Values)
-                        if (ixm.Contains(g))
-                            ixm.Remove(g);
-                }
+                foreach (List<Guid> ixm in ix.Values)
+                    if (ixm.Contains(g))
+                        ixm.Remove(g);
             }
         }
 

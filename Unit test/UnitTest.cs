@@ -117,7 +117,6 @@ namespace Datamodel.UnitTest
 		public static void TestRelations(IDbConnection con)
 		{
             DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
-			hub.ObjectTransformer.TypeConfiguration.RelationConfig.AddRelation(
 
             //Avoid ID's being equal with note and project
             for(int i = 0; i < 100; i++)
@@ -400,13 +399,22 @@ namespace Datamodel.UnitTest
             pg = nd.RelationManager.GetGuidForObject(p);
             Project test = hub.GetObjectByGuid<Project>(pg);
             pg = hub.RelationManager.GetGuidForObject(test);
+            object delid = p.UniqueValue;
             nd.DeleteObject(p);
-            pg = nd.RelationManager.GetGuidForObject(p);
+            Guid delg = nd.RelationManager.GetGuidForObject(p);
             pg = hub.RelationManager.GetGuidForObject(test);
             nd.CommitAll();
             test = (Project)hub.RelationManager.GetObjectByGuid(pg);
             pg = hub.RelationManager.GetGuidForObject(test);
             hub.CommitAll();
+
+            p = hub.GetObjectById<Project>(delid);
+            if (p != null)
+                throw new Exception("Failed to actually remove item");
+
+            p = hub.GetObjectByGuid<Project>(delg);
+            if (p != null)
+                throw new Exception("Failed to actually remove item");
 
             p = (Project)hub.Add(new Project());
             p.ProjectNoteID = 1;

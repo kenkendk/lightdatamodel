@@ -67,6 +67,7 @@ namespace System.Data.LightDatamodel
         void UnregisterObject(IDataClass item);
         void UnregisterObject(Guid g);
         void SetExistsInDb(IDataClass item, bool state);
+        void DeleteObject(IDataClass itm);
 
         Dictionary<string, List<Guid>> GetReferenceObjects(Type type, Guid item);
         void SetReferenceObjects(Type type, Guid item, Dictionary<string, List<Guid>> references);
