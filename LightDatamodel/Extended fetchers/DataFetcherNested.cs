@@ -106,8 +106,8 @@ namespace System.Data.LightDatamodel
                 res = Activator.CreateInstance(tmp.GetType());
                 (res as DataClassBase).m_dataparent = this;
             }
-
             ObjectTransformer.CopyObject(tmp, res);
+
 
             return res;
         }

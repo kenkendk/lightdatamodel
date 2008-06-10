@@ -217,6 +217,10 @@ namespace System.Data.LightDatamodel
                 Dictionary<Guid, List<Guid>> dict = m_references[propkey];
                 if (dict.ContainsKey(owner))
                     foreach (Guid o in new List<Guid>(dict[owner]))
+                    {
+                        if (!HasGuid(o))
+                            m_owner.GetObjectByGuid(o);
+
                         if (mapping.Key.Property != null)
                         {
                             if (newval == null)
@@ -237,6 +241,7 @@ namespace System.Data.LightDatamodel
                                 ((DataClassBase)GetObjectByGuid(o)).m_isdirty = true;// .SetDirty();
                             }
                         }
+                    }
             }
 
         }
@@ -498,8 +503,15 @@ namespace System.Data.LightDatamodel
                     string relationKey = m_config.GetRelationKey(type, s);
                     if (m_config.IsCollection(type, relationKey))
                     {
-                        while (m_references[s][item].Count > 0)
-                            RemoveReferenceObjectInternal(relationKey, type, item, m_references[s][item][0], false);
+                        for (int i = 0; i < m_references[s][item].Count; i++)
+                            if (!references[s].Contains(m_references[s][item][i]))
+                            {
+                                RemoveReferenceObjectInternal(relationKey, type, item, m_references[s][item][0], false);
+                                i--;
+                            }
+
+                        /*while (m_references[s][item].Count > 0)
+                            RemoveReferenceObjectInternal(relationKey, type, item, m_references[s][item][0], false);*/
 
                         if (references.ContainsKey(s))
                         {
