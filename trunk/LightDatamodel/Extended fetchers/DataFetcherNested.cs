@@ -116,6 +116,8 @@ namespace System.Data.LightDatamodel
         {
             object item = m_baseFetcher.Add(obj.GetType());
             ObjectTransformer.CopyObject(obj, item);
+            ((DataClassBase)obj).m_isdirty = false;
+            ((DataClassBase)obj).m_state = ObjectStates.Default;
         }
 
         protected override void UpdateObject(object obj)

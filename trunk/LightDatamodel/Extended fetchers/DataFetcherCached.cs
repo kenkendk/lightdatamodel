@@ -614,7 +614,7 @@ namespace System.Data.LightDatamodel
 			{
 				base.Commit(obj); //TODO: Beware of the events
 				m_deletedobjects.Remove(obj);
-				if (m_relationManager != null && m_relationManager.IsRegistered(obj)) m_relationManager.UnregisterObject(obj);
+                if (m_relationManager != null && m_relationManager.IsRegistered(obj)) m_relationManager.DeleteObject(obj);
 				if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
 				m_cache[tablename].Remove(obj.UniqueValue);
 			}
