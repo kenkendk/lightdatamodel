@@ -87,10 +87,10 @@ namespace System.Data.LightDatamodel.QueryModel
 			{
 				return op1.ToString().CompareTo(op2.ToString());
 			}
-			else
-			{
-				return ((IComparable)op1).CompareTo((IComparable)op2);
-			}
+            else
+            {
+                return ((IComparable)op1).CompareTo((IComparable)op2);
+            }
 		}
 
 		#region IComparer Members
@@ -259,6 +259,8 @@ namespace System.Data.LightDatamodel.QueryModel
                 sb.Append(o.ToString());
             else if (o as string != null)
                 sb.Append("'" + (string)o + "'");
+            else if (o.GetType() == typeof(DateTime))
+                sb.Append("'" + ((DateTime)o).ToString("s") + "'");
             else if (!allowNonprimitives)
                 return false;
             else
@@ -372,9 +374,7 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// <returns>A filtered list with only the matching items</returns>
 		public override object[] EvaluateList(IEnumerable items, params object[] parameters)
 		{
-			object[] lst = base.EvaluateList(items, parameters);
-			Sorter.Sort(this, lst);
-			return lst;
+			return Sorter.Sort<object>(this, base.EvaluateList(items, parameters)).ToArray();
 		}
 
 		/// <summary>
@@ -386,9 +386,7 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// <returns></returns>
 		public override T[] EvaluateList<T>(IEnumerable items, params object[] parameters)
 		{
-			T[] itemlist = base.EvaluateList<T>(items, parameters);
-			Sorter.Sort(this, itemlist);
-			return itemlist;
+			return Sorter.Sort<T>(this, base.EvaluateList<T>(items, parameters)).ToArray();
 		}
 
 	}
@@ -721,6 +719,18 @@ namespace System.Data.LightDatamodel.QueryModel
 	/// </summary>
 	public class Sorter
 	{
+        public static System.Collections.Generic.List<T> Sort<T>(SortableOperation opr, System.Collections.Generic.ICollection<T> items)
+        {
+            System.Collections.Generic.List<T> res;
+            if (items as System.Collections.Generic.List<T> != null)
+                res = items as System.Collections.Generic.List<T>;
+            else
+                res = new System.Collections.Generic.List<T>(items);
+
+            res.Sort(new ListComparer<T>(opr.SortParameters));
+            return res;
+        }
+
 		public static ArrayList Sort(SortableOperation opr, ICollection items)
 		{
 			ArrayList res;
@@ -732,6 +742,34 @@ namespace System.Data.LightDatamodel.QueryModel
 			res.Sort(new ListComparer(opr.SortParameters));
 			return res;
 		}
+
+        private class ListComparer<T> : System.Collections.Generic.IComparer<T>
+        {
+            SortableParameter[] m_sortorder;
+            public ListComparer(SortableParameter[] sortorder)
+            {
+                m_sortorder = sortorder;
+            }
+
+            #region IComparer<T> Members
+
+            public int Compare(T x, T y)
+            {
+                foreach (SortableParameter sp in m_sortorder)
+                {
+                    object v1 = sp.Evaluate(x, null);
+                    object v2 = sp.Evaluate(y, null);
+
+                    int res = Comparer.CompareTo(v1, v2);
+                    if (res != 0)
+                        return res * (sp.Ascending ? 1 : -1);
+                }
+
+                return 0;
+            }
+
+            #endregion
+        }
 
 		private class ListComparer : IComparer
 		{

@@ -385,8 +385,8 @@ namespace System.Data.LightDatamodel
                 if (m_config.GetMapping(propKey).Value.Field.DeclaringType == ownerType)
                 {
                     object[] tmp = m_owner.GetObjects(revType,
-                        m_config.GetMapping(propKey).Value.ColumnName + "=?",
-                        m_config.GetMapping(propKey).Key.Field.GetValue(GetObjectByGuid(owner)));
+                        m_config.GetMapping(propKey).Key.ColumnName + "=?",
+                        m_config.GetMapping(propKey).Value.Field.GetValue(GetObjectByGuid(owner)));
                     if (tmp != null && tmp.Length == 1)
                         res = tmp[0] as IDataClass;
                     else
@@ -513,13 +513,9 @@ namespace System.Data.LightDatamodel
                         /*while (m_references[s][item].Count > 0)
                             RemoveReferenceObjectInternal(relationKey, type, item, m_references[s][item][0], false);*/
 
-                        if (references.ContainsKey(s))
-                        {
-                            foreach (Guid g in references[s])
-                                AddReferenceObjectInternal(relationKey, type, item, g, false);
-                            
-                            references.Remove(s);
-                        }
+                        foreach (Guid g in references[s])
+                            AddReferenceObjectInternal(relationKey, type, item, g, false);
+                        references.Remove(s);
                     }
                     else
                     {
