@@ -24,62 +24,63 @@ namespace System.Data.LightDatamodel
             set { m_transformer = value; }
         }
 
-		//private class SQLBuilder : QueryModel.OperationOrParameter
-		//{
-		//    public SQLBuilder(GenericDataProvider provider, IDbCommand cmd, QueryModel.Operation op)
-		//    {
-		//        m_cmd = cmd;
-		//        m_provider = provider;
-		//        m_operation = op;
-		//    }
+        private class SQLBuilder : QueryModel.OperationOrParameter
+        {
+            public SQLBuilder(GenericDataProvider provider, IDbCommand cmd, QueryModel.Operation op)
+            {
+                m_cmd = cmd;
+                m_provider = provider;
+                m_operation = op;
+            }
 
-		//    private IDbCommand m_cmd;
-		//    private GenericDataProvider m_provider;
-		//    private QueryModel.Operation m_operation;
+            private IDbCommand m_cmd;
+            private GenericDataProvider m_provider;
+            private QueryModel.Operation m_operation;
+            private int m_colid = 4;
 
-		//    public IDbCommand Command
-		//    {
-		//        get { return m_cmd; }
-		//        set { m_cmd = value; }
-		//    }
+            public IDbCommand Command
+            {
+                get { return m_cmd; }
+                set { m_cmd = value; }
+            }
 
-		//    public GenericDataProvider Provider
-		//    {
-		//        get { return m_provider; }
-		//        set { m_provider = value; }
-		//    }
+            public GenericDataProvider Provider
+            {
+                get { return m_provider; }
+                set { m_provider = value; }
+            }
 
-		//    protected override string TranslateOperator(System.Data.LightDatamodel.QueryModel.Operators opr)
-		//    {
-		//        return m_provider.TranslateOperator(opr);
-		//    }
+            protected override string TranslateOperator(System.Data.LightDatamodel.QueryModel.Operators opr)
+            {
+                return m_provider.TranslateOperator(opr);
+            }
 
-		//    protected override void QuoteColumnName(string columnname, System.Text.StringBuilder sb)
-		//    {
-		//        sb.Append(m_provider.QuoteColumnname(columnname));
-		//    }
+            protected override void QuoteColumnName(string columnname, System.Text.StringBuilder sb)
+            {
+                sb.Append(m_provider.QuoteColumnname(columnname));
+            }
 
-		//    //protected override bool AddParameter(object o, bool allowNonprimitives, System.Text.StringBuilder sb)
-		//    //{
-		//    //    sb.Append(m_provider.AddParameter(m_cmd, o));
-		//    //    return true;
-		//    //}
+            protected override bool AddParameter(object o, bool allowNonprimitives, System.Text.StringBuilder sb)
+            {
+                sb.Append(m_provider.AddParameter(m_cmd, "col" + (m_colid++).ToString(), o));
+                return true;
+            }
 
-		//    public override string ToString()
-		//    {
-		//        return m_operation.ToString(false);
-		//    }
+            public override string ToString()
+            {
+                return m_operation.ToString(false);
+            }
 
-		//    public override object Evaluate(object item, object[] parameters)
-		//    {
-		//        throw new NotImplementedException();
-		//    }
+            public override object Evaluate(object item, object[] parameters)
+            {
+                throw new NotImplementedException();
+            }
 
-		//    public override bool IsOperation
-		//    {
-		//        get { throw new NotImplementedException(); }
-		//    }
-		//}
+            public override bool IsOperation
+            {
+                get { throw new NotImplementedException(); }
+            }
+        }
 
 		#region Abstract Members
 
@@ -530,7 +531,7 @@ namespace System.Data.LightDatamodel
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
-                string filter = operation.ToString();
+                string filter = new SQLBuilder(this, cmd, operation).ToString();
                 cmd.CommandText = GetSelectString(typeinfo);
 
                 if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
