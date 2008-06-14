@@ -94,6 +94,7 @@
     <Compile Include="Extended fetchers\DataFetcherCached.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extended fetchers\DataFetcherThreadSafe.cs" />
     <Compile Include="Extended fetchers\ExtendedInterfaces.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -131,6 +132,7 @@
     <Compile Include="RelationManager\GuidProxyCollection.cs" />
     <Compile Include="RelationManager\RelationManager.cs" />
     <Compile Include="RelationManager\RelationManagerConfig.cs" />
+    <Compile Include="RelationManager\RelationManagerThreadSafe.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

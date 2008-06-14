@@ -68,7 +68,7 @@ namespace System.Data.LightDatamodel
 
             public override string ToString()
             {
-                return m_operation.ToString(false);
+                return this.ToString(false);
             }
 
             public override object Evaluate(object item, object[] parameters)
@@ -80,6 +80,16 @@ namespace System.Data.LightDatamodel
             {
                 get { throw new NotImplementedException(); }
             }
+
+            public override string ToString(bool allowNonprimitives)
+            {
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                if (AsStringInternal(m_operation, allowNonprimitives, sb))
+                    return sb.ToString();
+                else
+                    return null;
+            }
+
         }
 
 		#region Abstract Members
