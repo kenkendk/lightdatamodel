@@ -131,11 +131,7 @@ namespace System.Data.LightDatamodel.QueryModel
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
-            if (AsStringInternal(this, true, sb))
-                return sb.ToString();
-            else
-                return null;
+            return this.ToString(true);
         }
 
         public virtual string ToString(bool allowNonprimitives)
@@ -866,13 +862,13 @@ namespace System.Data.LightDatamodel.QueryModel
 			OperatorPrecedence.Add(Operators.LessThanOrEqual, 4);
 			OperatorPrecedence.Add(Operators.GreaterThanOrEqual, 4);
 			OperatorPrecedence.Add(Operators.NotEqual, 4);
+            OperatorPrecedence.Add(Operators.Like, 5);
 
 			OperatorPrecedence.Add(Operators.Xor, 5);
 			OperatorPrecedence.Add(Operators.Not, 6);
 			OperatorPrecedence.Add(Operators.And, 7);
 			OperatorPrecedence.Add(Operators.Or, 8);
 			OperatorPrecedence.Add(Operators.In, 8);
-			OperatorPrecedence.Add(Operators.Like, 8);
 			OperatorPrecedence.Add(Operators.Between, 8);
 		}
 

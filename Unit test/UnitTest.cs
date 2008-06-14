@@ -35,6 +35,7 @@ namespace Datamodel.UnitTest
 
 			TestRelations(con);
 			TestQueryModel(con);
+            TestRelationsExtended(con);
 		}
 
 		public static void TestQueryModel(IDbConnection con)
@@ -425,5 +426,72 @@ namespace Datamodel.UnitTest
                 throw new Exception("Failed to set relation through ID update");
 
 		}
+
+        public static void TestRelationsExtended(IDbConnection con)
+        {
+            DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
+            Project p = hub.Add<Project>();
+            Note n = hub.Add<Note>();
+            p.ProjectNote = n;
+            hub.CommitAll();
+
+            long i = p.ID;
+            long j = n.ID;
+
+            hub.ClearCache();
+
+            DataFetcherNested nd = new DataFetcherNested(hub);
+            p = nd.GetObjectById<Project>(i);
+
+            if (p.ProjectNote == null)
+                throw new Exception("Failed to load item");
+
+            hub.ClearCache();
+
+            nd = new DataFetcherNested(hub);
+            n = nd.GetObjectById<Note>(j);
+
+            if (n.ProjectNotes.Count != 1)
+                throw new Exception("Failed to load item");
+
+            hub.ClearCache();
+
+            n = hub.GetObjectById<Note>(j);
+
+            nd = new DataFetcherNested(hub);
+            n = nd.GetObjectById<Note>(j);
+
+            if (n.ProjectNotes.Count != 1)
+                throw new Exception("Failed to load item");
+
+            p = nd.Add<Project>();
+            n = nd.Add<Note>();
+            n.ProjectNotes.Add(p);
+
+            nd.CommitAll();
+            hub.CommitAll();
+
+            foreach(Note nx in hub.GetObjects<Note>())
+                n = nx;
+
+            if (n.ProjectNotes.Count != 1)
+                throw new Exception("Failed to set item");
+
+
+            hub.ClearCache();
+            n = nd.Add<Note>();
+            p = nd.Add<Project>();
+            n.ProjectNotes.Add(p);
+
+            hub.CommitAll();
+
+            if (n.ProjectNotes.Count != 1)
+                throw new Exception("Failed to set item");
+
+            if (p.ProjectNote == null)
+                throw new Exception("Failed to set item");
+
+
+        }
 	}
 }
