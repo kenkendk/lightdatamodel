@@ -21,6 +21,7 @@ using System;
 using System.Data;
 using System.Collections;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace System.Data.LightDatamodel
 {
@@ -33,7 +34,7 @@ namespace System.Data.LightDatamodel
 		internal protected bool m_isdirty = true;
 		internal protected IDataFetcher m_dataparent;
 		internal protected ObjectStates m_state = ObjectStates.Default;
-		internal protected object m_originalprimaryvalue = null;
+		internal protected Dictionary<string, object> m_originalvalues;
 		public event DataChangeEventHandler BeforeDataChange;
 		public event DataChangeEventHandler AfterDataChange;
 		public event DataConnectionEventHandler BeforeDataCommit;
@@ -56,7 +57,8 @@ namespace System.Data.LightDatamodel
 		protected virtual void OnAfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			if(object.Equals(oldvalue, newvalue)) return;
-			if (propertyname == UniqueColumn && m_originalprimaryvalue == null) m_originalprimaryvalue = oldvalue;		//preserve original primary key
+			if (m_originalvalues == null) m_originalvalues = new Dictionary<string, object>();
+			if (!m_originalvalues.ContainsKey(propertyname)) m_originalvalues.Add(propertyname, oldvalue);		//preserve original values
 			m_isdirty=true;
 			if(AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
 		}

@@ -24,9 +24,9 @@ namespace System.Data.LightDatamodel
             set { m_transformer = value; }
         }
 
-        private class SQLBuilder : QueryModel.OperationOrParameter
+        private class SQLFilterBuilder : QueryModel.OperationOrParameter
         {
-            public SQLBuilder(GenericDataProvider provider, IDbCommand cmd, QueryModel.Operation op)
+            public SQLFilterBuilder(GenericDataProvider provider, IDbCommand cmd, QueryModel.Operation op)
             {
                 m_cmd = cmd;
                 m_provider = provider;
@@ -112,7 +112,7 @@ namespace System.Data.LightDatamodel
         #region SQL Command Cache Functions
         protected Dictionary<Type, string> m_cachedDelete = new Dictionary<Type, string>();
         protected Dictionary<Type, string> m_cachedSelect = new Dictionary<Type, string>();
-        protected Dictionary<Type, string> m_cachedUpdate = new Dictionary<Type, string>();
+        //protected Dictionary<Type, string> m_cachedUpdate = new Dictionary<Type, string>();
         protected Dictionary<Type, string> m_cachedInsert = new Dictionary<Type, string>();
         protected Dictionary<Type, string> m_identityWhere = new Dictionary<Type, string>();
 
@@ -194,31 +194,31 @@ namespace System.Data.LightDatamodel
         /// </summary>
         /// <param name="typeinfo"></param>
         /// <returns></returns>
-        protected virtual string GetUpdateString(TypeConfiguration.MappedClass typeinfo)
-        {
-            if (!m_cachedUpdate.ContainsKey(typeinfo.Type))
-            {
-                //Dummy parameter holder
-                IDbCommand cmd = m_connection.CreateCommand();
+		//protected virtual string GetUpdateString(TypeConfiguration.MappedClass typeinfo)
+		//{
+		//    if (!m_cachedUpdate.ContainsKey(typeinfo.Type))
+		//    {
+		//        //Dummy parameter holder
+		//        IDbCommand cmd = m_connection.CreateCommand();
 
-                System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                sb.Append("UPDATE ");
-                sb.Append(QuoteTablename(typeinfo.TableName));
-                sb.Append(" SET ");
-                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
-                    if (!mf.IgnoreWithUpdate)
-                    {
-                        sb.Append(QuoteColumnname(mf.ColumnName));
-                        sb.Append("=");
-                        sb.Append(AddParameter(cmd, mf.ColumnName, null));
-                        sb.Append(",");
-                    }
-                sb.Length--;
-                m_cachedUpdate[typeinfo.Type] = sb.ToString();
-            }
+		//        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+		//        sb.Append("UPDATE ");
+		//        sb.Append(QuoteTablename(typeinfo.TableName));
+		//        sb.Append(" SET ");
+		//        foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+		//            if (!mf.IgnoreWithUpdate)
+		//            {
+		//                sb.Append(QuoteColumnname(mf.ColumnName));
+		//                sb.Append("=");
+		//                sb.Append(AddParameter(cmd, mf.ColumnName, null));
+		//                sb.Append(",");
+		//            }
+		//        sb.Length--;
+		//        m_cachedUpdate[typeinfo.Type] = sb.ToString();
+		//    }
 
-            return m_cachedUpdate[typeinfo.Type];
-        }
+		//    return m_cachedUpdate[typeinfo.Type];
+		//}
 
         /// <summary>
         /// Returns a string of the type "INSERT INTO Table (Col1,Col2) VALUES (?,?)"
@@ -541,7 +541,7 @@ namespace System.Data.LightDatamodel
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
-                string filter = new SQLBuilder(this, cmd, operation).ToString();
+                string filter = new SQLFilterBuilder(this, cmd, operation).ToString();
                 cmd.CommandText = GetSelectString(typeinfo);
 
                 if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
@@ -679,42 +679,61 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="item"></param>
 		/// <param name="primaryvalue"></param>
-		public virtual void UpdateRow(object item, object primaryvalue)
+		public virtual void UpdateRow(object item)
 		{
 			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
-                cmd.CommandText = GetUpdateString(typeinfo) + GetIdentityWhere(typeinfo);
-                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
-                    if (!mf.IgnoreWithUpdate)
+				DataClassBase orgitem = item as DataClassBase;
+
+				//update sql
+				System.Text.StringBuilder sb = new System.Text.StringBuilder();
+				sb.Append("UPDATE ");
+				sb.Append(QuoteTablename(typeinfo.TableName));
+				sb.Append(" SET ");
+				foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+					if (!mf.IgnoreWithUpdate && orgitem.m_originalvalues.ContainsKey(mf.ColumnName))
 					{
-						object val = mf.Field.GetValue(item);
-						AddParameter(cmd, mf.ColumnName, val);
+						sb.Append(QuoteColumnname(mf.ColumnName));
+						sb.Append("=");
+						sb.Append(AddParameter(cmd, mf.ColumnName, mf.Field.GetValue(item)));
+						sb.Append(",");
 					}
-				AddParameter(cmd, "where" + typeinfo.UniqueColumn, primaryvalue);
+				sb.Length--;
+                //cmd.CommandText = GetUpdateString(typeinfo) + GetIdentityWhere(typeinfo);
+				cmd.CommandText = sb.ToString() + GetIdentityWhere(typeinfo);
+
+				//values
+				//foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+				//    if (!mf.IgnoreWithUpdate)
+				//    {
+				//        if (orgitem.m_originalvalues.ContainsKey(mf.ColumnName))		//only update if it's changed
+				//            AddParameter(cmd, mf.ColumnName, mf.Field.GetValue(item));
+				//        else
+				//        {
+				//            IDataParameter p = cmd.CreateParameter();
+				//            p.Value = null;
+				//            cmd.Parameters.Add(p);
+				//        }
+				//    }
+
+				//where
+				if (orgitem.m_originalvalues.ContainsKey(typeinfo.UniqueColumn))
+					AddParameter(cmd, "where" + typeinfo.UniqueColumn, orgitem.m_originalvalues[typeinfo.UniqueColumn]);
+				else
+					AddParameter(cmd, "where" + typeinfo.UniqueColumn, typeinfo.UniqueValue(item));
 
                 try
                 {
                     int r = cmd.ExecuteNonQuery();
-                    if (r != 1)
-                        throw new Exception("Row update was expected to update 1 row, but updated: " + r.ToString());
+                    if (r != 1) throw new Exception("Row update was expected to update 1 row, but updated: " + r.ToString());
                 }
                 catch (Exception ex)
                 {
                     throw new Exception("Couldn't update row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd) );
                 }
             }
-		}
-
-		/// <summary>
-		/// Will update a given row in the DB. Will throw an exception if none or more than 1 are updated
-		/// </summary>
-		/// <param name="item"></param>
-		public virtual void UpdateRow(object item)
-		{
-			TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
-			UpdateRow(item, typeinfo.UniqueValue(item));
 		}
 
 		/// <summary>
