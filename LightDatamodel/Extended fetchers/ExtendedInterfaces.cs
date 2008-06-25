@@ -36,6 +36,7 @@ namespace System.Data.LightDatamodel
 		//void Remove(IDataClass obj);
         IRelationManager RelationManager { get; }
 		bool IsDirty { get; }
+		void ClearCache();
 	}
 
 	/// <summary>

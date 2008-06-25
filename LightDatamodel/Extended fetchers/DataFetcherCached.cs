@@ -623,7 +623,7 @@ namespace System.Data.LightDatamodel
         /// <summary>
         /// Clears the cache, and removes all non-modified items 
         /// </summary>
-        public override void ClearCache()
+        public void ClearCache()
         {
             m_loadreducer = null;
             foreach (string key in m_cache.Keys)

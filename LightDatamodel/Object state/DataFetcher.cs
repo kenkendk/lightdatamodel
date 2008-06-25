@@ -96,13 +96,7 @@ namespace System.Data.LightDatamodel
         /// <param name="obj"></param>
         protected virtual void UpdateObject(object obj)
         {
-			DataClassBase baseobj = obj as DataClassBase;
-			if (baseobj != null && baseobj.m_originalprimaryvalue != null)
-			{
-				m_provider.UpdateRow(baseobj, baseobj.m_originalprimaryvalue);		//in case of changed primary value
-			}
-			else
-				m_provider.UpdateRow(obj);
+			m_provider.UpdateRow(obj);
         }
 
         /// <summary>
@@ -360,16 +354,9 @@ namespace System.Data.LightDatamodel
             ObjectTransformer.CopyObject(items[0], obj);
 			(obj as DataClassBase).m_state = ObjectStates.Default;
 			(obj as DataClassBase).m_isdirty = false;
-			(obj as DataClassBase).m_originalprimaryvalue = null;
+			(obj as DataClassBase).m_originalvalues = null;
 			OnAfterDataConnection(obj, DataActions.Fetch);
 		}
-
-        /// <summary>
-        /// Clears the cache (does nothing, since there is no cache)
-        /// </summary>
-        public virtual void ClearCache()
-        {
-        }
 
         /// <summary>
         /// Commits an object into the data source
@@ -394,8 +381,7 @@ namespace System.Data.LightDatamodel
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Update);
 
                 //Try to read data back from database, but not from a nested
-                if (this as DataFetcherNested == null)
-                    RefreshObject(obj);
+                if (this as DataFetcherNested == null) RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.New)
 			{
@@ -406,8 +392,7 @@ namespace System.Data.LightDatamodel
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Insert);
 
                 //Try to read data back from database, but not from a nested
-                if (this as DataFetcherNested == null)
-                    RefreshObject(obj);
+                if (this as DataFetcherNested == null) RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.Deleted)
 			{
