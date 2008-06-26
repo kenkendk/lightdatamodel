@@ -90,6 +90,37 @@ namespace System.Data.LightDatamodel
 		{
 		}
 
+		/// <summary>
+		/// Helper funtion that will insert a parameter in the commands parameter collection, and return a place holder for the value, to be used in the SQL string
+		/// </summary>
+		/// <param name="cmd">The command to use</param>
+		/// <param name="value">The value to insert</param>
+		/// <returns>A placeholder for the value, to be used in the SQL command</returns>
+		protected override string AddParameter(IDbCommand cmd, string paramname, object value)
+		{
+			IDataParameter p = cmd.CreateParameter();
+			if (value == null)
+				p.Value = DBNull.Value;
+			else if (value.GetType() == typeof(string) && (string)value == "")
+				p.Value = DBNull.Value;
+			else if (value.GetType() == typeof(DateTime))
+			{
+				DateTime d = (DateTime)value;
+				if (d.Equals(GetNullValue(typeof(DateTime))))
+					p.Value = DBNull.Value;
+				else
+					p.Value = d.ToOADate();
+			}
+			else if (value.GetType() == typeof(Decimal))		//GOD! Access is stupid
+			{
+				p.Value = (double)(Decimal)value;
+			}
+			else
+				p.Value = value;
+			cmd.Parameters.Add(p);
+			return "?";
+		}
+
         public override bool IsAutoIncrement(string tablename, string column)
         {
 			OpenConnection();
