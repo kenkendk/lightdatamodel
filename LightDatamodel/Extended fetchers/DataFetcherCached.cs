@@ -585,6 +585,11 @@ namespace System.Data.LightDatamodel
 			//}
 
             base.RefreshObject(obj);
+
+			//insert into cache
+			string tablename = m_transformer.TypeConfiguration.GetTableName(obj);
+			if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
+			m_cache[tablename][obj.UniqueValue] = obj;
 		}
 
 		public override void Commit(IDataClass obj)
