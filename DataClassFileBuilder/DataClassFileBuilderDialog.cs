@@ -1131,7 +1131,7 @@ namespace DataClassFileBuilder
 			}
 			else if (obj.GetType() == typeof(bool))
 				return (bool)obj ? "true" : "false";
-			else if (obj.GetType() == typeof(int) && columnisunique)
+			else if ((obj.GetType() == typeof(int) || obj.GetType() == typeof(long)) && columnisunique)
 				return "(new System.Random()).Next(int.MinValue, -1)";
 			else
 				return obj.ToString();

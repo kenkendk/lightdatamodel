@@ -130,7 +130,7 @@ namespace Datamodel.UnitTest
 			fetcher.Add(n2);
 			fetcher.Add(n3);
 			vali = fetcher.GetObjectById<Note>(n2.ID);
-			if (vali == null) throw new Exception("This feature is used, when not using the relation system");
+			if (vali == null) throw new Exception("This feature is used, when not using the relation system. THE OBJECT MUST RETURN! IT IS FAITH!");
 			Note[] newandold = fetcher.GetObjects<Note>();
 			if (newandold.Length != old.Length + 3) throw new Exception("WHYYYYYYYYY!!!!!???????");
 
@@ -504,7 +504,7 @@ namespace Datamodel.UnitTest
             pg = hub.RelationManager.GetGuidForObject(test);
             object delid = p.UniqueValue;
             nd.DeleteObject(p);
-            Guid delg = nd.RelationManager.GetGuidForObject(p);
+            Guid delg = nd.RelationManager.GetGuidForObject(p);		//aren't this supposed to fail?
             pg = hub.RelationManager.GetGuidForObject(test);
             nd.CommitAll();
             test = (Project)hub.RelationManager.GetObjectByGuid(pg);
