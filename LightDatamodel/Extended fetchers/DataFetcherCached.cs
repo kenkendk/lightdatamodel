@@ -599,6 +599,9 @@ namespace System.Data.LightDatamodel
 		{
 			string tablename = m_transformer.TypeConfiguration.GetTableName(obj);
 
+			//new object?
+			if ((obj as DataClassBase).m_dataparent == null) Add(obj);
+
 			//sql
 			if (obj.ObjectState == ObjectStates.Default)
 			{

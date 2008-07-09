@@ -319,6 +319,7 @@ namespace System.Data.LightDatamodel
 			(obj as DataClassBase).BeforeDataChange += new DataChangeEventHandler(obj_BeforeDataChange);
 			(obj as DataClassBase).AfterDataChange += new DataChangeEventHandler(obj_AfterDataChange);
 			(obj as DataClassBase).m_dataparent = this;
+			(obj as DataClassBase).m_state = ObjectStates.New;
 			return obj;
 		}
 
@@ -365,11 +366,7 @@ namespace System.Data.LightDatamodel
 		public virtual void Commit(IDataClass obj)
 		{
 			//new object?
-			if ((obj as DataClassBase).m_dataparent == null)
-			{
-				(obj as DataClassBase).m_dataparent = this;
-				(obj as DataClassBase).m_state = ObjectStates.New;
-			}
+			if ((obj as DataClassBase).m_dataparent == null) Add(obj);
 
 			//save
 			if (obj.ObjectState == ObjectStates.Default)

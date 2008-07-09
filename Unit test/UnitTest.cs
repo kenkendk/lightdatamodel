@@ -120,9 +120,15 @@ namespace Datamodel.UnitTest
 			//fetch new auto numbers
 			Note[] old = fetcher.GetObjects<Note>();
 			SpecificEvent e1 = fetcher.Add<SpecificEvent>();
-			Note n1 = fetcher.Add<Note>();
-			Note n2 = fetcher.Add<Note>();
-			Note n3 = fetcher.Add<Note>();
+			Note n1 = new Note();
+			Note n2 = new Note();
+			Note n3 = new Note();
+			n1.ID = -5;		//auto numbers
+			n2.ID = -6;		//auto numbers
+			n3.ID = -7;		//auto numbers
+			fetcher.Add(n1);
+			fetcher.Add(n2);
+			fetcher.Add(n3);
 			vali = fetcher.GetObjectById<Note>(n2.ID);
 			if (vali == null) throw new Exception("This feature is used, when not using the relation system");
 			Note[] newandold = fetcher.GetObjects<Note>();
@@ -130,9 +136,6 @@ namespace Datamodel.UnitTest
 
 			//uh this be a tricky one
 			int[] ids2 = { -5, -6 };
-			n1.ID = -5;
-			n2.ID = -6;
-			n3.ID = -7;
 			Note[] lst = fetcher.GetObjects<Note>("ID IN ?", ids2);
 			if (lst.Length != 2) throw new Exception("WHYYYYYYYYYY!!!!!!!?????????");
 		}
