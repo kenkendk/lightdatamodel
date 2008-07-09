@@ -34,9 +34,9 @@ namespace Datamodel.UnitTest
 			cmd.ExecuteNonQuery();
 
 			TestBasicOperations(con);
-			TestQueryModel(con);
 			TestCachedOperations(con);
 			TestRelations(con);
+			TestQueryModel(con);
             TestRelationsExtended(con);
 		}
 
