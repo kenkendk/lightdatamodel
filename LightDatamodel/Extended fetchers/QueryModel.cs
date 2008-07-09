@@ -189,10 +189,13 @@ namespace System.Data.LightDatamodel.QueryModel
                                 i++;
                                 if (!AddParameter(o, allowNonprimitives, sb))
                                     return false;
+								sb.Append(",");
                             }
 
-                            if (i == 0)
-                               AddParameter(null, allowNonprimitives, sb);
+							if (i == 0)
+								AddParameter(null, allowNonprimitives, sb);
+							else
+								sb.Remove(sb.Length - 1, 1);	//remove last ,
                         }
                         else
                         {
