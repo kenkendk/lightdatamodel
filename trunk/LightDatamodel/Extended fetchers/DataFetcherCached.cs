@@ -94,7 +94,7 @@ namespace System.Data.LightDatamodel
         protected override void InsertObject(object obj)
         {
             base.InsertObject(obj);
-            if(m_relationManager != null)m_relationManager.SetExistsInDb((IDataClass)obj, true);
+            if(m_relationManager != null)m_relationManager.SetExistsInDb((IDataClass)obj, true);		//Is this still needed?
         }
 
         #endregion
