@@ -46,7 +46,7 @@ namespace System.Data.LightDatamodel
 		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
 		public abstract string UniqueColumn	{get;}
 		public abstract object UniqueValue{get;}
-        public void SetDirty() { m_isdirty = true; }
+        //public void SetDirty() { m_isdirty = true; }
 
 		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{

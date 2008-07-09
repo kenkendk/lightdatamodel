@@ -687,13 +687,16 @@ namespace System.Data.LightDatamodel
                 TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
 				DataClassBase orgitem = item as DataClassBase;
 
+				//validate
+				if ((orgitem.m_originalvalues == null || orgitem.m_originalvalues.Count == 0) && orgitem.IsDirty) throw new Exception("Update when there's no altered values? ... and yet it's dirty? Something's not right");
+
 				//update sql
 				System.Text.StringBuilder sb = new System.Text.StringBuilder();
 				sb.Append("UPDATE ");
 				sb.Append(QuoteTablename(typeinfo.TableName));
 				sb.Append(" SET ");
 				foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
-					if (!mf.IgnoreWithUpdate && orgitem.m_originalvalues.ContainsKey(mf.ColumnName))
+					if (!mf.IgnoreWithUpdate && (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(mf.ColumnName)))
 					{
 						sb.Append(QuoteColumnname(mf.ColumnName));
 						sb.Append("=");
@@ -719,7 +722,7 @@ namespace System.Data.LightDatamodel
 				//    }
 
 				//where
-				if (orgitem.m_originalvalues.ContainsKey(typeinfo.UniqueColumn))
+				if (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(typeinfo.UniqueColumn))
 					AddParameter(cmd, "where" + typeinfo.UniqueColumn, orgitem.m_originalvalues[typeinfo.UniqueColumn]);
 				else
 					AddParameter(cmd, "where" + typeinfo.UniqueColumn, typeinfo.UniqueValue(item));

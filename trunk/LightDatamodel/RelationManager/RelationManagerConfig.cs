@@ -104,7 +104,7 @@ namespace System.Data.LightDatamodel
             return tmp.ToArray();
         }
 
-        public string GetPropKey(Type type, string propertyname)
+        public string GetPropertyGuid(Type type, string propertyname)
         {
             TypeConfiguration.MappedClass mc = m_typeConfig.GetTypeInfo(type);
 

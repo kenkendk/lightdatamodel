@@ -195,7 +195,7 @@ namespace System.Data.LightDatamodel.QueryModel
 							if (i == 0)
 								AddParameter(null, allowNonprimitives, sb);
 							else
-								sb.Remove(sb.Length - 1, 1);	//remove last ,
+								sb.Length--;	//remove last ,
                         }
                         else
                         {
