@@ -112,7 +112,7 @@
     <Compile Include="SpecificEvent.cs">
       <SubType>Code</SubType>
     </Compile>
-    <EmbeddedResource Include="C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\Unit test\Datamodel\LightDataModel.Mapping.xml">
+    <EmbeddedResource Include="LightDataModel.Mapping.xml">
       <SubType>Code</SubType>
     </EmbeddedResource>
   </ItemGroup>
