@@ -33,9 +33,108 @@ namespace Datamodel.UnitTest
 
 			cmd.ExecuteNonQuery();
 
-			TestRelations(con);
+			TestBasicOperations(con);
 			TestQueryModel(con);
+			TestCachedOperations(con);
+			TestRelations(con);
             TestRelationsExtended(con);
+		}
+
+		/// <summary>
+		/// This will test the second layer (the direct data fetcher)
+		/// </summary>
+		/// <param name="con"></param>
+		public static void TestBasicOperations(IDbConnection con)
+		{
+			//conn
+			DataFetcher fetcher = new DataFetcher(new SQLiteDataProvider(con));
+
+			//create and compute
+			Note newuser = new Note();
+			newuser.ID = fetcher.Compute<int, Note>("MAX(ID)", "") + 1;
+			newuser.NoteText = "Hans";
+			fetcher.Commit(newuser);
+
+			//retrive it
+			Note vali = fetcher.GetObjectById<Note>(newuser.ID);
+			if (vali == null) throw new Exception("Bah!");
+
+			//update
+			vali.NoteText = "Something's looking fenomenor...";
+			fetcher.Commit(vali);
+
+			//fetch
+			Note[] u = fetcher.GetObjects<Note>();
+			if (u == null || u.Length == 0) throw new Exception("Bah!");
+
+			//validate update
+			vali = fetcher.GetObjectById<Note>(u[0].ID);
+			if (vali.NoteText != u[0].NoteText) throw new Exception("Bah!");
+
+			//delete
+			fetcher.DeleteObject(newuser);
+
+			//validate
+			vali = fetcher.GetObjectById<Note>(u[0].ID);
+			if (vali != null) throw new Exception("Bah!");
+		}
+
+		/// <summary>
+		/// This will test the third layer (the cache on top of the direct fetcher)
+		/// </summary>
+		/// <param name="con"></param>
+		public static void TestCachedOperations(IDbConnection con)
+		{
+			//conn
+			DataFetcherCached fetcher = new DataFetcherCached(new SQLiteDataProvider(con));
+
+			//create and compute
+			Note newuser = new Note();
+			newuser.ID = fetcher.Compute<int, Note>("MAX(ID)", "") + 1;
+			newuser.NoteText = "Hans";
+			fetcher.Commit(newuser);
+
+			//retrive it
+			Note vali = fetcher.GetObjectById<Note>(newuser.ID);
+			if (vali == null) throw new Exception("Bah!");
+
+			//update
+			vali.NoteText = "Something's looking fenomenor...";
+			fetcher.Commit(vali);
+
+			//fetch
+			Note[] u = fetcher.GetObjects<Note>();
+			if (u == null || u.Length == 0) throw new Exception("Bah!");
+
+			//validate update
+			vali = fetcher.GetObjectById<Note>(u[0].ID);
+			if (vali.NoteText != u[0].NoteText) throw new Exception("Bah!");
+
+			//delete
+			fetcher.DeleteObject(newuser);
+
+			//validate
+			vali = fetcher.GetObjectById<Note>(u[0].ID);
+			if (vali != null) throw new Exception("Bah!");
+
+			//fetch new auto numbers
+			Note[] old = fetcher.GetObjects<Note>();
+			SpecificEvent e1 = fetcher.Add<SpecificEvent>();
+			Note n1 = fetcher.Add<Note>();
+			Note n2 = fetcher.Add<Note>();
+			Note n3 = fetcher.Add<Note>();
+			vali = fetcher.GetObjectById<Note>(n2.ID);
+			if (vali == null) throw new Exception("This feature is used, when not using the relation system");
+			Note[] newandold = fetcher.GetObjects<Note>();
+			if (newandold.Length != old.Length + 3) throw new Exception("WHYYYYYYYYY!!!!!???????");
+
+			//uh this be a tricky one
+			int[] ids2 = { -5, -6 };
+			n1.ID = -5;
+			n2.ID = -6;
+			n3.ID = -7;
+			Note[] lst = fetcher.GetObjects<Note>("ID IN ?", ids2);
+			if (lst.Length != 2) throw new Exception("WHYYYYYYYYYY!!!!!!!?????????");
 		}
 
 		public static void TestQueryModel(IDbConnection con)
