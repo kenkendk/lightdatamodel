@@ -533,9 +533,9 @@ namespace System.Data.LightDatamodel
 		/// Register an object as belonging to this fetcher
 		/// </summary>
 		/// <param name="obj">The object to insert</param>
-		protected virtual void HookObject(IDataClass obj)		//TODO: This should be merged with Add
+		protected override void HookObject(IDataClass obj)		//TODO: This should be merged with Add
 		{
-			base.Add(obj);
+			base.HookObject(obj);
 			string tablename = m_transformer.TypeConfiguration.GetTableName(obj);
 			if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
 			if (m_relationManager != null && !m_relationManager.IsRegistered(obj)) m_relationManager.RegisterObject(obj);

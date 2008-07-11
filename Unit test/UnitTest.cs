@@ -67,6 +67,10 @@ namespace Datamodel.UnitTest
 			Note[] u = fetcher.GetObjects<Note>();
 			if (u == null || u.Length == 0) throw new Exception("Bah!");
 
+			//only one must exist
+			u = fetcher.GetObjects<Note>("ID = ?", newuser.ID);
+			if (u.Length != 1) throw new Exception("Unacceptable!!!!!");
+
 			//validate update
 			vali = fetcher.GetObjectById<Note>(u[0].ID);
 			if (vali.NoteText != u[0].NoteText) throw new Exception("Bah!");
@@ -105,6 +109,10 @@ namespace Datamodel.UnitTest
 			//fetch
 			Note[] u = fetcher.GetObjects<Note>();
 			if (u == null || u.Length == 0) throw new Exception("Bah!");
+
+			//only one must exist
+			u = fetcher.GetObjects<Note>("ID = ?", newuser.ID);
+			if (u.Length != 1) throw new Exception("Unacceptable!!!!!");
 
 			//validate update
 			vali = fetcher.GetObjectById<Note>(u[0].ID);

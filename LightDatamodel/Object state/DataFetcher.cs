@@ -316,11 +316,20 @@ namespace System.Data.LightDatamodel
 		/// <param name="obj"></param>
 		public virtual IDataClass Add(IDataClass obj)
 		{
+			HookObject(obj);
+			(obj as DataClassBase).m_state = ObjectStates.New;
+			return obj;
+		}
+
+		/// <summary>
+		/// Register an object as belonging to this fetcher
+		/// </summary>
+		/// <param name="obj">The object to insert</param>
+		protected virtual void HookObject(IDataClass obj)		//TODO: This should be merged with Add
+		{
 			(obj as DataClassBase).BeforeDataChange += new DataChangeEventHandler(obj_BeforeDataChange);
 			(obj as DataClassBase).AfterDataChange += new DataChangeEventHandler(obj_AfterDataChange);
 			(obj as DataClassBase).m_dataparent = this;
-			(obj as DataClassBase).m_state = ObjectStates.New;
-			return obj;
 		}
 
 		public virtual RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter)
