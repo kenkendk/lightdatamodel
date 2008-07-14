@@ -32,6 +32,10 @@ namespace System.Data.LightDatamodel
         private Dictionary<Guid, bool> m_existsInDb;
 
 
+        /// <summary>
+        /// Constructs a new relation manager for the given connection
+        /// </summary>
+        /// <param name="owner">The connection to manage the relations on</param>
         public RelationManager(IDataFetcherCached owner)
         {
             m_config = owner.ObjectTransformer.TypeConfiguration.RelationConfig;
@@ -49,8 +53,14 @@ namespace System.Data.LightDatamodel
                     this.AddRelation(rf.PropertyName, rf.LocalField, rf.ReverseField);*/
         }
 
+        /// <summary>
+        /// This event is used to update the reverse ID values, when an object is commited and thus is assigned a new ID
+        /// </summary>
+        /// <param name="sender">The item that changed</param>
+        /// <param name="action">The action performed</param>
         void owner_AfterDataConnection(object sender, DataActions action)
         {
+            //Filter out all other than INSERT
             if (action == DataActions.Insert && sender as IDataClass != null && m_revHookedObjects.ContainsKey(sender as IDataClass))
             {
                 TypeConfiguration.MappedClass mc = m_config.TypeConfiguration.GetTypeInfo(sender);
@@ -80,6 +90,11 @@ namespace System.Data.LightDatamodel
             return m_hookedObjects[g];
         }
 
+        /// <summary>
+        /// All objects are registered by a GUID so the reference collections can be passed around without relying on object instance equality
+        /// </summary>
+        /// <param name="item">The item to get the GUID for</param>
+        /// <returns>The ID for the object</returns>
         public Guid GetGuidForObject(IDataClass item)
         {
             if (item == null)
@@ -89,6 +104,11 @@ namespace System.Data.LightDatamodel
             else throw new Exception("The given object is not registered in the current context. Please add it or load it through the correct datafetcher");
         }
 
+        /// <summary>
+        /// All objects must be registered (that is assigned a Guid)
+        /// </summary>
+        /// <param name="item">The item to register</param>
+        /// <returns></returns>
         public Guid RegisterObject(IDataClass item)
         {
             return RegisterObject(Guid.NewGuid(), item);
@@ -109,7 +129,12 @@ namespace System.Data.LightDatamodel
             return m_hookedObjects.ContainsKey(g);
         }
 
-
+        /// <summary>
+        /// This re-assigns an object with a new guid.
+        /// This is only used during startups
+        /// </summary>
+        /// <param name="o">Old GUID</param>
+        /// <param name="n">New Guid</param>
         public void ReassignGuid(Guid o, Guid n)
         {
             IDataClass item = m_hookedObjects[o];
@@ -118,6 +143,10 @@ namespace System.Data.LightDatamodel
             RegisterObject(n, item);
         }
 
+        /// <summary>
+        /// Remove an object, and clear all references to it on other objects
+        /// </summary>
+        /// <param name="itm"></param>
         public void DeleteObject(IDataClass itm)
         {
             if (itm == null || !m_revHookedObjects.ContainsKey(itm))
@@ -136,6 +165,14 @@ namespace System.Data.LightDatamodel
             }
         }
 
+        /// <summary>
+        /// This method is used to update the reverse ID value when an item is assigned an ID, or an item is assigned
+        /// </summary>
+        /// <param name="propertyname">The name of the property that changed</param>
+        /// <param name="owner">The owner GUID</param>
+        /// <param name="ownerType">The type of the owner</param>
+        /// <param name="newvalue">The new property value</param>
+        /// <param name="usePropertyAccess">True if the update should be done via the properties, which raise events. False otherwise</param>
         private void UpdateIDValueInternal(string propertyname, Guid owner, Type ownerType, object newvalue, bool usePropertyAccess)
         {
             string[] propkeys = m_config.GetPropKeysByID(ownerType);
@@ -146,6 +183,8 @@ namespace System.Data.LightDatamodel
                     m_references.Add(propkey, new Dictionary<Guid, List<Guid>>());
 
                 KeyValuePair<TypeConfiguration.MappedField, TypeConfiguration.MappedField> mapping = m_config.GetMapping(propkey);
+                
+                //Are we the parent or the child?
                 if (mapping.Value.Field.DeclaringType == ownerType)
                 {
                     if (m_config.TypeConfiguration.GetTypeInfo(ownerType).PrimaryKey.PropertyName == propertyname)
@@ -167,6 +206,7 @@ namespace System.Data.LightDatamodel
             UpdateIDValueInternal(propertyname, GetGuidForObject(sender as IDataClass), sender.GetType(), newvalue, true);
         }
 
+        //Remove references to an object internally, but do no modify the actual objects
         public void UnregisterObject(Guid g)
         {
             IDataClass item = m_hookedObjects[g];
@@ -184,6 +224,12 @@ namespace System.Data.LightDatamodel
 
         }
 
+        /// <summary>
+        /// Gets a list of references for a propertyname (key) and object type
+        /// </summary>
+        /// <param name="propertyname">The relation name (key)</param>
+        /// <param name="type">The object type</param>
+        /// <returns>A dictionary of references, where key is the owner and the value is a list of referenced objects</returns>
         private Dictionary<Guid, List<Guid>> GetReferences(string propertyname, Type type)
         {
             string propkey = m_config.GetPropertyGuid(type, propertyname);
@@ -194,6 +240,12 @@ namespace System.Data.LightDatamodel
             return m_references[propkey];
         }
 
+        /// <summary>
+        /// Helper funciton that returns the reverse type, given the property key and the type
+        /// </summary>
+        /// <param name="relationKey">A guid key made from the relation name</param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         private Type GetReverseType(string relationKey, Type type)
         {
             string propKey = m_config.GetPropertyGuid(type, relationKey);
@@ -208,10 +260,20 @@ namespace System.Data.LightDatamodel
 		//    return GetReferences(propertyname, owner.GetType());
 		//}
 
+        /// <summary>
+        /// Internal helper function that sets the reference ID value af assigning a new object
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="ownerType"></param>
+        /// <param name="owner"></param>
+        /// <param name="newval"></param>
+        /// <param name="usePropertyAccess"></param>
         private void SetIdValue(string relationKey, Type ownerType, Guid owner, object newval, bool usePropertyAccess)
         {
             string propkey = m_config.GetPropertyGuid(ownerType, relationKey);
             KeyValuePair<TypeConfiguration.MappedField, TypeConfiguration.MappedField> mapping = m_config.GetMapping(propkey);
+            
+            //Only set if the the object is the child
             if (mapping.Value.Field.DeclaringType == ownerType)
             {
                 Dictionary<Guid, List<Guid>> dict = m_references[propkey];
@@ -246,7 +308,15 @@ namespace System.Data.LightDatamodel
 
         }
 
-        public void RemoveReferenceObjectInternal(string relationKey, Type ownerType, Guid owner, Guid obj, bool updateId)
+        /// <summary>
+        /// Remove the reference, by either removing from the collection or re-assigning the property
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="ownerType"></param>
+        /// <param name="owner"></param>
+        /// <param name="obj"></param>
+        /// <param name="updateId"></param>
+        private void RemoveReferenceObjectInternal(string relationKey, Type ownerType, Guid owner, Guid obj, bool updateId)
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(relationKey, ownerType);
             if (!rels.ContainsKey(owner))
@@ -255,14 +325,17 @@ namespace System.Data.LightDatamodel
             if (obj == Guid.Empty)
                 return;
 
+            //Prevent recursive calls
             if (rels[owner].Contains(obj))
             {
+                //Set the reference id to the default
                 if (updateId && m_existsInDb.ContainsKey(owner) && m_existsInDb[owner])
                     SetIdValue(relationKey, ownerType, owner, null, true);
                 
                 rels[owner].Remove(obj);
                 Type objType = GetReverseType(relationKey, ownerType);
 
+                //Update the other end of the relation
                 if (m_config.IsCollection(objType, relationKey))
                     RemoveReferenceObjectInternal(relationKey, objType, obj, owner, updateId);
                 else
@@ -270,6 +343,12 @@ namespace System.Data.LightDatamodel
             }
         }
 
+        /// <summary>
+        /// Remove the an object from a one-to-many collection
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="owner"></param>
+        /// <param name="obj"></param>
         public void RemoveReferenceObject(string relationKey, IDataClass owner, IDataClass obj)
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(relationKey, owner.GetType());
@@ -278,6 +357,14 @@ namespace System.Data.LightDatamodel
             RemoveReferenceObjectInternal(relationKey, owner.GetType(), GetGuidForObject(owner), GetGuidForObject(obj), true);
         }
 
+        /// <summary>
+        /// Add a reference object, either from an add or an assignment
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="ownerType"></param>
+        /// <param name="owner"></param>
+        /// <param name="obj"></param>
+        /// <param name="updateId"></param>
         public void AddReferenceObjectInternal(string relationKey, Type ownerType, Guid owner, Guid obj, bool updateId)
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(relationKey, ownerType);
@@ -287,14 +374,17 @@ namespace System.Data.LightDatamodel
             if (obj == Guid.Empty)
                 return;
 
+            //Prevent multiple adds
             if (!rels[owner].Contains(obj))
             {
                 rels[owner].Add(obj);
 
                 Type objType = GetReverseType(relationKey, ownerType);
+                //Update the reference ID
                 if (updateId && m_existsInDb.ContainsKey(owner) && m_existsInDb[owner])
                     SetIdValue(relationKey, ownerType, owner, m_config.TypeConfiguration.GetTypeInfo(ownerType).UniqueValue(GetObjectByGuid(owner)), true); 
 
+                //Update the other end of the relation
                 if (m_config.IsCollection(objType, relationKey))
                     AddReferenceObjectInternal(relationKey, objType, obj, owner, updateId);
                 else
@@ -302,6 +392,12 @@ namespace System.Data.LightDatamodel
             }
         }
 
+        /// <summary>
+        /// Add a reference object to the collection
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="owner"></param>
+        /// <param name="obj"></param>
         public void AddReferenceObject(string relationKey, IDataClass owner, IDataClass obj)
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(relationKey, owner.GetType());
@@ -310,6 +406,13 @@ namespace System.Data.LightDatamodel
             AddReferenceObjectInternal(relationKey, owner.GetType(), GetGuidForObject(owner), GetGuidForObject(obj), true);
         }
 
+        /// <summary>
+        /// Set a reference object. This call ensures that the reference collection can only have one entry.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="propertyname"></param>
+        /// <param name="owner"></param>
+        /// <param name="value"></param>
         public void SetReferenceObject<T>(string propertyname, IDataClass owner, T value) where T : IDataClass
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(propertyname, owner.GetType());
@@ -319,6 +422,12 @@ namespace System.Data.LightDatamodel
             SetReferenceObjectInternal(propertyname, owner.GetType(), GetGuidForObject(owner), GetGuidForObject(value), true);
         }
 
+        /// <summary>
+        /// Set a reference object. This call ensures that the reference collection can only have one entry.
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="owner"></param>
+        /// <param name="obj"></param>
         public void SetReferenceObject(string relationKey, IDataClass owner, IDataClass obj)
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(relationKey, owner.GetType());
@@ -328,22 +437,36 @@ namespace System.Data.LightDatamodel
             SetReferenceObjectInternal(relationKey, owner.GetType(), GetGuidForObject(owner), GetGuidForObject(obj), true);
         }
 
+        /// <summary>
+        /// Set a reference object. This call ensures that the reference collection can only have one entry.
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="ownerType"></param>
+        /// <param name="owner"></param>
+        /// <param name="obj"></param>
+        /// <param name="updateId"></param>
         private void SetReferenceObjectInternal(string relationKey, Type ownerType, Guid owner, Guid obj, bool updateId)
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(relationKey, ownerType);
             if (!rels.ContainsKey(owner))
                 rels.Add(owner, new List<Guid>());
             Type objType = GetReverseType(relationKey, ownerType);
+
+            //Set to null, so remove the object from the collection
             if (obj == Guid.Empty)
             {
+                //There should only be one...
                 while (rels[owner].Count > 0)
                 {
                     Guid p = rels[owner][0];
 
+                    //Update ID's
                     if (updateId && m_existsInDb.ContainsKey(owner) && m_existsInDb[owner])
                         SetIdValue(relationKey, ownerType, owner, null, true);
 
                     rels[owner].RemoveAt(0);
+
+                    //Update the other end
                     if (m_config.IsCollection(objType, relationKey))
                         RemoveReferenceObjectInternal(relationKey, objType, p, owner, updateId);
                     else
@@ -352,11 +475,16 @@ namespace System.Data.LightDatamodel
             }
             else
             {
+                //Protect against inifinite recursion
                 if (!rels[owner].Contains(obj))
                 {
                     rels[owner].Add(obj);
+
+                    //Update ID's
                     if (updateId && m_existsInDb.ContainsKey(owner) && m_existsInDb[owner])
                         SetIdValue(relationKey, ownerType, owner, m_config.TypeConfiguration.GetTypeInfo(ownerType).UniqueValue(GetObjectByGuid(owner)), true);
+
+                    //Update the other end
                     if (m_config.IsCollection(objType, relationKey))
                         AddReferenceObjectInternal(relationKey, objType, obj, owner, updateId);
                     else
@@ -365,28 +493,46 @@ namespace System.Data.LightDatamodel
             }
         }
 
+        /// <summary>
+        /// Returns the object from a relation on the given type and propertyname
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="propertyname"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
         public T GetReferenceObject<T>(string propertyname, IDataClass owner)
         {
             return (T)GetReferenceObject(propertyname, owner);
         }
 
+        /// <summary>
+        /// Returns the object from a relation on the given type and propertyname
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="ownerType"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
         public IDataClass GetReferenceObject(string relationKey, Type ownerType, Guid owner)
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(relationKey, ownerType);
             if (!rels.ContainsKey(owner) && m_existsInDb.ContainsKey(owner) && m_existsInDb[owner])
             {
-                //Load items
+                //First call, load items in context
                 string propKey = m_config.GetPropertyGuid(ownerType, relationKey);
                 Type revType = GetReverseType(relationKey, ownerType);
                 rels.Add(owner, new List<Guid>());
 
                 IDataClass res;
 
-                if (m_config.GetMapping(propKey).Value.Field.DeclaringType == ownerType)		//huh?
+                //Are we parent or child?
+                if (m_config.GetMapping(propKey).Value.Field.DeclaringType == ownerType)
                 {
+                    //We are parent, get the childs
                     object[] tmp = m_owner.GetObjects(revType,
                         m_config.GetMapping(propKey).Key.ColumnName + "=?",
                         m_config.GetMapping(propKey).Value.Field.GetValue(GetObjectByGuid(owner)));
+
+                    //There can be only one child in a one-to-many
                     if (tmp != null && tmp.Length == 1)
                         res = tmp[0] as IDataClass;
                     else
@@ -394,16 +540,21 @@ namespace System.Data.LightDatamodel
                 }
                 else
                 {
+                    //We are child, do we have a valid value?
 					if ((m_config.GetMapping(propKey).Key.Field.GetValue(GetObjectByGuid(owner)) == m_config.GetMapping(propKey).Key.GetDefaultValue(m_owner.Provider)))
 						res = null;
 					else
 					{
+                        //Get the parent
 						res = m_owner.GetObjectById(revType, m_config.GetMapping(propKey).Key.Field.GetValue(GetObjectByGuid(owner))) as IDataClass;
-						if (m_config.GetMapping(propKey).Value.IsAutoGenerated && m_existsInDb.ContainsKey(GetGuidForObject(res)) && !m_existsInDb[GetGuidForObject(res)]) res = null;	//we can't return an object with an unsigned autonumber - WHY NOT? - We just can't!- Can so! - Cannot! - Can! - Cannot! - Can! - Cannot!
+
+                        //Filter ones with no ID
+						if (m_config.GetMapping(propKey).Value.IsAutoGenerated && m_existsInDb.ContainsKey(GetGuidForObject(res)) && !m_existsInDb[GetGuidForObject(res)]) res = null;	
+                        //we can't return an object with an unsigned autonumber - WHY NOT? - We just can't!- Can so! - Cannot! - Can! - Cannot! - Can! - Cannot!
 					}
                 }
 
-
+                //Are there any existing data?
                 if (res != null)
                 {
                     rels[owner].Add(GetGuidForObject(res));
@@ -417,25 +568,49 @@ namespace System.Data.LightDatamodel
 
             }
 
+            //Return regular object or null
             if (rels.ContainsKey(owner) && rels[owner].Count == 1)
                 return GetObjectByGuid(rels[owner][0]);
             else
                 return null;
         }
 
+        /// <summary>
+        /// Returns the object from a relation on the given type and propertyname
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
         public IDataClass GetReferenceObject(string relationKey, IDataClass owner)
         {
             return GetReferenceObject(relationKey, owner.GetType(), GetGuidForObject(owner));
         }
 
+        /// <summary>
+        /// Returns a list of referenced objects from a relation on the given type and propertyname.
+        /// The wrapper ensures that the type is assignable to IList&lt;T&gt;.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="propertyname"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
         public GenericListWrapper<T, IDataClass> GetReferenceCollection<T>(string propertyname, IDataClass owner) where T : IDataClass
         {
             return new GenericListWrapper<T, IDataClass>(GetReferenceCollection(propertyname, owner));
         }
 
+        /// <summary>
+        /// Returns a list of referenced objects from a relation on the given type and propertyname.
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="ownerType"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
         public IList<IDataClass> GetReferenceCollection(string relationKey, Type ownerType, Guid owner)
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(relationKey, ownerType);
+            
+            //If this is the first load, fetch objects from DB
             if (!rels.ContainsKey(owner) && m_existsInDb.ContainsKey(owner) && m_existsInDb[owner])
             {
                 string propKey = m_config.GetPropertyGuid(ownerType, relationKey);
@@ -444,19 +619,23 @@ namespace System.Data.LightDatamodel
 
                 object[] tmp;
 
+                //Are we parent or child?
                 if (m_config.GetMapping(propKey).Value.Field.DeclaringType == ownerType)
                 {
+                    //Parent, get child objects
                     tmp = m_owner.GetObjects(revType,
                         m_config.GetMapping(propKey).Key.ColumnName + "=?",
                         m_config.TypeConfiguration.UniqueValue(GetObjectByGuid(owner)));
                 }
                 else
                 {
+                    //Child, get parent
                     tmp = m_owner.GetObjects(revType,
                         m_config.GetMapping(propKey).Value.ColumnName + "=?",
                         m_config.TypeConfiguration.UniqueValue(GetObjectByGuid(owner)));
                 }
 
+                //Make the reverse assignment for each
                 if (tmp != null)
                     foreach (IDataClass ic in tmp)
                     {
@@ -473,15 +652,29 @@ namespace System.Data.LightDatamodel
             if (!rels.ContainsKey(owner))
                 rels.Add(owner, new List<Guid>());
 
+            //The list is a List<Guid>, but we want a List<IDataClass>, so we wrap it!
             return new GuidProxyCollection(this, relationKey, rels[owner], ownerType, owner);
         }
 
+        /// <summary>
+        /// Returns a list of referenced objects from a relation on the given type and propertyname.
+        /// </summary>
+        /// <param name="relationKey"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
         public IList<IDataClass> GetReferenceCollection(string relationKey, IDataClass owner)
         {
             return GetReferenceCollection(relationKey, owner.GetType(), GetGuidForObject(owner));
         }
 
 
+        /// <summary>
+        /// Gets a copy of the internal reference list. This is ONLY used for passing 
+        /// relations through a nested datafetcher
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="item"></param>
+        /// <returns></returns>
         public Dictionary<string, List<Guid>> GetReferenceObjects(Type type, Guid item)
         {
             Dictionary<string, List<Guid>> list = new Dictionary<string, List<Guid>>();
@@ -499,8 +692,16 @@ namespace System.Data.LightDatamodel
             return list;
         }
 
+        /// <summary>
+        /// Sets the internal reference list. This is ONLY used for passing 
+        /// relations through a nested datafetcher
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="item"></param>
+        /// <param name="references"></param>
         public void SetReferenceObjects(Type type, Guid item, Dictionary<string, List<Guid>> references)
         {
+            //Step 1, remove all the items that are locally, but not in the passed structure
             foreach (string s in m_references.Keys)
                 if (m_references[s].ContainsKey(item) && references.ContainsKey(s))
                 {
@@ -533,6 +734,7 @@ namespace System.Data.LightDatamodel
                     }
                 }
 
+            //Step 2, add all items that are not already there
             foreach (string s in references.Keys)
             {
                 string relationKey = m_config.GetRelationKey(type, s);
