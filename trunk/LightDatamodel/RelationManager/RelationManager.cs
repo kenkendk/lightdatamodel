@@ -316,7 +316,7 @@ namespace System.Data.LightDatamodel
         /// <param name="owner"></param>
         /// <param name="obj"></param>
         /// <param name="updateId"></param>
-        private void RemoveReferenceObjectInternal(string relationKey, Type ownerType, Guid owner, Guid obj, bool updateId)
+        public void RemoveReferenceObjectInternal(string relationKey, Type ownerType, Guid owner, Guid obj, bool updateId)
         {
             Dictionary<Guid, List<Guid>> rels = GetReferences(relationKey, ownerType);
             if (!rels.ContainsKey(owner))
