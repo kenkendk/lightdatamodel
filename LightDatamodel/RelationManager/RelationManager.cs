@@ -300,7 +300,8 @@ namespace System.Data.LightDatamodel
                             if (newval != prevval || (newval != null && !newval.Equals(prevval)))
                             {
                                 mapping.Key.Field.SetValue(GetObjectByGuid(o), newval);
-                                //((DataClassBase)GetObjectByGuid(o)).m_isdirty = true;// .SetDirty();
+                                ((DataClassBase)GetObjectByGuid(o)).m_isdirty = true;// .SetDirty();
+                                ((DataClassBase)GetObjectByGuid(o)).m_originalvalues[mapping.Key.PropertyName] = prevval;
                             }
                         }
                     }
@@ -541,7 +542,7 @@ namespace System.Data.LightDatamodel
                 else
                 {
                     //We are child, do we have a valid value?
-					if ((m_config.GetMapping(propKey).Key.Field.GetValue(GetObjectByGuid(owner)) == m_config.GetMapping(propKey).Key.GetDefaultValue(m_owner.Provider)))
+					if ((m_config.GetMapping(propKey).Key.Field.GetValue(GetObjectByGuid(owner)).Equals(m_config.GetMapping(propKey).Key.GetDefaultValue(m_owner.Provider))))
 						res = null;
 					else
 					{
