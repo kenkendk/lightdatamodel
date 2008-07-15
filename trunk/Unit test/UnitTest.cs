@@ -513,6 +513,9 @@ namespace Datamodel.UnitTest
             object delid = p.UniqueValue;
             nd.DeleteObject(p);
             Guid delg = nd.RelationManager.GetGuidForObject(p);		//aren't this supposed to fail?
+                                                                    //Sort of, but since it's a nested fetcher, and not committed, 
+                                                                    //the basefetcher can still retrieve the item
+                                                                    //But it ONLY works for Guid access
             pg = hub.RelationManager.GetGuidForObject(test);
             nd.CommitAll();
             test = (Project)hub.RelationManager.GetObjectByGuid(pg);

@@ -301,6 +301,8 @@ namespace System.Data.LightDatamodel
                             {
                                 mapping.Key.Field.SetValue(GetObjectByGuid(o), newval);
                                 ((DataClassBase)GetObjectByGuid(o)).m_isdirty = true;// .SetDirty();
+                                if (((DataClassBase)GetObjectByGuid(o)).m_originalvalues == null)
+                                    ((DataClassBase)GetObjectByGuid(o)).m_originalvalues = new Dictionary<string, object>();
                                 ((DataClassBase)GetObjectByGuid(o)).m_originalvalues[mapping.Key.PropertyName] = prevval;
                             }
                         }
