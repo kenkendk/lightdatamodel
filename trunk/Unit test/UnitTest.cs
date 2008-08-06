@@ -107,7 +107,7 @@ namespace Datamodel.UnitTest
 
 			//create and compute
 			Note newuser = new Note();
-			newuser.ID = fetcher.Compute<int, Note>("MAX(ID)", "") + 1;
+			newuser.ID = fetcher.Compute<long, Note>("MAX(ID)", "") + 1;
 			newuser.NoteText = "Hans";
 			fetcher.Commit(newuser);
 
