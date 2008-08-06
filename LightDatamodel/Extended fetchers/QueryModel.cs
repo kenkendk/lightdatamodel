@@ -61,11 +61,11 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// <returns>0 if the operands are considered equal, negative if the op1 is less than op2 and positive otherwise. May throw an exception if the two operands cannot be compared.</returns>
 		public static int CompareTo(object op1, object op2)
 		{
-			if (op1 == null && op2 == null)
+			if ((op1 == null && op2 == null) || (op1 == DBNull.Value && op2 == DBNull.Value))
 				return 0;
-			else if (op1 == null)
+			else if (op1 == null || op1 == DBNull.Value)
 				return -1;
-			else if (op2 == null)
+			else if (op2 == null || op2 == DBNull.Value)
 				return 1;
 			else if (op1 as IComparable == null || op2 as IComparable == null)
 				throw new Exception("Unable to compare: " + op1.GetType() + " with " + op2.GetType());
