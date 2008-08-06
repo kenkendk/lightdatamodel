@@ -81,6 +81,19 @@ namespace Datamodel.UnitTest
 			//validate
 			vali = fetcher.GetObjectById<Note>(u[0].ID);
 			if (vali != null) throw new Exception("Bah!");
+
+			//test for NULL and ""
+			IDbCommand cmd = con.CreateCommand();
+			cmd.CommandText = "INSERT INTO Note (ID) VALUES (666)";		//NoteText is now null
+			cmd.ExecuteNonQuery();
+			cmd.CommandText = "INSERT INTO Note (NoteText) VALUES (NULL)";
+			cmd.ExecuteNonQuery();
+			cmd.CommandText = "INSERT INTO Note (NoteText) VALUES (\"\")";
+			cmd.ExecuteNonQuery();
+			Note[] tmp = fetcher.GetObjects<Note>("NoteText = ? OR NoteText = ?", "", null);
+			if (tmp.Length != 3) throw new Exception("NOOOOOO!!!!! HOW DO I LOCATE ALL EMPTY POSTS?????????");
+			foreach (Note n in tmp)
+				fetcher.DeleteObject(n);
 		}
 
 		/// <summary>
