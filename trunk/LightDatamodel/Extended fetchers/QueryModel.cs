@@ -44,6 +44,7 @@ namespace System.Data.LightDatamodel.QueryModel
 		IIF,
 		In,
 		Between,
+        Is,
         NOP
 	}
 
@@ -508,6 +509,8 @@ namespace System.Data.LightDatamodel.QueryModel
 					return !ResAsBool(res[0].Result);
 				case Operators.Equal:
 					return Comparer.CompareTo(res[0].Result, res[1].Result) == 0;
+                case Operators.Is:
+                    return res[0].Result == res[1].Result;
 				case Operators.NotEqual:
 					return Comparer.CompareTo(res[0].Result, res[1].Result) != 0;
 				case Operators.GreaterThan:
@@ -850,6 +853,7 @@ namespace System.Data.LightDatamodel.QueryModel
 			OperatorList.Add("NOT", Operators.Not);
 			OperatorList.Add("!", Operators.Not);
 			OperatorList.Add("BETWEEN", Operators.Between);
+            OperatorList.Add("IS", Operators.Is);
 
 			Pairwise.Add("[", "]");
 			Pairwise.Add("(", ")");
@@ -865,6 +869,7 @@ namespace System.Data.LightDatamodel.QueryModel
 			OperatorPrecedence.Add(Operators.LessThanOrEqual, 4);
 			OperatorPrecedence.Add(Operators.GreaterThanOrEqual, 4);
 			OperatorPrecedence.Add(Operators.NotEqual, 4);
+            OperatorPrecedence.Add(Operators.Is, 5);
             OperatorPrecedence.Add(Operators.Like, 5);
 
 			OperatorPrecedence.Add(Operators.Xor, 5);

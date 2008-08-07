@@ -90,7 +90,7 @@ namespace Datamodel.UnitTest
 			cmd.ExecuteNonQuery();
 			cmd.CommandText = "INSERT INTO Note (NoteText) VALUES (\"\")";
 			cmd.ExecuteNonQuery();
-			Note[] tmp = fetcher.GetObjects<Note>("NoteText = ? OR NoteText = ?", "", DBNull.Value);
+			Note[] tmp = fetcher.GetObjects<Note>("NoteText = ? OR NoteText Is ?", "", DBNull.Value);
 			if (tmp.Length != 3) throw new Exception("NOOOOOO!!!!! HOW DO I LOCATE ALL EMPTY POSTS?????????");
 			foreach (Note n in tmp)
 				fetcher.DeleteObject(n);

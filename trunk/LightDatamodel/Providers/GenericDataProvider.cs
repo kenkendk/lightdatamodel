@@ -153,7 +153,7 @@ namespace System.Data.LightDatamodel
                 sb.Append(" WHERE ");
                 sb.Append(QuoteColumnname(typeinfo.UniqueColumn));
                 sb.Append("=");
-				sb.Append(AddParameter(cmd, "where" + typeinfo.UniqueColumn, null));
+				sb.Append(AddParameter(cmd, "where" + typeinfo.UniqueColumn, ""));
                 m_identityWhere[typeinfo.Type] = sb.ToString();
             }
 
@@ -242,7 +242,7 @@ namespace System.Data.LightDatamodel
                     {
                         sb.Append(QuoteColumnname(mf.ColumnName));
                         sb.Append(",");
-                        sb2.Append(AddParameter(cmd, mf.ColumnName, null));
+                        sb2.Append(AddParameter(cmd, mf.ColumnName, ""));
                         sb2.Append(",");
                     }
                 sb.Length--;
@@ -594,6 +594,8 @@ namespace System.Data.LightDatamodel
 					return "XOR";
                 case QueryModel.Operators.Between:
                     return "BETWEEN";
+                case QueryModel.Operators.Is:
+                    return "IS";
 				default:
 					throw new Exception("Bad operator: " + opr.ToString());
 								   
