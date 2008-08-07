@@ -274,10 +274,11 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		protected override string AddParameter(IDbCommand cmd, string paramname, object value)
 		{
-			IDataParameter p = cmd.CreateParameter();
 			if (value == null)
-				p.Value = DBNull.Value;
-			else if (value.GetType() == typeof(string) && (string)value == "")
+                return "NULL";
+            
+            IDataParameter p = cmd.CreateParameter();
+			if (value.GetType() == typeof(string) && (string)value == "")
 				p.Value = DBNull.Value;
 			else if (value.GetType() == typeof(DateTime))
 			{

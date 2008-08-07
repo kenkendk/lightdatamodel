@@ -212,11 +212,19 @@ namespace System.Data.LightDatamodel
         protected override string AddParameter(IDbCommand cmd, string columnname, object value)
         {
             //This method is overridden because SQLite does not have to do tricks 
-            // SQLite correctly handles dates, times, null's and empty strings!
-            IDataParameter p = cmd.CreateParameter();
-            p.Value = value;
-            cmd.Parameters.Add(p);
-            return "?";
+            // SQLite correctly handles dates, times, and empty strings!
+            if (value == null || value == DBNull.Value)
+            {
+                //Unfortunately the "x is null" cannot accept a "x is ?" where ? is a DBNull parameter
+                return "NULL";
+            }
+            else
+            {
+                IDataParameter p = cmd.CreateParameter();
+                p.Value = value;
+                cmd.Parameters.Add(p);
+                return "?";
+            }
         }
 
 
