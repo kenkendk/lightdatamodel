@@ -323,6 +323,8 @@ namespace System.Data.LightDatamodel.QueryModel
                     return "XOR";
                 case QueryModel.Operators.Between:
                     return "BETWEEN";
+				case Operators.Is:
+					return "IS";
                 default:
                     throw new Exception("Bad operator: " + opr.ToString());
 

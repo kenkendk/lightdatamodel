@@ -94,6 +94,8 @@ namespace Datamodel.UnitTest
 			if (tmp.Length != 3) throw new Exception("NOOOOOO!!!!! HOW DO I LOCATE ALL EMPTY POSTS?????????");
 			foreach (Note n in tmp)
 				fetcher.DeleteObject(n);
+			tmp = fetcher.GetObjects<Note>("NoteText = ? OR NoteText Is ?", "", DBNull.Value);
+			if (tmp.Length != 0) throw new Exception("Bah!");
 		}
 
 		/// <summary>
@@ -159,6 +161,14 @@ namespace Datamodel.UnitTest
 			int[] ids2 = { -5, -6 };
 			Note[] lst = fetcher.GetObjects<Note>("ID IN ?", ids2);
 			if (lst.Length != 2) throw new Exception("WHYYYYYYYYYY!!!!!!!?????????");
+
+			//test for NULL and ""
+			Note[] tmp = fetcher.GetObjects<Note>("NoteText = ? OR NoteText Is ?", "", DBNull.Value);
+			if (tmp.Length != 3) throw new Exception("NOOOOOO!!!!! HOW DO I LOCATE ALL EMPTY POSTS?????????");
+			tmp = fetcher.GetObjects<Note>("NoteText = ? OR NoteText Is ?", "", DBNull.Value);	//retry to test the cache
+			if (tmp.Length != 3) throw new Exception("NOOOOOO!!!!! HOW DO I LOCATE ALL EMPTY POSTS?????????");
+			foreach (Note n in tmp)
+				fetcher.DeleteObject(n);
 		}
 
 		public static void TestQueryModel(IDbConnection con)
