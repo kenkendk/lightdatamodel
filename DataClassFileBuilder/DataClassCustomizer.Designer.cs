@@ -46,6 +46,9 @@
             this.IgnoredFieldName = new System.Windows.Forms.TextBox();
             this.label11 = new System.Windows.Forms.Label();
             this.ReferenceProperties = new System.Windows.Forms.GroupBox();
+            this.GenerateRelationKey = new System.Windows.Forms.Button();
+            this.ReferenceRelationKey = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
             this.ReferenceIsCollection = new System.Windows.Forms.CheckBox();
             this.ReferenceReversePropertyname = new System.Windows.Forms.ComboBox();
             this.label10 = new System.Windows.Forms.Label();
@@ -142,11 +145,13 @@
             // 
             // toolStrip
             // 
+            this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripSplitButton1,
             this.RemoveButton});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
+            this.toolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
             this.toolStrip.Size = new System.Drawing.Size(200, 25);
             this.toolStrip.TabIndex = 1;
             this.toolStrip.Text = "toolStrip1";
@@ -260,6 +265,9 @@
             // 
             this.ReferenceProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.ReferenceProperties.Controls.Add(this.GenerateRelationKey);
+            this.ReferenceProperties.Controls.Add(this.ReferenceRelationKey);
+            this.ReferenceProperties.Controls.Add(this.label13);
             this.ReferenceProperties.Controls.Add(this.ReferenceIsCollection);
             this.ReferenceProperties.Controls.Add(this.ReferenceReversePropertyname);
             this.ReferenceProperties.Controls.Add(this.label10);
@@ -271,17 +279,47 @@
             this.ReferenceProperties.Controls.Add(this.label6);
             this.ReferenceProperties.Controls.Add(this.label7);
             this.ReferenceProperties.Controls.Add(this.label8);
-            this.ReferenceProperties.Location = new System.Drawing.Point(8, 224);
+            this.ReferenceProperties.Location = new System.Drawing.Point(8, 208);
             this.ReferenceProperties.Name = "ReferenceProperties";
-            this.ReferenceProperties.Size = new System.Drawing.Size(335, 176);
+            this.ReferenceProperties.Size = new System.Drawing.Size(335, 192);
             this.ReferenceProperties.TabIndex = 0;
             this.ReferenceProperties.TabStop = false;
             this.ReferenceProperties.Text = "Reference properties";
             // 
+            // GenerateRelationKey
+            // 
+            this.GenerateRelationKey.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.GenerateRelationKey.Location = new System.Drawing.Point(256, 64);
+            this.GenerateRelationKey.Name = "GenerateRelationKey";
+            this.GenerateRelationKey.Size = new System.Drawing.Size(72, 20);
+            this.GenerateRelationKey.TabIndex = 26;
+            this.GenerateRelationKey.Text = "Generate";
+            this.GenerateRelationKey.UseVisualStyleBackColor = true;
+            this.GenerateRelationKey.Click += new System.EventHandler(this.GenerateRelationKey_Click);
+            // 
+            // ReferenceRelationKey
+            // 
+            this.ReferenceRelationKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ReferenceRelationKey.Location = new System.Drawing.Point(104, 64);
+            this.ReferenceRelationKey.Name = "ReferenceRelationKey";
+            this.ReferenceRelationKey.Size = new System.Drawing.Size(144, 20);
+            this.ReferenceRelationKey.TabIndex = 25;
+            this.ReferenceRelationKey.TextChanged += new System.EventHandler(this.ReferenceRelationKey_TextChanged);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(16, 64);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(64, 13);
+            this.label13.TabIndex = 24;
+            this.label13.Text = "RelationKey";
+            // 
             // ReferenceIsCollection
             // 
             this.ReferenceIsCollection.AutoSize = true;
-            this.ReferenceIsCollection.Location = new System.Drawing.Point(16, 64);
+            this.ReferenceIsCollection.Location = new System.Drawing.Point(16, 88);
             this.ReferenceIsCollection.Name = "ReferenceIsCollection";
             this.ReferenceIsCollection.Size = new System.Drawing.Size(124, 17);
             this.ReferenceIsCollection.TabIndex = 23;
@@ -294,7 +332,7 @@
             this.ReferenceReversePropertyname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.ReferenceReversePropertyname.FormattingEnabled = true;
-            this.ReferenceReversePropertyname.Location = new System.Drawing.Point(104, 144);
+            this.ReferenceReversePropertyname.Location = new System.Drawing.Point(104, 168);
             this.ReferenceReversePropertyname.Name = "ReferenceReversePropertyname";
             this.ReferenceReversePropertyname.Size = new System.Drawing.Size(223, 21);
             this.ReferenceReversePropertyname.TabIndex = 22;
@@ -303,7 +341,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(16, 144);
+            this.label10.Location = new System.Drawing.Point(16, 168);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(72, 13);
             this.label10.TabIndex = 21;
@@ -315,7 +353,7 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.ReferenceReverseColumnname.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ReferenceReverseColumnname.FormattingEnabled = true;
-            this.ReferenceReverseColumnname.Location = new System.Drawing.Point(104, 120);
+            this.ReferenceReverseColumnname.Location = new System.Drawing.Point(104, 144);
             this.ReferenceReverseColumnname.Name = "ReferenceReverseColumnname";
             this.ReferenceReverseColumnname.Size = new System.Drawing.Size(223, 21);
             this.ReferenceReverseColumnname.TabIndex = 20;
@@ -324,7 +362,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(16, 120);
+            this.label9.Location = new System.Drawing.Point(16, 144);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(84, 13);
             this.label9.TabIndex = 19;
@@ -339,6 +377,7 @@
             this.ReferencePropertyname.Name = "ReferencePropertyname";
             this.ReferencePropertyname.Size = new System.Drawing.Size(223, 21);
             this.ReferencePropertyname.TabIndex = 18;
+            this.ReferencePropertyname.SelectedIndexChanged += new System.EventHandler(this.ReferencePropertyname_SelectedIndexChanged);
             this.ReferencePropertyname.TextChanged += new System.EventHandler(this.ReferencePropertyname_TextChanged);
             // 
             // ReferenceReverseTablename
@@ -347,7 +386,7 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.ReferenceReverseTablename.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ReferenceReverseTablename.FormattingEnabled = true;
-            this.ReferenceReverseTablename.Location = new System.Drawing.Point(104, 96);
+            this.ReferenceReverseTablename.Location = new System.Drawing.Point(104, 120);
             this.ReferenceReverseTablename.Name = "ReferenceReverseTablename";
             this.ReferenceReverseTablename.Size = new System.Drawing.Size(223, 21);
             this.ReferenceReverseTablename.TabIndex = 17;
@@ -376,7 +415,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(16, 96);
+            this.label7.Location = new System.Drawing.Point(16, 120);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(73, 13);
             this.label7.TabIndex = 14;
@@ -659,6 +698,9 @@
         private System.Windows.Forms.TextBox FieldDefaultValue;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.ErrorProvider errorProvider1;
+        private System.Windows.Forms.Button GenerateRelationKey;
+        private System.Windows.Forms.TextBox ReferenceRelationKey;
+        private System.Windows.Forms.Label label13;
 
     }
 }

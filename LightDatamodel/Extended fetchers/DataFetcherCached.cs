@@ -411,8 +411,14 @@ namespace System.Data.LightDatamodel
 		/// <param name="type">Type of the item to delete</param>
 		public override void DeleteObject<DATACLASS>(object id) 
 		{
-			DATACLASS tobedeleted = GetObjectById<DATACLASS>(id);
-			if (tobedeleted != null) DeleteObject((IDataClass)tobedeleted);
+            //In case someone tries to pass in the object rather than the key
+            if (id as IDataClass != null)
+                DeleteObject((IDataClass)id);
+            else
+            {
+                DATACLASS tobedeleted = GetObjectById<DATACLASS>(id);
+                if (tobedeleted != null) DeleteObject((IDataClass)tobedeleted);
+            }
 		}
 
 		/// <summary>

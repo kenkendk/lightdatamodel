@@ -1064,6 +1064,7 @@ namespace System.Data.LightDatamodel
             private PropertyInfo m_localProperty;
             private MappedField m_reverseField;
             private PropertyInfo m_reverseProperty;
+            private string m_relationKey;
 
             private ReferenceField()
             {
@@ -1124,6 +1125,9 @@ namespace System.Data.LightDatamodel
 
                 //True if the local property is a collection
                 m_isCollection = bool.Parse(node.Attributes["iscollection"].Value);
+
+                //Backwards compatible propertykey
+                m_relationKey = node.Attributes["relation_key"] == null ? m_propertyName : node.Attributes["relation_key"].Value;
             }
 
 
@@ -1203,6 +1207,12 @@ namespace System.Data.LightDatamodel
                 get { return m_reverseProperty; }
             }
 
+            public string RelationKey
+            {
+                get { return m_relationKey; }
+                set { m_relationKey = value; }
+            }
+
             public void Serialize(XmlNode node)
             {
                 node.Attributes.Append(node.OwnerDocument.CreateAttribute("reverse_table")).Value = m_reverse_table;
@@ -1214,6 +1224,9 @@ namespace System.Data.LightDatamodel
                 node.Attributes.Append(node.OwnerDocument.CreateAttribute("property")).Value = m_propertyName;
 
                 node.Attributes.Append(node.OwnerDocument.CreateAttribute("iscollection")).Value = m_isCollection ? "true" : "false";
+
+                if (m_relationKey != null)
+                    node.Attributes.Append(node.OwnerDocument.CreateAttribute("relation_key")).Value = m_relationKey;
             }
         }
     }

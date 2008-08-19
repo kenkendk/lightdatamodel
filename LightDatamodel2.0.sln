@@ -7,6 +7,10 @@ EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "InstallDataClassFileBuilder", "InstallDataClassFileBuilder\InstallDataClassFileBuilder.vdproj", "{27CC7B8F-075B-46A0-81AD-B5C120BA18BE}"
 EndProject
 Global
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
