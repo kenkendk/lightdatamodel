@@ -55,7 +55,7 @@ namespace System.Data.LightDatamodel
 
         public void AddRelation(TypeConfiguration.ReferenceField rf)
         {
-            AddRelation(rf.PropertyName, rf.LocalField, rf.ReverseField, false, rf.IsCollection);
+            AddRelation(rf.RelationKey, rf.LocalField, rf.ReverseField, false, rf.IsCollection);
         }
 
         public void AddRelation(string relationkey, TypeConfiguration.MappedField owner, TypeConfiguration.MappedField child, bool ownerCollection, bool childCollection)

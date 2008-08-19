@@ -1047,8 +1047,8 @@ namespace DataClassFileBuilder
                     foreach (TypeConfiguration.ReferenceField rf in mapping.ReferenceColumns.Values)
                     {
                         sw.Write("\t\tpublic " + tableLookup[rf.ReverseTablename].ClassName + " " + rf.PropertyName + "\n\t\t{\n");
-                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(\"" + rf.PropertyName + "\", this); }\n");
-                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(\"" + rf.PropertyName + "\", this, value); }\n");
+                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(\"" + rf.RelationKey + "\", this); }\n");
+                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(\"" + rf.RelationKey + "\", this, value); }\n");
                         sw.Write("\t\t}\n\n");
                     }
 
@@ -1065,7 +1065,7 @@ namespace DataClassFileBuilder
                                         sw.Write("\t\tpublic System.Collections.Generic.IList<" + mc.ClassName + "> " + rf.ReversePropertyName + "\n\t\t{\n");
                                         sw.Write("\t\t\tget\n\t\t\t{\n");
                                         sw.Write("\t\t\t\tif (m_" + rf.ReversePropertyName + " == null)\n");
-                                        sw.Write("\t\t\t\t\tm_" + rf.ReversePropertyName + " = base.RelationManager.GetReferenceCollection<" + mc.ClassName + ">(\"" + rf.PropertyName + "\", this);\n");
+                                        sw.Write("\t\t\t\t\tm_" + rf.ReversePropertyName + " = base.RelationManager.GetReferenceCollection<" + mc.ClassName + ">(\"" + rf.RelationKey + "\", this);\n");
                                         sw.Write("\t\t\t\treturn m_" + rf.ReversePropertyName + ";\n");
                                         sw.Write("\t\t\t}\n");
                                         sw.Write("\t\t}\n\n");
@@ -1073,8 +1073,8 @@ namespace DataClassFileBuilder
                                     else
                                     {
                                         sw.Write("\t\tpublic " + mc.ClassName + " " + rf.ReversePropertyName + "\n\t\t{\n");
-                                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + mc.ClassName + ">(\"" + rf.PropertyName + "\", this); }\n");
-                                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + mc.ClassName + ">(\"" + rf.PropertyName + "\", this, value); }\n");
+                                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + mc.ClassName + ">(\"" + rf.RelationKey + "\", this); }\n");
+                                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + mc.ClassName + ">(\"" + rf.RelationKey + "\", this, value); }\n");
                                         sw.Write("\t\t}\n\n");
                                     }
                                 }

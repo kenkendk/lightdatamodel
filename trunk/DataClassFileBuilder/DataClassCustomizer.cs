@@ -155,6 +155,7 @@ namespace DataClassFileBuilder
                     ReferenceReverseTablename.Text = rf.ReverseTablename;
                     ReferenceReverseColumnname.Text = rf.ReverseColumn;
                     ReferenceReversePropertyname.Text = rf.ReversePropertyName;
+                    ReferenceRelationKey.Text = rf.RelationKey;
                 }
 
                 foreach (Control c in splitContainer1.Panel2.Controls)
@@ -307,6 +308,7 @@ namespace DataClassFileBuilder
             else
             {
                 TypeConfiguration.ReferenceField rf = TypeConfiguration.CreateReferenceField();
+                rf.RelationKey = Guid.NewGuid().ToString();
                 (table.Tag as TypeConfiguration.MappedClass).ReferenceColumns.Add(Guid.NewGuid().ToString(), rf);
                 TreeNode field = new TreeNode(rf.PropertyName, IMAGE_REFERENCE, IMAGE_REFERENCE);
                 field.Tag = rf;
@@ -480,6 +482,23 @@ namespace DataClassFileBuilder
                 {
                     errorProvider1.SetError(FieldDefaultValue, "Invalid value: " + ex.Message);
                 }
+        }
+
+        private void GenerateRelationKey_Click(object sender, EventArgs e)
+        {
+            ReferenceRelationKey.Text = Guid.NewGuid().ToString();
+        }
+
+        private void ReferencePropertyname_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ReferenceRelationKey_TextChanged(object sender, EventArgs e)
+        {
+            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField == null)
+                return;
+            (treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField).RelationKey = ReferenceRelationKey.Text;
         }
 
     }
