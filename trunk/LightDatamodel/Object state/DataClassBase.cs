@@ -39,6 +39,7 @@ namespace System.Data.LightDatamodel
 		public event DataChangeEventHandler AfterDataChange;
 		public event DataConnectionEventHandler BeforeDataCommit;
 		public event DataConnectionEventHandler AfterDataCommit;
+		internal protected static Random rnd = new Random();		//used to provide unique (almost) to new objects
 
 		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
         public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
