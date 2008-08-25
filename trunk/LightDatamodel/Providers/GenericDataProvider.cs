@@ -757,7 +757,7 @@ namespace System.Data.LightDatamodel
 					if (!mf.IgnoreWithInsert)
 					{
 						object val = mf.Field.GetValue(item);
-						AddParameter(cmd, mf.ColumnName, val);
+                        AddParameter(cmd, mf.ColumnName, val);
 					}
 
                 try

@@ -411,6 +411,16 @@ namespace System.Data.LightDatamodel
 
 		}
 
+        /// <summary>
+		/// Discards all changes from the object, and removes it from the internal cache.
+        /// Since there is no cache on the basic provider, it does nothing.
+		/// </summary>
+		/// <param name="obj">The object to discard</param>
+        public virtual void DiscardObject(IDataClass obj)
+        {
+        }
+
+
         public virtual void Dispose()
         {
             m_provider = null;

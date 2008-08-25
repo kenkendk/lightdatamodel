@@ -213,7 +213,9 @@ namespace System.Data.LightDatamodel
         {
             //This method is overridden because SQLite does not have to do tricks 
             // SQLite correctly handles dates, times, and empty strings!
-            if (value == null || value == DBNull.Value)
+
+            //TODO: update/insert has pre-cached strings, so we cannot return "NULL", but must insert the parameter
+            if ((value == null || value == DBNull.Value) && !cmd.CommandText.ToLower().StartsWith("insert into") && !cmd.CommandText.ToLower().StartsWith("update"))
             {
                 //Unfortunately the "x is null" cannot accept a "x is ?" where ? is a DBNull parameter
                 return "NULL";

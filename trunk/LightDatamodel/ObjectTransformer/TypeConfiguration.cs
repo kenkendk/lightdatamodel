@@ -767,7 +767,12 @@ namespace System.Data.LightDatamodel
                     m_dataType = Type.GetType(m_datatypename);
 
                     if (mapping.Attributes["nullvalue"] != null)
-                        m_defaultValue = Convert.ChangeType(mapping.Attributes["nullvalue"].Value, m_dataType);
+                    {
+                        if (m_dataType != null)
+                            m_defaultValue = Convert.ChangeType(mapping.Attributes["nullvalue"].Value, m_dataType);
+                        else
+                            throw new Exception("Invalid datatype: " + m_datatypename);
+                    }
                     else
                         m_defaultValue = null;
                 }
