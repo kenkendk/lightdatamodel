@@ -998,10 +998,7 @@ namespace DataClassFileBuilder
                             sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithSelect()]\n");
 
                         string defaultValue;
-                        if (mf.DefaultValue == null)
-                            defaultValue = FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName, mapping.ViewSQL), provider.IsUnique(mapping.TableName, mf.ColumnName));
-                        else
-                            defaultValue = FormatObjectToCSharp(mf.GetDefaultValue(provider), false);
+                        defaultValue = FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName, mapping.ViewSQL), provider.IsUnique(mapping.TableName, mf.ColumnName));
 
 						sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + defaultValue + ";\n");
                     }
@@ -1132,7 +1129,7 @@ namespace DataClassFileBuilder
 			else if (obj.GetType() == typeof(bool))
 				return (bool)obj ? "true" : "false";
 			else if ((obj.GetType() == typeof(int) || obj.GetType() == typeof(long)) && columnisunique)
-				return "(new System.Random()).Next(int.MinValue, -1)";
+				return "rnd.Next(int.MinValue, -1)";
 			else
 				return obj.ToString();
 		}

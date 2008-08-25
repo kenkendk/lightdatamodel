@@ -21,6 +21,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_6A7A2EE12015D5DF116950E953A65ED0"
+        "OwnerKey" = "8:_74A7C6D80E4F4B429F485E6E4894BDA5"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_74A7C6D80E4F4B429F485E6E4894BDA5"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -35,12 +41,6 @@
         {
         "MsmKey" = "8:_AFD561CB411446B4AE3EF172823FEDDB"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_CB6BB9711CA49DA079EE7CBA2AED3341"
-        "OwnerKey" = "8:_74A7C6D80E4F4B429F485E6E4894BDA5"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -64,7 +64,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_CB6BB9711CA49DA079EE7CBA2AED3341"
+        "OwnerKey" = "8:_6A7A2EE12015D5DF116950E953A65ED0"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -198,6 +198,37 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6A7A2EE12015D5DF116950E953A65ED0"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:LightDatamodel, Version=1.1.0.0, Culture=neutral, PublicKeyToken=c7a68962c12dce64, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_6A7A2EE12015D5DF116950E953A65ED0"
+                    {
+                    "Name" = "8:LightDatamodel.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:LightDatamodel.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_6D7C1AF9273F4B06A7FD2E6FE0EEA66F"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_7B8CE40639B847AAB30C644A82545E3F"
             {
             "SourcePath" = "8:..\\SQLite\\SQLite binary\\sqlite3.dll"
@@ -236,37 +267,6 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_CB6BB9711CA49DA079EE7CBA2AED3341"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:LightDatamodel, Version=1.1.0.0, Culture=neutral, PublicKeyToken=c7a68962c12dce64, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_CB6BB9711CA49DA079EE7CBA2AED3341"
-                    {
-                    "Name" = "8:LightDatamodel.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:LightDatamodel.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_6D7C1AF9273F4B06A7FD2E6FE0EEA66F"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F9DC3ED5C017174C419E34846C530F43"
@@ -355,14 +355,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:DataClassFileBuilder"
-        "ProductCode" = "8:{006A5AAE-05FC-4774-9848-C7A7F1D3DEEB}"
-        "PackageCode" = "8:{AFE38813-5563-4AA4-AA84-A08ACC16941C}"
+        "ProductCode" = "8:{5EDB2C4D-5877-44F8-93DA-40D482D54BF1}"
+        "PackageCode" = "8:{9E8E87AC-BEA2-45FC-BAEE-261AB989C2D5}"
         "UpgradeCode" = "8:{49B1AB5F-ED4B-43BD-8D24-5B8097B0087B}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.0.31"
+        "ProductVersion" = "8:1.0.33"
         "Manufacturer" = "8:Geograf"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -876,7 +876,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_74A7C6D80E4F4B429F485E6E4894BDA5"
             {
-            "SourcePath" = "8:..\\DataClassFileBuilder\\obj\\Release\\DataClassFileBuilder.exe"
+            "SourcePath" = "8:..\\DataClassFileBuilder\\obj\\Debug\\DataClassFileBuilder.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_6D7C1AF9273F4B06A7FD2E6FE0EEA66F"
