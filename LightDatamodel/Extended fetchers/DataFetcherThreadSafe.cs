@@ -122,6 +122,12 @@ namespace System.Data.LightDatamodel
             }
         }
 
+        public void DiscardObject(IDataClass obj)
+        {
+            lock (m_lock)
+                m_basefetcher.DiscardObject(obj);
+        }
+
         #endregion
 
         #region IDataFetcher Members

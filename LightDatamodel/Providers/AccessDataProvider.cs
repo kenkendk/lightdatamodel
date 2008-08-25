@@ -98,7 +98,8 @@ namespace System.Data.LightDatamodel
 		/// <returns>A placeholder for the value, to be used in the SQL command</returns>
 		protected override string AddParameter(IDbCommand cmd, string paramname, object value)
 		{
-			if (value == null || value == DBNull.Value) return "NULL";
+			if ((value == null || value == DBNull.Value) && !cmd.CommandText.ToLower().StartsWith("insert into") && !cmd.CommandText.ToLower().StartsWith("update"))
+				return "NULL";
 
 			IDataParameter p = cmd.CreateParameter();
 			if (value == null || (value.GetType() == typeof(string) && (string)value == ""))

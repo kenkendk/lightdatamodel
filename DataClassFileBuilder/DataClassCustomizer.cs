@@ -199,7 +199,7 @@ namespace DataClassFileBuilder
         {
             if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.MappedField == null)
                 return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).DataTypeName = FieldColumnname.Text;
+            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).DataTypeName = FieldDatatype.Text;
         }
 
         private void FieldAutogenerate_CheckedChanged(object sender, EventArgs e)
