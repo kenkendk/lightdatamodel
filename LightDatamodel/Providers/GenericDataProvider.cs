@@ -31,7 +31,10 @@ namespace System.Data.LightDatamodel
                 m_cmd = cmd;
                 m_provider = provider;
                 m_operation = op;
-            }
+			
+				if (m_cmd.CommandText == null)
+					m_cmd.CommandText = "";
+			}
 
             private IDbCommand m_cmd;
             private GenericDataProvider m_provider;
