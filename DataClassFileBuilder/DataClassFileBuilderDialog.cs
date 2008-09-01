@@ -998,7 +998,15 @@ namespace DataClassFileBuilder
                             sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithSelect()]\n");
 
                         string defaultValue;
-                        defaultValue = FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName, mapping.ViewSQL), provider.IsUnique(mapping.TableName, mf.ColumnName));
+                        if (mf.DefaultValue != null)
+                        {
+                            if (mf.DefaultValue as string == null)
+                                defaultValue = mf.DefaultValue.ToString();
+                            else
+                                defaultValue = "\"" + (mf.DefaultValue as string) + "\"";
+                        }
+                        else
+                            defaultValue = FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName, mapping.ViewSQL), provider.IsUnique(mapping.TableName, mf.ColumnName));
 
 						sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + defaultValue + ";\n");
                     }
