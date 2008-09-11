@@ -177,6 +177,82 @@ namespace System.Data.LightDatamodel
 		//    return GetObjects<DATACLASS>(QueryModel.Parser.ParseQuery(query));
 		//}
 
+        /*/// <summary>
+        /// This function checks if the query is for a primary key, and if so finds the results
+        /// by looking in the hashtable, rather than itterating the list.
+        /// </summary>
+        /// <param name="operation">The operation to evaluate</param>
+        /// <returns>Either null if the query was not for a primary key, or the resulting items</returns>
+        public virtual DATACLASS[] IsQueryForID<DATACLASS>(QueryModel.Operation operation)
+        {
+            if (operation == null)
+                return null;
+
+            if (operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.Equal
+                || operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.In)
+            {
+                if (operation.Parameters != null && operation.Parameters.Length == 2)
+                {
+                    if (!operation.Parameters[0].IsOperation
+                        && !operation.Parameters[1].IsOperation)
+                    {
+                        if ((operation.Parameters[0] as QueryModel.Parameter).IsColumn
+                            && !(operation.Parameters[1] as QueryModel.Parameter).IsColumn
+                            && (operation.Parameters[0] as QueryModel.Parameter).Value == m_transformer.TypeConfiguration.UniqueColumn(typeof(DATACLASS)))
+                        {
+                            if (operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.In)
+                            {
+                                //List<DATACLASS> lst = new List<DATACLASS>();
+                                //foreach (object o in (IEnumerable)(operation.Parameters[1] as QueryModel.Parameter))
+                                //{
+                                //    object o = this.GetObjectById<DATACLASS>(o);
+                                //    if (o != null)
+                                //        lst.Add(o);
+                                //}
+
+                                return lst.ToArray();
+                            }
+                            else
+                            {
+                                DATACLASS c = this.GetObjectById<DATACLASS>((operation.Parameters[0] as QueryModel.Parameter).Value);
+                                if (c == null)
+                                    return new DATACLASS[0];
+                                else
+                                    return new DATACLASS[] { c };
+                            }
+                        }
+                        else if ((operation.Parameters[0] as QueryModel.Parameter).IsColumn
+                            && !(operation.Parameters[1] as QueryModel.Parameter).IsColumn
+                            && (operation.Parameters[0] as QueryModel.Parameter).Value == m_transformer.TypeConfiguration.UniqueColumn(typeof(DATACLASS)))
+                        {
+                            if (operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.In)
+                            {
+                                //List<DATACLASS> lst = new List<DATACLASS>();
+                                //foreach (object o in (IEnumerable)(operation.Parameters[1] as QueryModel.Parameter).Value)
+                                //{
+                                //    object o = this.GetObjectById<DATACLASS>(o);
+                                //    if (o != null)
+                                //        lst.Add(o);
+                                //}
+
+                                //return lst.ToArray();
+                            }
+                            else
+                            {
+                                DATACLASS c = this.GetObjectById<DATACLASS>((operation.Parameters[1] as QueryModel.Parameter).Value);
+                                if (c == null)
+                                    return new DATACLASS[0];
+                                else
+                                    return new DATACLASS[] { c };
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }*/
+
 		/// <summary>
 		/// This will load a list of arbitary objects
 		/// If the given object is a DataClassBase it will be hook into the DataFetcher
@@ -188,6 +264,9 @@ namespace System.Data.LightDatamodel
 		/// <returns>All matching objects</returns>
 		public override DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation)
 		{
+            if (operation == null)
+                return GetObjects<DATACLASS>();
+
             string tablename = m_transformer.TypeConfiguration.GetTableName(typeof(DATACLASS));
             if (!m_cache.ContainsKey(tablename))
                 m_cache[tablename] = new SortedList<object, IDataClass>();
@@ -195,10 +274,15 @@ namespace System.Data.LightDatamodel
 			if (!HasLoaded(typeof(DATACLASS), operation))
 				InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));
 
+            /*DATACLASS[] tmp = IsQueryForID<DATACLASS>(operation);
+            if (tmp != null)
+                return tmp;*/
+
             //TODO: An enumerable collection that transparently itterates over a number of collections would make this more efficient
             List<DATACLASS> items = new List<DATACLASS>();
             foreach (DATACLASS b in m_cache[tablename].Values)
                 items.Add(b);
+
 
 		
             QueryModel.Operation filter = QueryModel.Parser.ParseQuery("GetType.FullName = ?", typeof(DATACLASS).FullName);
@@ -251,7 +335,7 @@ namespace System.Data.LightDatamodel
                 if (!m_loadreducer.ContainsKey(type))
                     m_loadreducer.Add(type, new Dictionary<string, string>());
 
-                if (m_loadreducer[type].ContainsKey(eq))
+                if (m_loadreducer[type].ContainsKey(eq) || m_loadreducer[type].ContainsKey(""))
                     return true;
                 else
                 {
