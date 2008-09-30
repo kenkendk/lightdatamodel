@@ -86,7 +86,8 @@ namespace System.Data.LightDatamodel.QueryModel
 			}
 			else if (op1.GetType() == typeof(string) || op2.GetType() == typeof(string))
 			{
-				return op1.ToString().CompareTo(op2.ToString());
+				//do case insentinsive
+				return string.Compare(op1.ToString(), op2.ToString(), true);
 			}
             else
             {
@@ -512,7 +513,12 @@ namespace System.Data.LightDatamodel.QueryModel
 				case Operators.Equal:
 					return Comparer.CompareTo(res[0].Result, res[1].Result) == 0;
                 case Operators.Is:
-                    return res[0].Result == res[1].Result;
+					if (res[1].Result == null)
+					{
+						return res[0].Result == null || (res[0].Result.GetType() == typeof(DateTime) && (DateTime)res[0].Result == new DateTime(1, 1, 1)) || (res[0].Result.GetType() == typeof(int) && (int)res[0].Result == int.MinValue) || (res[0].Result.GetType() == typeof(float) && (float)res[0].Result == float.MinValue) || (res[0].Result.GetType() == typeof(double) && (double)res[0].Result == double.MinValue);
+					}
+					else
+	                    return res[0].Result == res[1].Result;
 				case Operators.NotEqual:
 					return Comparer.CompareTo(res[0].Result, res[1].Result) != 0;
 				case Operators.GreaterThan:
