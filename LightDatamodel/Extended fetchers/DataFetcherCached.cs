@@ -31,12 +31,16 @@ namespace System.Data.LightDatamodel
 	{
 		//protected SortedList<string, SortedList<object, IDataClass>> m_cache = new SortedList<string, SortedList<object, IDataClass>>();		//object = PrimaryKeyValue
 		protected Cache m_cache = new Cache();
-        protected Dictionary<Type, Dictionary<string, string>> m_loadreducer;
+		protected Dictionary<Type, Dictionary<string, string>> m_loadreducer = new Dictionary<Type, Dictionary<string, string>>();
+		private System.Threading.ReaderWriterLock m_transactionlock = new System.Threading.ReaderWriterLock();
 
 		public event ObjectStateChangeHandler ObjectAddRemove;
 
 		#region " Cache "
 
+		/// <summary>
+		/// This is not thread safe. The fetcher is though
+		/// </summary>
 		[System.Diagnostics.DebuggerDisplay("Count = {Count}")]
 		public class Cache : IEnumerable<IDataClass>, IDisposable
 		{
@@ -49,6 +53,8 @@ namespace System.Data.LightDatamodel
 
 			public MultiDictionary<Type, IDataClass> NewObjects { get { return m_newobjects; } }
 			public List<IDataClass> DeletedObjects { get { return m_deletedobjects; } }
+
+			public System.Threading.ReaderWriterLock Lock = new System.Threading.ReaderWriterLock();
 
 			public IDataClass this[Type type, string indexname, object indexvalue]
 			{
@@ -152,7 +158,7 @@ namespace System.Data.LightDatamodel
 
 					public IDataClass Current
 					{
-						get 
+						get
 						{
 							if (m_mainenumerator != null) return m_mainenumerator.Current.Value;
 							else return m_newobjectenumerator.Current;
@@ -333,7 +339,7 @@ namespace System.Data.LightDatamodel
 				{
 					m_parent = null;
 					m_typeenumerator.Dispose();
-					if (m_objectenumerator!=null) m_objectenumerator.Dispose();
+					if (m_objectenumerator != null) m_objectenumerator.Dispose();
 					m_objectenumerator = null;
 				}
 
@@ -360,9 +366,9 @@ namespace System.Data.LightDatamodel
 				public void Reset()
 				{
 					m_typeenumerator = m_parent.GetEnumerator();
-					if(!m_typeenumerator.MoveNext()) return;
+					if (!m_typeenumerator.MoveNext()) return;
 					Dictionary<string, MultiDictionary<object, IDataClass>>.Enumerator e = m_typeenumerator.Current.Value.GetEnumerator();
-					if(!e.MoveNext()) return;
+					if (!e.MoveNext()) return;
 					m_objectenumerator = e.Current.Value.GetEnumerator();
 				}
 			}
@@ -378,43 +384,54 @@ namespace System.Data.LightDatamodel
 		#endregion
 
 		/// <summary>
-        /// Gets a value describing if the fetcher contains uncommited changes
-        /// </summary>
+		/// Gets a value describing if the fetcher contains uncommited changes
+		/// </summary>
 		public bool IsDirty
 		{
 			get
 			{
-				if (m_cache.NewObjects.Count > 0 || m_cache.DeletedObjects.Count > 0) return true;
+				try
+				{
+					m_cache.Lock.AcquireReaderLock(-1);
+					if (m_cache.NewObjects.Count > 0 || m_cache.DeletedObjects.Count > 0) return true;
 
-				foreach(IDataClass obj in m_cache)
-					if (obj.IsDirty) return true;
+					foreach (IDataClass obj in m_cache)
+						if (obj.IsDirty) return true;
 
-				return false;
+					return false;
+				}
+				finally
+				{
+					m_cache.Lock.ReleaseReaderLock();
+				}
 			}
 		}
 
 		public Cache LocalCache { get { return m_cache; } }
 
-        /// <summary>
-        /// Constructs a new cached data fetcher
-        /// </summary>
-        /// <param name="provider">The provider to use</param>
-		public DataFetcherCached(IDataProvider provider) : base(provider)
+		/// <summary>
+		/// Constructs a new cached data fetcher
+		/// </summary>
+		/// <param name="provider">The provider to use</param>
+		public DataFetcherCached(IDataProvider provider)
+			: base(provider)
 		{
-		//    //if (m_mappings.RelationConfig.GetAvaliblePropKeys().Length != 0)
-		//    //    m_relationManager = new RelationManager(this);
-		//    //else
-		//    //{
-		//    //    //If the user creates the relations later, we need to create it
-		//    //    m_mappings.RelationConfig.AddedRelation += new EventHandler(RelationConfig_AddedRelation);
-		//    //    m_relationManager = null;
-		//    //}
+			//    //if (m_mappings.RelationConfig.GetAvaliblePropKeys().Length != 0)
+			//    //    m_relationManager = new RelationManager(this);
+			//    //else
+			//    //{
+			//    //    //If the user creates the relations later, we need to create it
+			//    //    m_mappings.RelationConfig.AddedRelation += new EventHandler(RelationConfig_AddedRelation);
+			//    //    m_relationManager = null;
+			//    //}
 
 			m_mappings.TypesInitialized += new EventHandler(m_mappings_TypesInitialized);
 		}
 
 		private void m_mappings_TypesInitialized(object sender, EventArgs e)
 		{
+			//only 1 thread will enter this
+
 			//pre-add indexes (gives a slight startup performance boost)
 			foreach (TypeConfiguration.MappedClass type in m_mappings)
 				foreach (TypeConfiguration.MappedField index in type.IndexFields)
@@ -427,72 +444,116 @@ namespace System.Data.LightDatamodel
 		//        m_relationManager = new RelationManager(this);
 		//}
 
-        //#region Provider interactions
-        /* The methods in this regions does all interaction with the provider.
-         * This approach enables easy overrides of provider interaction,
-         * when using the Nested provider.
-         * 
-         * It also removes clutter and varying ways to interact with the provider
-         */
+		//#region Provider interactions
+		/* The methods in this regions does all interaction with the provider.
+		 * This approach enables easy overrides of provider interaction,
+		 * when using the Nested provider.
+		 * 
+		 * It also removes clutter and varying ways to interact with the provider
+		 */
 
-        /// <summary>
-        /// This inserts an object into the datasource
-        /// </summary>
-        /// <param name="obj">The object to insert</param>
+		/// <summary>
+		/// This inserts an object into the datasource
+		/// </summary>
+		/// <param name="obj">The object to insert</param>
 		//protected override void InsertObject(object obj)
 		//{
 		//    base.InsertObject(obj);
 		//    //if(m_relationManager != null)m_relationManager.SetExistsInDb((IDataClass)obj, true);		//Is this still needed?
 		//}
-        //#endregion
+		//#endregion
 
-        /// <summary>
-        /// Commits all cached objects to data source
-        /// </summary>
+		/// <summary>
+		/// Commits all cached objects to data source
+		/// </summary>
 		public virtual void CommitAll()
 		{
 			Guid transactionID = Guid.NewGuid();
 			bool inTransaction = false;
 
-			lock (m_provider)		//SQLite can only handle 1 transaction ... and not writing from multiple threads isn't that bad, is it?
+			LinkedList<IDataClass> deletedobjects = null;
+			LinkedList<IDataClass> newobjects = null;
+			LinkedList<IDataClass> updatedobjects = null;
+			try
 			{
-				m_provider.BeginTransaction(transactionID);
+				m_transactionlock.AcquireWriterLock(-1);		//only 1 of this function (CommitAll) may run
+
+				//get objects
+				try
+				{
+					m_cache.Lock.AcquireReaderLock(-1);
+					deletedobjects = new LinkedList<IDataClass>(m_cache.DeletedObjects);
+					newobjects = new LinkedList<IDataClass>(m_cache.NewObjects.Values);
+					updatedobjects = new LinkedList<IDataClass>();
+					foreach (IDataClass obj in m_cache)
+						if (obj.IsDirty)
+							updatedobjects.AddLast(obj);
+				}
+				finally
+				{
+					m_cache.Lock.ReleaseReaderLock();
+				}
+
+				//start commiting
+				m_provider.BeginTransaction(transactionID); //SQLite can only handle 1 transaction ... and not writing from multiple threads isn't that bad, is it?
 				inTransaction = true;
 
 				try
 				{
-					bool hasupdated;
-					do
-					{
-						hasupdated = false;
+					//delete (First we delete. In case we've delete a primary key, that also will be inserted)
+					foreach (IDataClass c in deletedobjects)
+						base.Commit(c); //no lock
 
-						//delete (First we delete. In case we've delete a primary key, that also will be inserted)
-						LinkedList<IDataClass> deletedobjects = new LinkedList<IDataClass>(m_cache.DeletedObjects);
-						foreach (IDataClass c in deletedobjects)
-							this.Commit(c);
+					//create
+					foreach (IDataClass c in newobjects)
+						base.Commit(c, false); //no lock
 
-						//create
-						LinkedList<IDataClass> newobjects = new LinkedList<IDataClass>(m_cache.NewObjects.Values);
-						foreach (IDataClass c in newobjects)
-							this.Commit(c);
+					//update
+					foreach (IDataClass c in updatedobjects)
+						base.Commit(c, false); //no lock
 
-						//update
-						foreach (IDataClass obj in m_cache)
-							if (obj.IsDirty)
-							{
-								this.Commit(obj);
-								hasupdated = true;
-							}
-					}
-					while (m_cache.NewObjects.Count > 0 || m_cache.DeletedObjects.Count > 0 || hasupdated);		//in case the save procedures alters something
 					m_provider.CommitTransaction(transactionID);
 					inTransaction = false;
 				}
 				finally
 				{
-					if (inTransaction) m_provider.RollbackTransaction(transactionID);
+					if (inTransaction) m_provider.RollbackTransaction(transactionID);		//TODO: The objects are not rolled back!!!!
+				}
+
+				if (inTransaction) throw new Exception("Can this happen????");
+
+			}
+			finally
+			{
+				m_transactionlock.ReleaseWriterLock();
+			}
+
+			//refresh objects ... only do this if the transaction is a success ... kind of commit
+			foreach (IDataClass c in newobjects)
+				RefreshObject(c);
+			foreach (IDataClass c in updatedobjects)
+				RefreshObject(c);
+
+			//commit objects to cache
+			try
+			{
+				m_cache.Lock.AcquireWriterLock(-1);
+				foreach (IDataClass c in deletedobjects)
+					m_cache.DeletedObjects.Remove(c);
+				foreach (IDataClass c in newobjects)
+				{
+					m_cache.NewObjects.Remove(c.GetType(), c);
+					m_cache[c.GetType(), m_mappings[c.GetType()].PrimaryKey.Databasefield, m_mappings[c.GetType()].PrimaryKey.Field.GetValue(c)] = c;
 				}
 			}
+			finally
+			{
+				m_cache.Lock.ReleaseWriterLock();
+			}
+
+			//recursive commit
+			if (deletedobjects.Count > 0 || newobjects.Count > 0 || updatedobjects.Count > 0) CommitAll();
+
 		}
 
 		///// <summary>
@@ -525,81 +586,81 @@ namespace System.Data.LightDatamodel
 		//    return GetObjects<DATACLASS>(QueryModel.Parser.ParseQuery(query));
 		//}
 
-        /*/// <summary>
-        /// This function checks if the query is for a primary key, and if so finds the results
-        /// by looking in the hashtable, rather than itterating the list.
-        /// </summary>
-        /// <param name="operation">The operation to evaluate</param>
-        /// <returns>Either null if the query was not for a primary key, or the resulting items</returns>
-        public virtual DATACLASS[] IsQueryForID<DATACLASS>(QueryModel.Operation operation)
-        {
-            if (operation == null)
-                return null;
+		/*/// <summary>
+		/// This function checks if the query is for a primary key, and if so finds the results
+		/// by looking in the hashtable, rather than itterating the list.
+		/// </summary>
+		/// <param name="operation">The operation to evaluate</param>
+		/// <returns>Either null if the query was not for a primary key, or the resulting items</returns>
+		public virtual DATACLASS[] IsQueryForID<DATACLASS>(QueryModel.Operation operation)
+		{
+			if (operation == null)
+				return null;
 
-            if (operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.Equal
-                || operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.In)
-            {
-                if (operation.Parameters != null && operation.Parameters.Length == 2)
-                {
-                    if (!operation.Parameters[0].IsOperation
-                        && !operation.Parameters[1].IsOperation)
-                    {
-                        if ((operation.Parameters[0] as QueryModel.Parameter).IsColumn
-                            && !(operation.Parameters[1] as QueryModel.Parameter).IsColumn
-                            && (operation.Parameters[0] as QueryModel.Parameter).Value == m_transformer.TypeConfiguration.UniqueColumn(typeof(DATACLASS)))
-                        {
-                            if (operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.In)
-                            {
-                                //List<DATACLASS> lst = new List<DATACLASS>();
-                                //foreach (object o in (IEnumerable)(operation.Parameters[1] as QueryModel.Parameter))
-                                //{
-                                //    object o = this.GetObjectById<DATACLASS>(o);
-                                //    if (o != null)
-                                //        lst.Add(o);
-                                //}
+			if (operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.Equal
+				|| operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.In)
+			{
+				if (operation.Parameters != null && operation.Parameters.Length == 2)
+				{
+					if (!operation.Parameters[0].IsOperation
+						&& !operation.Parameters[1].IsOperation)
+					{
+						if ((operation.Parameters[0] as QueryModel.Parameter).IsColumn
+							&& !(operation.Parameters[1] as QueryModel.Parameter).IsColumn
+							&& (operation.Parameters[0] as QueryModel.Parameter).Value == m_transformer.TypeConfiguration.UniqueColumn(typeof(DATACLASS)))
+						{
+							if (operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.In)
+							{
+								//List<DATACLASS> lst = new List<DATACLASS>();
+								//foreach (object o in (IEnumerable)(operation.Parameters[1] as QueryModel.Parameter))
+								//{
+								//    object o = this.GetObjectById<DATACLASS>(o);
+								//    if (o != null)
+								//        lst.Add(o);
+								//}
 
-                                return lst.ToArray();
-                            }
-                            else
-                            {
-                                DATACLASS c = this.GetObjectById<DATACLASS>((operation.Parameters[0] as QueryModel.Parameter).Value);
-                                if (c == null)
-                                    return new DATACLASS[0];
-                                else
-                                    return new DATACLASS[] { c };
-                            }
-                        }
-                        else if ((operation.Parameters[0] as QueryModel.Parameter).IsColumn
-                            && !(operation.Parameters[1] as QueryModel.Parameter).IsColumn
-                            && (operation.Parameters[0] as QueryModel.Parameter).Value == m_transformer.TypeConfiguration.UniqueColumn(typeof(DATACLASS)))
-                        {
-                            if (operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.In)
-                            {
-                                //List<DATACLASS> lst = new List<DATACLASS>();
-                                //foreach (object o in (IEnumerable)(operation.Parameters[1] as QueryModel.Parameter).Value)
-                                //{
-                                //    object o = this.GetObjectById<DATACLASS>(o);
-                                //    if (o != null)
-                                //        lst.Add(o);
-                                //}
+								return lst.ToArray();
+							}
+							else
+							{
+								DATACLASS c = this.GetObjectById<DATACLASS>((operation.Parameters[0] as QueryModel.Parameter).Value);
+								if (c == null)
+									return new DATACLASS[0];
+								else
+									return new DATACLASS[] { c };
+							}
+						}
+						else if ((operation.Parameters[0] as QueryModel.Parameter).IsColumn
+							&& !(operation.Parameters[1] as QueryModel.Parameter).IsColumn
+							&& (operation.Parameters[0] as QueryModel.Parameter).Value == m_transformer.TypeConfiguration.UniqueColumn(typeof(DATACLASS)))
+						{
+							if (operation.Operator == System.Data.LightDatamodel.QueryModel.Operators.In)
+							{
+								//List<DATACLASS> lst = new List<DATACLASS>();
+								//foreach (object o in (IEnumerable)(operation.Parameters[1] as QueryModel.Parameter).Value)
+								//{
+								//    object o = this.GetObjectById<DATACLASS>(o);
+								//    if (o != null)
+								//        lst.Add(o);
+								//}
 
-                                //return lst.ToArray();
-                            }
-                            else
-                            {
-                                DATACLASS c = this.GetObjectById<DATACLASS>((operation.Parameters[1] as QueryModel.Parameter).Value);
-                                if (c == null)
-                                    return new DATACLASS[0];
-                                else
-                                    return new DATACLASS[] { c };
-                            }
-                        }
-                    }
-                }
-            }
+								//return lst.ToArray();
+							}
+							else
+							{
+								DATACLASS c = this.GetObjectById<DATACLASS>((operation.Parameters[1] as QueryModel.Parameter).Value);
+								if (c == null)
+									return new DATACLASS[0];
+								else
+									return new DATACLASS[] { c };
+							}
+						}
+					}
+				}
+			}
 
-            return null;
-        }*/
+			return null;
+		}*/
 
 		/// <summary>
 		/// This will load a list of arbitary objects
@@ -612,27 +673,35 @@ namespace System.Data.LightDatamodel
 		/// <returns>All matching objects</returns>
 		public override DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation)
 		{
-            //if (operation == null) return GetObjects<DATACLASS>();
+			//if (operation == null) return GetObjects<DATACLASS>();
 
 			//string tablename = m_mappings[typeof(DATACLASS)].Tablename;
 
 			if (!HasLoaded(typeof(DATACLASS), operation))
-				InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));
+				InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));		//this is locked
 
-            /*DATACLASS[] tmp = IsQueryForID<DATACLASS>(operation);
-            if (tmp != null)
-                return tmp;*/
+			/*DATACLASS[] tmp = IsQueryForID<DATACLASS>(operation);
+			if (tmp != null)
+				return tmp;*/
 
-            //TODO: An enumerable collection that transparently itterates over a number of collections would make this more efficient
+			//TODO: An enumerable collection that transparently itterates over a number of collections would make this more efficient
 			//List<IDataClass> items = new List<IDataClass>(m_cache.GetObjects(typeof(DATACLASS)));
 			//foreach (DATACLASS b in m_cache[tablename].Values)
 			//    items.Add(b);
 
-            //QueryModel.Operation filter = QueryModel.Parser.ParseQuery("GetType.FullName = ?", typeof(DATACLASS).FullName);
+			//QueryModel.Operation filter = QueryModel.Parser.ParseQuery("GetType.FullName = ?", typeof(DATACLASS).FullName);
 			//items.AddRange(filter.EvaluateList<IDataClass>(m_cache.NewObjects));
 
-			return operation.EvaluateList<DATACLASS>(m_cache.GetObjects(typeof(DATACLASS)));
-        }
+			try
+			{
+				m_cache.Lock.AcquireReaderLock(-1);
+				return operation.EvaluateList<DATACLASS>(m_cache.GetObjects(typeof(DATACLASS)));
+			}
+			finally
+			{
+				m_cache.Lock.ReleaseReaderLock();
+			}
+		}
 
 		//public override object[] GetObjects(Type type)
 		//{
@@ -655,64 +724,89 @@ namespace System.Data.LightDatamodel
 			//if (!m_cache.ContainsKey(tablename))
 			//    m_cache[tablename] = new SortedList<object, IDataClass>();
 
-            if (!HasLoaded(type, operation))
-			    InsertObjectsInCache(LoadObjects(type, operation));
+			if (!HasLoaded(type, operation))
+				InsertObjectsInCache(LoadObjects(type, operation));
 
 			//ArrayList items = new ArrayList((ICollection)m_cache.GetObjects(type));
 
 			//QueryModel.Operation filter = QueryModel.Parser.ParseQuery("GetType.FullName = ?", type.FullName);
 			//items.AddRange(filter.EvaluateList(m_cache.NewObjects));
 
-			return operation.EvaluateList(m_cache.GetObjects(type));
-        }
+			try
+			{
+				m_cache.Lock.AcquireReaderLock(-1);
+				return operation.EvaluateList(m_cache.GetObjects(type));
+			}
+			finally
+			{
+				m_cache.Lock.ReleaseReaderLock();
+			}
+		}
 
-        protected bool HasLoaded(Type type, QueryModel.Operation operation)
-        {
-            string eq = operation.ToString(false);
-            if (eq != null)
-            {
-                if (m_loadreducer == null) m_loadreducer = new Dictionary<Type, Dictionary<string, string>>();
-                if (!m_loadreducer.ContainsKey(type)) m_loadreducer.Add(type, new Dictionary<string, string>());
+		protected bool HasLoaded(Type type, QueryModel.Operation operation)
+		{
+			string eq = operation.ToString(false);
+			if (eq != null)
+			{
+				if (!m_loadreducer.ContainsKey(type))
+				{
+					lock (m_loadreducer)		//double lock
+					{
+						if (!m_loadreducer.ContainsKey(type)) m_loadreducer.Add(type, new Dictionary<string, string>());
+					}
+				}
 
-                if (m_loadreducer[type].ContainsKey(eq) || m_loadreducer[type].ContainsKey(""))
-                    return true;
-                else
-                {
-                    m_loadreducer[type][eq] = eq;
-                    return false;
-                }
-            }
-            else
-                return false;
-        }
+				if (m_loadreducer[type].ContainsKey(eq) || m_loadreducer[type].ContainsKey(""))
+					return true;
+				else
+				{
+					//will this need lock? Nah
+					m_loadreducer[type][eq] = eq;
+					return false;
+				}
+			}
+			else
+				return false;
+		}
 
 		/// <summary>
 		/// Discards all changes from the object, and removes it from the internal cache
 		/// </summary>
 		/// <param name="obj">The object to discard</param>
-		public override void DiscardObject(IDataClass obj)
+		public void DiscardObject(IDataClass obj)
 		{
-            //string tablename = m_mappings[obj.GetType()].Tablename;
-            
+			//string tablename = m_mappings[obj.GetType()].Tablename;
+
 			//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
 			//if ((m_relationManager != null && m_relationManager.ExistsInDb(obj)) || m_relationManager == null)
 			//if (m_cache[obj.GetType()].ContainsKey(m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)))
 			//    {
 			//        m_cache[tablename].Remove(m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
-                    m_loadreducer = null;
-				//}
+			//lock (m_loadreducer)
+			{
+				m_loadreducer.Clear();
+			}
+			//}
 
-					foreach (TypeConfiguration.MappedField index in m_mappings[obj.GetType()].IndexFields)
-					{
-						m_cache.RemoveObject(obj.GetType(), index.Databasefield, index.Field.GetValue(obj), obj);
-					}
-        
-            //if (m_relationManager != null) m_relationManager.UnregisterObject(obj);
-        }
+			try
+			{
+				m_cache.Lock.AcquireWriterLock(-1);
+				foreach (TypeConfiguration.MappedField index in m_mappings[obj.GetType()].IndexFields)
+				{
+					m_cache.RemoveObject(obj.GetType(), index.Databasefield, index.Field.GetValue(obj), obj);
+				}
+			}
+			finally
+			{
+				m_cache.Lock.ReleaseWriterLock();
+			}
+
+			//if (m_relationManager != null) m_relationManager.UnregisterObject(obj);
+		}
 
 		public DATACLASS GetObjectFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
 		{
-			DATACLASS[] ret = GetObjectsFromCache<DATACLASS>(filter, parameters);
+			DATACLASS[] ret = GetObjectsFromCache<DATACLASS>(filter, parameters);		//this has lock
 			if (ret != null && ret.Length > 0) return ret[0];
 			return default(DATACLASS);
 		}
@@ -726,12 +820,12 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
 		{
-			return GetObjectsFromCache <DATACLASS>(QueryModel.Parser.ParseQuery(filter, parameters));
+			return GetObjectsFromCache<DATACLASS>(QueryModel.Parser.ParseQuery(filter, parameters)); //this has lock
 		}
 
 		public DATACLASS GetObjectFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass
 		{
-			DATACLASS[] ret = GetObjectsFromCache < DATACLASS>(query);
+			DATACLASS[] ret = GetObjectsFromCache<DATACLASS>(query); //this has lock
 			if (ret != null && ret.Length > 0) return ret[0];
 			return default(DATACLASS);
 		}
@@ -744,95 +838,112 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass
 		{
-            object[] tmp = GetObjectsFromCache(typeof(DATACLASS), query);
-            DATACLASS[] res = new DATACLASS[tmp.Length];
-            System.Array.Copy(tmp, res, res.Length);
-            return res;
+			object[] tmp = GetObjectsFromCache(typeof(DATACLASS), query); //this has lock
+			DATACLASS[] res = new DATACLASS[tmp.Length];
+			System.Array.Copy(tmp, res, res.Length);
+			return res;
 		}
 
 		public object GetObjectFromCache(Type type, QueryModel.Operation query)
 		{
-			object[] ret = GetObjectsFromCache(type, query);
+			object[] ret = GetObjectsFromCache(type, query); //this has lock
 			if (ret != null && ret.Length > 0) return ret[0];
 			return null;
 		}
 
-		public object[] GetObjectsFromCache(Type type, QueryModel.Operation query)
+		public virtual object[] GetObjectsFromCache(Type type, QueryModel.Operation query)
 		{
 			//string tablename = m_mappings[type].Tablename;
 			//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
 
 			//List<IDataClass> allItems = new List<IDataClass>();
-			if (this as DataFetcherNested != null)
-                if (!HasLoaded(type, query))
-				    InsertObjectsInCache(LoadObjects(type, query));
+			//if (this as DataFetcherNested != null)
+			//    if (!HasLoaded(type, query))
+			//        InsertObjectsInCache(LoadObjects(type, query));
 
 			//allItems.AddRange(m_cache.GetObjects(type));
 			//foreach (DataClassBase o in m_cache.NewObjects)
 			//    if (o.GetType().IsAssignableFrom(type)) allItems.Add(o);
 
-			return query.EvaluateList(m_cache.GetObjects(type));
+
+			try
+			{
+				m_cache.Lock.AcquireReaderLock(-1);
+				return query.EvaluateList(m_cache.GetObjects(type));
+			}
+			finally
+			{
+				m_cache.Lock.ReleaseReaderLock();
+			}
 		}
 
 		public object GetObjectFromCache(Type type, string filter, params object[] parameters)
 		{
-			object[] ret = GetObjectsFromCache(type, filter, parameters);
+			object[] ret = GetObjectsFromCache(type, filter, parameters); //this has lock
 			if (ret != null && ret.Length > 0) return ret[0];
 			return null;
 		}
 
 		public object[] GetObjectsFromCache(Type type, string filter, params object[] parameters)
 		{
-			return GetObjectsFromCache(type, QueryModel.Parser.ParseQuery(filter, parameters));
+			return GetObjectsFromCache(type, QueryModel.Parser.ParseQuery(filter, parameters)); //this has lock
 		}
 
 		protected IDataClass[] InsertObjectsInCache(object[] data)
-        {
+		{
 			List<IDataClass> res = new List<IDataClass>();
 
-			foreach (IDataClass item in data)
-            {
-                IDataClass toAdd = item;
-                if (item as DataClassBase != null)
-                {
-					//string tablename = m_mappings[item.GetType()].Tablename;
-					//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
-                    DataClassBase dbitem = item as DataClassBase;
-					if (m_cache[item.GetType(), m_mappings[dbitem.GetType()].PrimaryKey.Databasefield, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] == null)
-                    {
-						QueryModel.Operation opdeleted = QueryModel.Parser.ParseQuery("GetType.FullName = ? AND UniqueValue = ?", item.GetType().FullName, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem));
-                        if (opdeleted.EvaluateList(m_cache.DeletedObjects).Length > 0) continue;
+			try
+			{
+				m_cache.Lock.AcquireWriterLock(-1);
 
-                        dbitem.m_state = ObjectStates.Default;
-                        dbitem.m_isdirty = false;
+				foreach (IDataClass item in data)
+				{
+					IDataClass toAdd = item;
+					if (item as DataClassBase != null)
+					{
+						//string tablename = m_mappings[item.GetType()].Tablename;
+						//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
+						DataClassBase dbitem = item as DataClassBase;
+						if (m_cache[item.GetType(), m_mappings[dbitem.GetType()].PrimaryKey.Databasefield, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] == null)
+						{
+							QueryModel.Operation opdeleted = QueryModel.Parser.ParseQuery("GetType.FullName = ? AND " + m_mappings[dbitem.GetType()].PrimaryKey.Property.Name + " = ?", item.GetType().FullName, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem));
+							if (opdeleted.EvaluateList(m_cache.DeletedObjects).Length > 0) continue;
 
-                        HookObject(dbitem);
+							dbitem.m_state = ObjectStates.Default;
+							dbitem.m_isdirty = false;
 
-						//if (this as DataFetcherNested == null && m_relationManager != null) m_relationManager.SetExistsInDb(dbitem, true);
-						//m_cache[tablename][m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] = dbitem;
-						m_cache[item.GetType(), m_mappings[dbitem.GetType()].PrimaryKey.Databasefield, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] = dbitem;
-                    }
-                    else
-						toAdd = item;
-                }
-                else if (item as DataClassView != null)
-                {
-					string viewname = m_mappings[item.GetType()].Tablename;
-                    (item as DataClassView).m_dataparent = this;
-					m_cache[item.GetType(), "GetHashCode", item.GetHashCode()] = (IDataClass)item;
-					toAdd = (IDataClass)item;
-                }
+							HookObject(dbitem);
 
-                //TODO: Should not fire events, when the result is cached?
-                if (toAdd != null)
-                {
-                    res.Add(toAdd);
-                    OnAfterDataConnection(toAdd, DataActions.Fetch);
-                }
+							//if (this as DataFetcherNested == null && m_relationManager != null) m_relationManager.SetExistsInDb(dbitem, true);
+							//m_cache[tablename][m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] = dbitem;
+							m_cache[item.GetType(), m_mappings[dbitem.GetType()].PrimaryKey.Databasefield, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] = dbitem;
+						}
+						else
+							toAdd = item;
+					}
+					else if (item as DataClassView != null)
+					{
+						string viewname = m_mappings[item.GetType()].Tablename;
+						(item as DataClassView).m_dataparent = this;
+						m_cache[item.GetType(), "GetHashCode", item.GetHashCode()] = (IDataClass)item;
+						toAdd = (IDataClass)item;
+					}
 
-            }
-            return res.ToArray();
-        }
+					if (toAdd != null) res.Add(toAdd);
+				}
+			}
+			finally
+			{
+				m_cache.Lock.ReleaseWriterLock();
+			}
+
+			//TODO: Should not fire events, when the result is cached?
+			foreach (object obj in res)
+				OnAfterDataConnection(obj, DataActions.Fetch);
+
+			return res.ToArray();
+		}
 
 		/// <summary>
 		/// This will delete the object ... same as RemoveObject
@@ -842,18 +953,26 @@ namespace System.Data.LightDatamodel
 		{
 			IDataClass obj = (IDataClass)item;
 			ObjectStates oldstate = obj.ObjectState;
-			//string tablename = m_mappings[item.GetType()].Tablename;
-			if (obj.ObjectState == ObjectStates.New)
+			try
 			{
-				m_cache.NewObjects.Remove(obj.GetType(), obj);
-				//if(m_relationManager != null)m_relationManager.UnregisterObject(obj);
+				m_cache.Lock.AcquireWriterLock(-1);
+				//string tablename = m_mappings[item.GetType()].Tablename;
+				if (obj.ObjectState == ObjectStates.New)
+				{
+					m_cache.NewObjects.Remove(obj.GetType(), obj);
+					//if(m_relationManager != null)m_relationManager.UnregisterObject(obj);
+				}
+				else
+				{
+					//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
+					m_cache.RemoveObject(item.GetType(), m_mappings[item.GetType()].PrimaryKey.Databasefield, m_mappings[item.GetType()].PrimaryKey.Field.GetValue(obj), obj);
+					m_cache.DeletedObjects.Add(obj);
+					(obj as DataClassBase).m_state = ObjectStates.Deleted;
+				}
 			}
-			else
+			finally
 			{
-				//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
-				m_cache.RemoveObject(item.GetType(), m_mappings[item.GetType()].PrimaryKey.Databasefield, m_mappings[item.GetType()].PrimaryKey.Field.GetValue(obj), obj);
-				m_cache.DeletedObjects.Add(obj);
-				(obj as DataClassBase).m_state = ObjectStates.Deleted;
+				m_cache.Lock.ReleaseWriterLock();
 			}
 			if (ObjectAddRemove != null) ObjectAddRemove(this, obj, oldstate, ObjectStates.Deleted);
 		}
@@ -863,17 +982,17 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="id">ID of the item</param>
 		/// <param name="type">Type of the item to delete</param>
-		public override void DeleteObject<DATACLASS>(object id) 
-		{
-            //In case someone tries to pass in the object rather than the key
-            if (id as IDataClass != null)
-                DeleteObject((IDataClass)id);
-            else
-            {
-                DATACLASS tobedeleted = GetObjectById<DATACLASS>(id);
-                if (tobedeleted != null) DeleteObject((IDataClass)tobedeleted);
-            }
-		}
+		//public override void DeleteObject<DATACLASS>(object id)
+		//{
+		//    //In case someone tries to pass in the object rather than the key
+		//    if (id as IDataClass != null)
+		//        DeleteObject((IDataClass)id);		//this has lock
+		//    else
+		//    {
+		//        DATACLASS tobedeleted = GetObjectById<DATACLASS>(id);		//this has lock
+		//        if (tobedeleted != null) DeleteObject((IDataClass)tobedeleted);		//this has lock
+		//    }
+		//}
 
 		/// <summary>
 		/// Gets an object by its Guid
@@ -917,27 +1036,36 @@ namespace System.Data.LightDatamodel
 			if (GetDataClassLevel(type) < DataClassLevels.Base) throw new Exception("This object cannot be fetched by primary key. Use GetObjects instead");
 
 			//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
-			if (m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id] == null)
+			if (m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id] == null)		//will these need locks?
 			{
 				QueryModel.Operation op = QueryModel.Parser.ParseQuery(m_mappings[type].PrimaryKey.Databasefield + "=?", id);
 				if (!HasLoaded(type, op))
 				{
 					object[] items = LoadObjects(type, op);
-					if (items != null && items.Length != 0)	InsertObjectsInCache(items);
+					if (items != null && items.Length != 0) InsertObjectsInCache(items);
 				}
 			}
 
-			if(m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id] != null)
-				return m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id];
+			if (m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id] != null)		//will these need locks?
+				return m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id];	//will these need locks?
 			else
 			{
-                //There is no point in returning this if the ID is incorrect ... why is the ID incorrect if it's auto generated? if it's a negative random int, it has 99.99999995% chance to be unique
+				//There is no point in returning this if the ID is incorrect ... why is the ID incorrect if it's auto generated? if it's a negative random int, it has 99.99999995% chance to be unique
 				//if (m_relationManager != null && m_transformer.TypeConfiguration.GetTypeInfo(type).PrimaryKey.IsAutoGenerated)
 				//    return null;
 
 				QueryModel.Operation filter = QueryModel.Parser.ParseQuery(m_mappings[type].PrimaryKey.Databasefield + "=?", id);
-				IList lst = filter.EvaluateList(m_cache.NewObjects.Items[type]);
-				if (lst.Count == 1)
+				IList lst = null;
+				try
+				{
+					m_cache.Lock.AcquireReaderLock(-1);
+					lst = filter.EvaluateList(m_cache.NewObjects.Items[type]);
+				}
+				finally
+				{
+					m_cache.Lock.ReleaseReaderLock();
+				}
+				if (lst != null && lst.Count == 1)
 					return lst[0];
 				else
 					return null;
@@ -973,16 +1101,25 @@ namespace System.Data.LightDatamodel
 		/// <param name="newobj"></param>
 		public override IDataClass Add(IDataClass newobj)
 		{
-            (newobj as DataClassBase).m_state = ObjectStates.New;
-			m_cache.NewObjects.Add(newobj.GetType(), newobj);
+			(newobj as DataClassBase).m_state = ObjectStates.New;
+			try
+			{
+				m_cache.Lock.AcquireWriterLock(-1);
+				m_cache.NewObjects.Add(newobj.GetType(), newobj);
+			}
+			finally
+			{
+				m_cache.Lock.ReleaseWriterLock();
+			}
+
 			//if (m_relationManager != null && !m_relationManager.IsRegistered(newobj))
 			//{
 			//    m_relationManager.RegisterObject(newobj);
 			//    m_relationManager.SetExistsInDb(newobj, false);
 			//}
-            HookObject(newobj);
+			HookObject(newobj);
 			if (ObjectAddRemove != null) ObjectAddRemove(this, newobj, ObjectStates.New, ObjectStates.New);
-            return newobj;
+			return newobj;
 		}
 
 		/// <summary>
@@ -1051,67 +1188,104 @@ namespace System.Data.LightDatamodel
 		//    //m_cache[tablename][m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)] = obj;
 		//}
 
-		public override void Commit(IDataClass obj)
+		public override void Commit(IDataClass obj, bool refreshobject)
 		{
 			//string tablename = m_mappings[obj.GetType()].Tablename;
 
 			//new object?
 			if ((obj as DataClassBase).m_dataparent == null) Add(obj);
 
-			//sql
-			if (obj.ObjectState == ObjectStates.Default)
+			try
 			{
-				//TODO: WHY?
-				//if ((m_relationManager != null && m_relationManager.ExistsInDb(obj)) || !m_transformer.TypeConfiguration.IsPrimaryKeyAutoGenerated(obj))
-					base.Commit(obj);
-			}
-			else if (obj.ObjectState == ObjectStates.New)
-			{
-				base.Commit(obj);		//TODO: Beware of the events
-				m_cache.NewObjects.Remove(obj.GetType(), obj);
+				m_transactionlock.AcquireReaderLock(-1);		//we can run this function (Commit) in multiple threads
 
-				//if ((m_relationManager != null && m_relationManager.ExistsInDb(obj)) || !m_transformer.TypeConfiguration.IsPrimaryKeyAutoGenerated(obj))
-				//if ((m_relationManager != null && m_relationManager.ExistsInDb(obj)) || m_relationManager == null)
+				//sql
+				if (obj.ObjectState == ObjectStates.Default)
 				{
+					//TODO: WHY?
+					//if ((m_relationManager != null && m_relationManager.ExistsInDb(obj)) || !m_transformer.TypeConfiguration.IsPrimaryKeyAutoGenerated(obj))
+					base.Commit(obj, refreshobject);
+				}
+				else if (obj.ObjectState == ObjectStates.New)
+				{
+					base.Commit(obj, refreshobject);		//TODO: Beware of the events
+					try
+					{
+						m_cache.Lock.AcquireWriterLock(-1);
+						m_cache.NewObjects.Remove(obj.GetType(), obj);
+						m_cache[obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Databasefield, m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)] = obj;
+					}
+					finally
+					{
+						m_cache.Lock.ReleaseWriterLock();
+					}
+
+					//if ((m_relationManager != null && m_relationManager.ExistsInDb(obj)) || !m_transformer.TypeConfiguration.IsPrimaryKeyAutoGenerated(obj))
+					//if ((m_relationManager != null && m_relationManager.ExistsInDb(obj)) || m_relationManager == null)
+					{
+						//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
+						//m_cache[obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Databasefield, m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)] = obj;
+						//m_cache[tablename][m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)] = obj;
+					}
+				}
+				else if (obj.ObjectState == ObjectStates.Deleted)
+				{
+					base.Commit(obj, refreshobject); //TODO: Beware of the events
+					try
+					{
+						m_cache.Lock.AcquireWriterLock(-1);
+						m_cache.DeletedObjects.Remove(obj);
+					}
+					finally
+					{
+						m_cache.Lock.ReleaseWriterLock();
+					}
+					//if (m_relationManager != null && m_relationManager.IsRegistered(obj)) m_relationManager.DeleteObject(obj);
 					//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
-					m_cache[obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Databasefield, m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)] = obj;
-					//m_cache[tablename][m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)] = obj;
+					//m_cache[tablename].Remove(m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
+					//m_cache.RemoveObject(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Databasefield, m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj), obj);
 				}
 			}
-			else if (obj.ObjectState == ObjectStates.Deleted)
+			finally
 			{
-				base.Commit(obj); //TODO: Beware of the events
-				m_cache.DeletedObjects.Remove(obj);
-                //if (m_relationManager != null && m_relationManager.IsRegistered(obj)) m_relationManager.DeleteObject(obj);
-				//if (!m_cache.ContainsKey(tablename)) m_cache.Add(tablename, new SortedList<object, IDataClass>());
-				//m_cache[tablename].Remove(m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
-				//m_cache.RemoveObject(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Databasefield, m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj), obj);
+				m_transactionlock.ReleaseReaderLock();
 			}
 		}
 
-        /// <summary>
-        /// Clears the cache, and removes all non-modified items 
-        /// </summary>
-        public void ClearCache()
-        {
-            m_loadreducer = null;
-			m_cache.ClearAllUnchanged();
-        }
+		/// <summary>
+		/// Clears the cache, and removes all non-modified items 
+		/// </summary>
+		public void ClearCache()
+		{
+			//lock (m_loadreducer)
+			{
+				m_loadreducer.Clear();
+			}
+			try
+			{
+				m_cache.Lock.AcquireWriterLock(-1);
+				m_cache.ClearAllUnchanged();
+			}
+			finally
+			{
+				m_cache.Lock.ReleaseWriterLock();
+			}
+		}
 
-        /*public virtual void CommitAllRecursive()
-        {
-            List<IDataClass> added, deleted, modified;
-            GetDirty(added, updated, deleted);
-        }*/
+		/*public virtual void CommitAllRecursive()
+		{
+			List<IDataClass> added, deleted, modified;
+			GetDirty(added, updated, deleted);
+		}*/
 
-        public override void Dispose()
-        {
-            base.Dispose();
+		public override void Dispose()
+		{
+			base.Dispose();
 			m_cache.Dispose();
-		    m_cache = null;
-            //m_relationManager = null;
-            m_loadreducer = null;
-        }
+			m_cache = null;
+			//m_relationManager = null;
+			m_loadreducer = null;
+		}
 
 	}
 

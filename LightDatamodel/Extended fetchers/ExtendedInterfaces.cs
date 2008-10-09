@@ -42,6 +42,7 @@ namespace System.Data.LightDatamodel
 		bool IsDirty { get; }
 		void ClearCache();
 		void CommitAll();
+		void DiscardObject(IDataClass obj);
 	}
 
 	/// <summary>
