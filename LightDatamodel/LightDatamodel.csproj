@@ -1,4 +1,4 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
@@ -95,12 +95,14 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Extended fetchers\DataFetcherThreadSafe.cs" />
+    <Compile Include="Extended fetchers\DataFetcherWithRelations.cs" />
     <Compile Include="Extended fetchers\ExtendedInterfaces.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Extended fetchers\DataFetcherNested.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extended fetchers\MultiDictionary.cs" />
     <Compile Include="Extended fetchers\QueryModel.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -130,8 +132,6 @@
     </Compile>
     <Compile Include="RelationManager\GenericListWrapper.cs" />
     <Compile Include="RelationManager\GuidProxyCollection.cs" />
-    <Compile Include="RelationManager\RelationManager.cs" />
-    <Compile Include="RelationManager\RelationManagerConfig.cs" />
     <Compile Include="RelationManager\RelationManagerThreadSafe.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

@@ -25,13 +25,13 @@ namespace System.Data.LightDatamodel
 {
     public class GuidProxyCollection : IList<IDataClass>
     {
-        private RelationManager m_manager;
+        private DataFetcherWithRelations m_manager;
         private List<Guid> m_list;
         private Guid m_owner;
         private Type m_ownerType;
         private string m_relationKey;
 
-        public GuidProxyCollection(RelationManager manager, string relationKey, List<Guid> list, Type ownerType, Guid owner)
+		public GuidProxyCollection(DataFetcherWithRelations manager, string relationKey, List<Guid> list, Type ownerType, Guid owner)
         {
             m_relationKey = relationKey;
             m_list = list;
@@ -66,7 +66,7 @@ namespace System.Data.LightDatamodel
                 else
                 {
                     IDataClass ic = m_manager.GetObjectByGuid(m_owner);
-                    return (IDataClass)((IDataFetcherCached)ic.DataParent).GetObjectByGuid(m_list[index]);
+                    return (IDataClass)((DataFetcherWithRelations)ic.DataParent).GetObjectByGuid(m_list[index]);
                 }
             }
             set

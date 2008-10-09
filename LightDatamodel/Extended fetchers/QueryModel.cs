@@ -583,6 +583,7 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// <returns>A filtered list with only the matching items</returns>
 		public virtual object[] EvaluateList(IEnumerable items, params object[] parameters)
 		{
+			if (items == null) return new object[0];
 			ArrayList lst = new ArrayList();
 			foreach(object o in items)
 				if (ResAsBool(this.Evaluate(o, parameters)))

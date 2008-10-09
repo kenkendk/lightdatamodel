@@ -27,282 +27,309 @@ namespace System.Data.LightDatamodel
     /// This class is a wrapper class for a datafetcher.
     /// It is protected by a lock, so that all operations can be called from threads.
     /// </summary>
-    public class DataFetcherThreadSafe : IDataFetcherCached
-    {
-        private object m_lock;
-        private IDataFetcherCached m_basefetcher;
-        private IRelationManager m_manager;
+	//public class DataFetcherThreadSafe : IDataFetcherCached
+	//{
+	//    private object m_lock;
+	//    private IDataFetcherCached m_basefetcher;
+	//    private RelationManager m_manager;
+	//    protected TypeConfiguration m_mappings;
 
-        public DataFetcherThreadSafe(IDataFetcherCached basefetcher)
-            : this(new object(), basefetcher)
-        {
-        }
-        public DataFetcherThreadSafe(object @lock, IDataFetcherCached basefetcher)
-        {
-            m_lock = @lock;
-            m_basefetcher = basefetcher;
-            m_manager = new RelationManagerThreadSafe(m_lock, m_basefetcher.RelationManager);
+	//    public TypeConfiguration Mappings { get { return m_mappings; } }
 
-            m_basefetcher.AfterDataChange += new DataChangeEventHandler(m_basefetcher_AfterDataChange);
-            m_basefetcher.AfterDataConnection += new DataConnectionEventHandler(m_basefetcher_AfterDataConnection);
-            m_basefetcher.BeforeDataChange += new DataChangeEventHandler(m_basefetcher_BeforeDataChange);
-            m_basefetcher.BeforeDataConnection += new DataConnectionEventHandler(m_basefetcher_BeforeDataConnection);
-            m_basefetcher.ObjectAddRemove += new ObjectStateChangeHandler(m_basefetcher_ObjectAddRemove);
-        }
+	//    public DataFetcherThreadSafe(IDataFetcherCached basefetcher)
+	//        : this(new object(), basefetcher)
+	//    {
+	//    }
+	//    public DataFetcherThreadSafe(object @lock, IDataFetcherCached basefetcher)
+	//    {
+	//        m_lock = @lock;
+	//        m_basefetcher = basefetcher;
+	//        m_manager = new RelationManagerThreadSafe(m_lock, m_basefetcher.RelationManager);
 
-        public object Lock { get { return m_lock; } }
+	//        m_basefetcher.AfterDataChange += new DataChangeEventHandler(m_basefetcher_AfterDataChange);
+	//        m_basefetcher.AfterDataConnection += new DataConnectionEventHandler(m_basefetcher_AfterDataConnection);
+	//        m_basefetcher.BeforeDataChange += new DataChangeEventHandler(m_basefetcher_BeforeDataChange);
+	//        m_basefetcher.BeforeDataConnection += new DataConnectionEventHandler(m_basefetcher_BeforeDataConnection);
+	//        m_basefetcher.ObjectAddRemove += new ObjectStateChangeHandler(m_basefetcher_ObjectAddRemove);
+	//    }
 
-        void m_basefetcher_ObjectAddRemove(object sender, IDataClass obj, ObjectStates oldstate, ObjectStates newstate)
-        {
-            lock (m_lock)
-                if (ObjectAddRemove != null)
-                    ObjectAddRemove(sender, obj, oldstate, newstate);
-        }
+	//    public object Lock { get { return m_lock; } }
 
-        void m_basefetcher_BeforeDataConnection(object sender, DataActions action)
-        {
-            lock (m_lock)
-                if (BeforeDataConnection != null)
-                    BeforeDataConnection(sender, action);
-        }
+	//    void m_basefetcher_ObjectAddRemove(object sender, IDataClass obj, ObjectStates oldstate, ObjectStates newstate)
+	//    {
+	//        lock (m_lock)
+	//            if (ObjectAddRemove != null)
+	//                ObjectAddRemove(sender, obj, oldstate, newstate);
+	//    }
 
-        void m_basefetcher_BeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
-        {
-            lock (m_lock)
-                if (BeforeDataChange != null)
-                    BeforeDataChange(sender, propertyname, oldvalue, newvalue);
-        }
+	//    void m_basefetcher_BeforeDataConnection(object sender, DataActions action)
+	//    {
+	//        lock (m_lock)
+	//            if (BeforeDataConnection != null)
+	//                BeforeDataConnection(sender, action);
+	//    }
 
-        void m_basefetcher_AfterDataConnection(object sender, DataActions action)
-        {
-            lock (m_lock)
-                if (AfterDataConnection != null)
-                    AfterDataConnection(sender, action);
-        }
+	//    void m_basefetcher_BeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
+	//    {
+	//        lock (m_lock)
+	//            if (BeforeDataChange != null)
+	//                BeforeDataChange(sender, propertyname, oldvalue, newvalue);
+	//    }
 
-        void m_basefetcher_AfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
-        {
-            lock (m_lock)
-                if (AfterDataChange != null)
-                    AfterDataChange(sender, propertyname, oldvalue, newvalue);
-        }
+	//    void m_basefetcher_AfterDataConnection(object sender, DataActions action)
+	//    {
+	//        lock (m_lock)
+	//            if (AfterDataConnection != null)
+	//                AfterDataConnection(sender, action);
+	//    }
 
-        #region IDataFetcherCached Members
+	//    void m_basefetcher_AfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
+	//    {
+	//        lock (m_lock)
+	//            if (AfterDataChange != null)
+	//                AfterDataChange(sender, propertyname, oldvalue, newvalue);
+	//    }
 
-        public event ObjectStateChangeHandler ObjectAddRemove;
+	//    #region IDataFetcherCached Members
 
-        public DATACLASS GetObjectByGuid<DATACLASS>(Guid guid) where DATACLASS : IDataClass
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjectByGuid<DATACLASS>(guid);
-        }
+	//    public event ObjectStateChangeHandler ObjectAddRemove;
 
-        public object GetObjectByGuid(Guid guid)
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjectByGuid(guid);
-        }
+	//    public DATACLASS GetObjectByGuid<DATACLASS>(Guid guid) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectByGuid<DATACLASS>(guid);
+	//    }
 
-        public object[] GetObjectsFromCache(Type type, System.Data.LightDatamodel.QueryModel.Operation query)
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjectsFromCache(type, query);
-        }
+	//    public object GetObjectByGuid(Guid guid)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectByGuid(guid);
+	//    }
 
-        public object[] GetObjectsFromCache(Type type, string filter, params object[] parameters)
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjectsFromCache(type, filter, parameters);
-        }
+	//    public object[] GetObjectsFromCache(Type type, System.Data.LightDatamodel.QueryModel.Operation query)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectsFromCache(type, query);
+	//    }
 
-        public DATACLASS[] GetObjectsFromCache<DATACLASS>(System.Data.LightDatamodel.QueryModel.Operation query) where DATACLASS : IDataClass
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjectsFromCache<DATACLASS>(query);
-        }
+	//    public object[] GetObjectsFromCache(Type type, string filter, params object[] parameters)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectsFromCache(type, filter, parameters);
+	//    }
 
-        public DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjectsFromCache<DATACLASS>(filter, parameters);
-        }
+	//    public DATACLASS[] GetObjectsFromCache<DATACLASS>(System.Data.LightDatamodel.QueryModel.Operation query) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectsFromCache<DATACLASS>(query);
+	//    }
 
-        public IRelationManager RelationManager
-        {
-            get { return m_manager; }
-        }
+	//    public DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectsFromCache<DATACLASS>(filter, parameters);
+	//    }
 
-        public bool IsDirty
-        {
-            get 
-            {
-                lock (m_lock)
-                    return m_basefetcher.IsDirty;
-            }
-        }
+	//    public object GetObjectFromCache(Type type, System.Data.LightDatamodel.QueryModel.Operation query)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectFromCache(type, query);
+	//    }
 
-        public void DiscardObject(IDataClass obj)
-        {
-            lock (m_lock)
-                m_basefetcher.DiscardObject(obj);
-        }
+	//    public object GetObjectFromCache(Type type, string filter, params object[] parameters)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectFromCache(type, filter, parameters);
+	//    }
 
-        #endregion
+	//    public DATACLASS GetObjectFromCache<DATACLASS>(System.Data.LightDatamodel.QueryModel.Operation query) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectFromCache<DATACLASS>(query);
+	//    }
 
-        #region IDataFetcher Members
+	//    public DATACLASS GetObjectFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectFromCache<DATACLASS>(filter, parameters);
+	//    }
 
-        public event DataChangeEventHandler BeforeDataChange;
+	//    public RelationManager RelationManager
+	//    {
+	//        get { return m_manager; }
+	//    }
 
-        public event DataChangeEventHandler AfterDataChange;
+	//    public bool IsDirty
+	//    {
+	//        get 
+	//        {
+	//            lock (m_lock)
+	//                return m_basefetcher.IsDirty;
+	//        }
+	//    }
 
-        public event DataConnectionEventHandler BeforeDataConnection;
+	//    public void DiscardObject(IDataClass obj)
+	//    {
+	//        lock (m_lock)
+	//            m_basefetcher.DiscardObject(obj);
+	//    }
 
-        public event DataConnectionEventHandler AfterDataConnection;
+	//    #endregion
 
-        public DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
-        {
-            lock (m_lock) 
-                return m_basefetcher.GetObjects<DATACLASS>(filter, parameters);
-        }
+	//    #region IDataFetcher Members
 
-        public DATACLASS[] GetObjects<DATACLASS>() where DATACLASS : IDataClass
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjects<DATACLASS>();
-        }
+	//    public event DataChangeEventHandler BeforeDataChange;
 
-        public DATACLASS[] GetObjects<DATACLASS>(System.Data.LightDatamodel.QueryModel.Operation operation) where DATACLASS : IDataClass
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjects<DATACLASS>(operation);
-        }
+	//    public event DataChangeEventHandler AfterDataChange;
 
-        public object[] GetObjects(Type type)
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjects(type);
-        }
+	//    public event DataConnectionEventHandler BeforeDataConnection;
 
-        public object[] GetObjects(Type type, string filter, params object[] parameters)
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjects(type, filter, parameters);
-        }
+	//    public event DataConnectionEventHandler AfterDataConnection;
 
-        public object[] GetObjects(Type type, System.Data.LightDatamodel.QueryModel.Operation operation)
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjects(type, operation);
-        }
+	//    public DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock) 
+	//            return m_basefetcher.GetObjects<DATACLASS>(filter, parameters);
+	//    }
 
-        public DATACLASS GetObject<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObject<DATACLASS>(filter, parameters);
-        }
+	//    public DATACLASS[] GetObjects<DATACLASS>() where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjects<DATACLASS>();
+	//    }
 
-        public DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjectById<DATACLASS>(id);
-        }
+	//    public DATACLASS[] GetObjects<DATACLASS>(System.Data.LightDatamodel.QueryModel.Operation operation) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjects<DATACLASS>(operation);
+	//    }
 
-        public object GetObjectById(Type type, object id)
-        {
-            lock (m_lock)
-                return m_basefetcher.GetObjectById(type, id);
-        }
+	//    public object[] GetObjects(Type type)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjects(type);
+	//    }
 
-        public void Commit(IDataClass obj)
-        {
-            lock (m_lock)
-                m_basefetcher.Commit(obj);
-        }
+	//    public object[] GetObjects(Type type, string filter, params object[] parameters)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjects(type, filter, parameters);
+	//    }
 
-        public void CommitAll()
-        {
-            lock (m_lock)
-                m_basefetcher.CommitAll();
-        }
+	//    public object[] GetObjects(Type type, System.Data.LightDatamodel.QueryModel.Operation operation)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjects(type, operation);
+	//    }
 
-        public DATACLASS Add<DATACLASS>() where DATACLASS : IDataClass
-        {
-            lock (m_lock)
-                return m_basefetcher.Add<DATACLASS>();
-        }
+	//    public DATACLASS GetObject<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObject<DATACLASS>(filter, parameters);
+	//    }
 
-        public object Add(Type type)
-        {
-            lock (m_lock)
-                return m_basefetcher.Add(type);
-        }
+	//    public DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectById<DATACLASS>(id);
+	//    }
 
-        public IDataClass Add(IDataClass newobj)
-        {
-            lock (m_lock)
-                return m_basefetcher.Add(newobj);
-        }
+	//    public object GetObjectById(Type type, object id)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.GetObjectById(type, id);
+	//    }
 
-        public IDataProvider Provider
-        {
-            get { return m_basefetcher.Provider; }
-        }
+	//    public void Commit(IDataClass obj)
+	//    {
+	//        lock (m_lock)
+	//            m_basefetcher.Commit(obj);
+	//    }
 
-        public IObjectTransformer ObjectTransformer
-        {
-            get { return m_basefetcher.ObjectTransformer; }
-        }
+	//    public void CommitAll()
+	//    {
+	//        lock (m_lock)
+	//            m_basefetcher.CommitAll();
+	//    }
 
-        public RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter)
-        {
-            lock (m_lock)
-                return m_basefetcher.Compute<RETURNVALUE, DATACLASS>(expression, filter);
-        }
+	//    public DATACLASS Add<DATACLASS>() where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.Add<DATACLASS>();
+	//    }
 
-        public void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass
-        {
-            lock (m_lock)
-                m_basefetcher.DeleteObject<DATACLASS>(id);
-        }
+	//    public object Add(Type type)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.Add(type);
+	//    }
 
-        public void DeleteObject(object item)
-        {
-            lock (m_lock)
-                m_basefetcher.DeleteObject(item);
-        }
+	//    public IDataClass Add(IDataClass newobj)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.Add(newobj);
+	//    }
 
-        public void RefreshObject(IDataClass obj)
-        {
-            lock (m_lock)
-                m_basefetcher.RefreshObject(obj);
-        }
+	//    public IDataProvider Provider
+	//    {
+	//        get { return m_basefetcher.Provider; }
+	//    }
 
-        public void ClearCache()
-        {
-            lock (m_lock)
-                m_basefetcher.ClearCache();
-        }
+	//    //public IObjectTransformer ObjectTransformer
+	//    //{
+	//    //    get { return m_basefetcher.ObjectTransformer; }
+	//    //}
 
-        #endregion
+	//    public RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter)
+	//    {
+	//        lock (m_lock)
+	//            return m_basefetcher.Compute<RETURNVALUE, DATACLASS>(expression, filter);
+	//    }
 
-        #region IDisposable Members
+	//    public void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass
+	//    {
+	//        lock (m_lock)
+	//            m_basefetcher.DeleteObject<DATACLASS>(id);
+	//    }
 
-        public void Dispose()
-        {
-            lock (m_lock)
-                if (m_basefetcher != null)
-                {
-                    m_basefetcher.AfterDataChange -= new DataChangeEventHandler(m_basefetcher_AfterDataChange);
-                    m_basefetcher.AfterDataConnection -= new DataConnectionEventHandler(m_basefetcher_AfterDataConnection);
-                    m_basefetcher.BeforeDataChange -= new DataChangeEventHandler(m_basefetcher_BeforeDataChange);
-                    m_basefetcher.BeforeDataConnection -= new DataConnectionEventHandler(m_basefetcher_BeforeDataConnection);
-                    m_basefetcher.ObjectAddRemove -= new ObjectStateChangeHandler(m_basefetcher_ObjectAddRemove);
+	//    public void DeleteObject(object item)
+	//    {
+	//        lock (m_lock)
+	//            m_basefetcher.DeleteObject(item);
+	//    }
 
-                    m_basefetcher.Dispose();
-                    m_basefetcher = null;
-                }
-        }
+	//    public void RefreshObject(IDataClass obj)
+	//    {
+	//        lock (m_lock)
+	//            m_basefetcher.RefreshObject(obj);
+	//    }
 
-        #endregion
-    }
+	//    public void ClearCache()
+	//    {
+	//        lock (m_lock)
+	//            m_basefetcher.ClearCache();
+	//    }
+
+	//    #endregion
+
+	//    #region IDisposable Members
+
+	//    public void Dispose()
+	//    {
+	//        lock (m_lock)
+	//            if (m_basefetcher != null)
+	//            {
+	//                m_basefetcher.AfterDataChange -= new DataChangeEventHandler(m_basefetcher_AfterDataChange);
+	//                m_basefetcher.AfterDataConnection -= new DataConnectionEventHandler(m_basefetcher_AfterDataConnection);
+	//                m_basefetcher.BeforeDataChange -= new DataChangeEventHandler(m_basefetcher_BeforeDataChange);
+	//                m_basefetcher.BeforeDataConnection -= new DataConnectionEventHandler(m_basefetcher_BeforeDataConnection);
+	//                m_basefetcher.ObjectAddRemove -= new ObjectStateChangeHandler(m_basefetcher_ObjectAddRemove);
+
+	//                m_basefetcher.Dispose();
+	//                m_basefetcher = null;
+	//            }
+	//    }
+
+	//    #endregion
+	//}
 }

@@ -54,7 +54,8 @@ namespace System.Data.LightDatamodel
 		void CommitTransaction(Guid id);
 		void RollbackTransaction(Guid id);
 		void Close();
-		IObjectTransformer Transformer { get; set; }
+		//IObjectTransformer Transformer { get; set; }
+		IDataFetcher Parent { get; set;}
 	}
 
 	/// <summary>

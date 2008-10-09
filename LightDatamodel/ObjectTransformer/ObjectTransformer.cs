@@ -27,11 +27,11 @@ namespace System.Data.LightDatamodel
 	/// <summary>
 	/// Will aid in transforming datareaders to objects and back
 	/// </summary>
-	public class ObjectTransformer : IObjectTransformer
+	public class ObjectTransformer
 	{
-		private TypeConfiguration m_configuration = new TypeConfiguration();
+		//private TypeConfiguration m_configuration = new TypeConfiguration();
 
-        public TypeConfiguration TypeConfiguration { get { return m_configuration; } }
+		//public TypeConfiguration TypeConfiguration { get { return m_configuration; } }
 
         /// <summary>
         /// Creates a new copy of the given item
@@ -39,7 +39,7 @@ namespace System.Data.LightDatamodel
         /// <typeparam name="DATACLASS">The type of object to work on</typeparam>
         /// <param name="source">The source object</param>
         /// <returns>A fresh copy</returns>
-        public DATACLASS CreateCopy<DATACLASS>(DATACLASS source)
+        public static DATACLASS CreateCopy<DATACLASS>(DATACLASS source)
         {
             return (DATACLASS)CreateCopy(source);
         }
@@ -49,7 +49,7 @@ namespace System.Data.LightDatamodel
         /// </summary>
         /// <param name="source">The source object</param>
         /// <returns>A fresh copy</returns>
-        public object CreateCopy(object source)
+        public static object CreateCopy(object source)
         {
             object target = Activator.CreateInstance(source.GetType());
             CopyObject(source, target);
@@ -61,21 +61,21 @@ namespace System.Data.LightDatamodel
         /// </summary>
         /// <param name="source">The object to copy from</param>
         /// <param name="target">The object to copy to</param>
-        public void CopyObject(object source, object target)
+        public static void CopyObject(object source, object target)
         {
 			if (source == null || target == null) throw new ArgumentNullException("source and target can't be null");
             if (target.GetType() != source.GetType()) throw new Exception("Objects must be of same type");
 
-            FieldInfo[] fields = m_configuration.GetFields(source.GetType());
+			FieldInfo[] fields = source.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly); ;
             foreach (FieldInfo fi in fields)
                 fi.SetValue(target, fi.GetValue(source));
 
-            IRelationManager sourceManager = null;
-            IRelationManager targetManager = null;
+			DataFetcherWithRelations sourceManager = null;
+			DataFetcherWithRelations targetManager = null;
 
             //take care of relations
-            if (source as IDataClass != null) sourceManager = ((IDataClass)source).RelationManager;
-            if (target as IDataClass != null) targetManager = ((IDataClass)target).RelationManager;
+			if (source as IDataClass != null) sourceManager = (((IDataClass)source).DataParent as DataFetcherWithRelations) != null ? (((IDataClass)source).DataParent as DataFetcherWithRelations) : null;
+			if (target as IDataClass != null) targetManager = (((IDataClass)source).DataParent as DataFetcherWithRelations) != null ? (((IDataClass)target).DataParent as DataFetcherWithRelations) : null; 
             if (sourceManager != null && targetManager != null)
             {
                 if (targetManager.IsRegistered(target as IDataClass)) targetManager.ReassignGuid(targetManager.GetGuidForObject(target as IDataClass), sourceManager.GetGuidForObject(source as IDataClass));
@@ -92,15 +92,15 @@ namespace System.Data.LightDatamodel
         /// <param name="obj"></param>
         /// <param name="data"></param>
         /// <returns>The item populated</returns>
-        public object PopulateDataClass(object obj, IDataReader reader, IDataProvider provider)
+        public static object PopulateDataClass(object obj, IDataReader reader, IDataProvider provider)
         {
-            TypeConfiguration.MappedClass typeinfo = m_configuration.GetTypeInfo(obj);
+			TypeConfiguration.MappedClass typeinfo = provider.Parent.Mappings[obj.GetType()];
             //This iteration model will enable the "forward only" type readers
             for (int i = 0; i < reader.FieldCount; i++)
             {
                 try
                 {
-                    TypeConfiguration.MappedField mf = typeinfo.GetColumn(reader.GetName(i));
+                    TypeConfiguration.MappedField mf = typeinfo[reader.GetName(i)];
                     if (mf != null && !mf.IgnoreWithSelect)
                     {
                         object value = reader.GetValue(i);
@@ -116,26 +116,26 @@ namespace System.Data.LightDatamodel
             return obj;
         }
 
-        public object[] TransformToObjects(Type type, IDataReader reader, IDataProvider provider)
+        public static object[] TransformToObjects(Type type, IDataReader reader, IDataProvider provider)
         {
             List<object> items = new List<object>();
             while (reader.Read())
             {
                 object newobj = Activator.CreateInstance(type);
-                this.PopulateDataClass(newobj, reader, provider);
+				ObjectTransformer.PopulateDataClass(newobj, reader, provider);
                 items.Add(newobj);
             }
 
             return items.ToArray();
         }
 
-        public DATACLASS[] TransformToObjects<DATACLASS>(IDataReader reader, IDataProvider provider)
+        public static DATACLASS[] TransformToObjects<DATACLASS>(IDataReader reader, IDataProvider provider)
         {
             List<DATACLASS> items = new List<DATACLASS>();
             while (reader.Read())
             {
                 DATACLASS newobj = Activator.CreateInstance<DATACLASS>();
-                this.PopulateDataClass(newobj, reader, provider);
+				ObjectTransformer.PopulateDataClass(newobj, reader, provider);
                 items.Add(newobj);
             }
 

@@ -131,9 +131,9 @@ namespace System.Data.LightDatamodel
 
         #endregion
 
+#pragma warning disable 693
         private class Enumerator<Tx> : IEnumerator<Tx> where Tx : Ty
         {
-
             IEnumerator<Ty> m_enm;
             public Enumerator(IEnumerator<Ty> enm)
             {
@@ -177,5 +177,6 @@ namespace System.Data.LightDatamodel
 
             #endregion
         }
+#pragma warning restore 693
     }
 }

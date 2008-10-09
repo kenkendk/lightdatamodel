@@ -29,7 +29,8 @@ namespace System.Data.LightDatamodel
 	public abstract class GenericDataProvider : IDataProvider
 	{
 		protected IDbConnection m_connection;
-        protected IObjectTransformer m_transformer;
+        //protected IObjectTransformer m_transformer;
+		protected IDataFetcher m_parent;
 
 		public IDbConnection Connection
 		{
@@ -37,11 +38,17 @@ namespace System.Data.LightDatamodel
 			set { m_connection = value; }
 		}
 
-        public IObjectTransformer Transformer
-        {
-            get { return m_transformer; }
-            set { m_transformer = value; }
-        }
+		//public IObjectTransformer Transformer
+		//{
+		//    get { return m_transformer; }
+		//    set { m_transformer = value; }
+		//}
+
+		public IDataFetcher Parent
+		{
+			get { return m_parent; }
+			set { m_parent = value; }
+		}
 
         private class SQLFilterBuilder : QueryModel.OperationOrParameter
         {
@@ -149,7 +156,7 @@ namespace System.Data.LightDatamodel
             {
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
                 sb.Append("DELETE FROM ");
-                sb.Append(QuoteTablename(typeinfo.TableName));
+                sb.Append(QuoteTablename(typeinfo.Tablename));
                 m_cachedDelete[typeinfo.Type] = sb.ToString();
             }
 
@@ -166,16 +173,16 @@ namespace System.Data.LightDatamodel
             if (!m_identityWhere.ContainsKey(typeinfo.Type))
             {
                 if (typeinfo.PrimaryKey == null)
-                    throw new Exception("Cannot delete row from table \"" + typeinfo.TableName + "\" because the table has no primary key");
+                    throw new Exception("Cannot delete row from table \"" + typeinfo.Tablename + "\" because the table has no primary key");
 
                 //Dummy parameter holder
                 IDbCommand cmd = m_connection.CreateCommand();
 
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
                 sb.Append(" WHERE ");
-                sb.Append(QuoteColumnname(typeinfo.UniqueColumn));
+                sb.Append(QuoteColumnname(typeinfo.PrimaryKey.Databasefield));
                 sb.Append("=");
-				sb.Append(AddParameter(cmd, "where" + typeinfo.UniqueColumn, ""));
+				sb.Append(AddParameter(cmd, "where" + typeinfo.PrimaryKey.Databasefield, ""));
                 m_identityWhere[typeinfo.Type] = sb.ToString();
             }
 
@@ -196,15 +203,15 @@ namespace System.Data.LightDatamodel
 
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
                 sb.Append("SELECT ");
-                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+                foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
                     if (!mf.IgnoreWithSelect)
                     {
-                        sb.Append(QuoteColumnname(mf.ColumnName));
+                        sb.Append(QuoteColumnname(mf.Databasefield));
                         sb.Append(",");
                     }
                 sb.Length--;
                 sb.Append(" FROM ");
-                sb.Append(QuoteTablename(typeinfo.TableName));
+                sb.Append(QuoteTablename(typeinfo.Tablename));
                 m_cachedSelect[typeinfo.Type] = sb.ToString();
             }
 
@@ -257,14 +264,14 @@ namespace System.Data.LightDatamodel
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
                 System.Text.StringBuilder sb2 = new System.Text.StringBuilder();
                 sb.Append("INSERT INTO ");
-                sb.Append(QuoteTablename(typeinfo.TableName));
+                sb.Append(QuoteTablename(typeinfo.Tablename));
                 sb.Append(" (");
-                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+                foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
                     if (!mf.IgnoreWithInsert)
                     {
-                        sb.Append(QuoteColumnname(mf.ColumnName));
+                        sb.Append(QuoteColumnname(mf.Databasefield));
                         sb.Append(",");
-                        sb2.Append(AddParameter(cmd, mf.ColumnName, ""));
+                        sb2.Append(AddParameter(cmd, mf.Databasefield, ""));
                         sb2.Append(",");
                     }
                 sb.Length--;
@@ -418,10 +425,10 @@ namespace System.Data.LightDatamodel
 		{
 			OpenConnection();
 			IDbCommand cmd = m_connection.CreateCommand();
-            TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
+            TypeConfiguration.MappedClass typeinfo = m_parent.Mappings[item.GetType()];
 
             cmd.CommandText = GetDeleteString(typeinfo) + GetIdentityWhere(typeinfo);
-			AddParameter(cmd, "where" + typeinfo.UniqueColumn, typeinfo.UniqueValue(item));
+			AddParameter(cmd, "where" + typeinfo.PrimaryKey.Databasefield, typeinfo.PrimaryKey.Field.GetValue(item));
             
             try
 			{
@@ -431,7 +438,7 @@ namespace System.Data.LightDatamodel
 			}
 			catch(Exception ex)
 			{
-                throw new Exception("Couldn't delete row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
+				throw new MissingPrimaryKeyException("Couldn't delete row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
 			}
 		}
 
@@ -473,28 +480,28 @@ namespace System.Data.LightDatamodel
             
 			using(IDbCommand cmd = m_connection.CreateCommand())
             {
-                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
+				TypeConfiguration.MappedClass typeinfo = m_parent.Mappings[type];
                 
                 cmd.CommandText = GetSelectString(typeinfo) + GetIdentityWhere(typeinfo);
-                AddParameter(cmd, "where" + typeinfo.PrimaryKey.ColumnName, primarykey);
+                AddParameter(cmd, "where" + typeinfo.PrimaryKey.Databasefield, primarykey);
 
 			    try
 			    {
 				    using(IDataReader dr = cmd.ExecuteReader())
                     {
-                        object[] results = m_transformer.TransformToObjects(type, dr, this);
+						object[] results = ObjectTransformer.TransformToObjects(type, dr, this);
 						dr.Close();
                         if (results.Length == 0)
                             return null;
                         else if (results.Length == 1)
                             return results[0];
                         else
-                            throw new Exception("Got " + results.Length.ToString() + " results after selection in table \"" + typeinfo.TableName + "\" with primary key \"" + primarykey.ToString() + "\".");
+                            throw new Exception("Got " + results.Length.ToString() + " results after selection in table \"" + typeinfo.Tablename + "\" with primary key \"" + primarykey.ToString() + "\".");
                     }
 			    }
 			    catch(Exception ex)
 			    {
-                    throw new Exception("Couldn't load row (" + primarykey.ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+                    throw new Exception("Couldn't load row (" + primarykey.ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message);
 			    }
             }
 		}
@@ -562,7 +569,7 @@ namespace System.Data.LightDatamodel
 			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
-                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
+				TypeConfiguration.MappedClass typeinfo = m_parent.Mappings[type];
                 string filter = new SQLFilterBuilder(this, cmd, operation).ToString();
                 cmd.CommandText = GetSelectString(typeinfo);
 
@@ -572,14 +579,14 @@ namespace System.Data.LightDatamodel
                 {
 					using (IDataReader dr = cmd.ExecuteReader())
 					{
-						object[] ret = m_transformer.TransformToObjects(type, dr, this);
+						object[] ret = ObjectTransformer.TransformToObjects(type, dr, this);
 						dr.Close();
 						return ret;
 					}
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+                    throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message);
                 }
             }
 		}
@@ -675,7 +682,7 @@ namespace System.Data.LightDatamodel
 			OpenConnection();
 		    using (IDbCommand cmd = m_connection.CreateCommand())
 		    {
-		        TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(type);
+				TypeConfiguration.MappedClass typeinfo = m_parent.Mappings[type];
 
 		        cmd.CommandText = GetSelectString(typeinfo);
 		        cmd.Parameters.Clear();
@@ -686,14 +693,14 @@ namespace System.Data.LightDatamodel
 		        {
 		            using (IDataReader dr = cmd.ExecuteReader())
 		            {
-		                object[] ret= m_transformer.TransformToObjects(type, dr, this);
+						object[] ret = ObjectTransformer.TransformToObjects(type, dr, this);
 		                dr.Close();
 		                return ret;
 		            }
 		        }
 		        catch (Exception ex)
 		        {
-		            throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message);
+		            throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message);
 		        }
 		    }
 		}
@@ -708,7 +715,7 @@ namespace System.Data.LightDatamodel
 			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
-                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
+				TypeConfiguration.MappedClass typeinfo = m_parent.Mappings[item.GetType()];
 				DataClassBase orgitem = item as DataClassBase;
 
 				//validate
@@ -717,14 +724,14 @@ namespace System.Data.LightDatamodel
 				//update sql
 				System.Text.StringBuilder sb = new System.Text.StringBuilder();
 				sb.Append("UPDATE ");
-				sb.Append(QuoteTablename(typeinfo.TableName));
+				sb.Append(QuoteTablename(typeinfo.Tablename));
 				sb.Append(" SET ");
-				foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
-					if (!mf.IgnoreWithUpdate && (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(mf.ColumnName)))
+				foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
+					if (!mf.IgnoreWithUpdate && (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(mf.Databasefield)))
 					{
-						sb.Append(QuoteColumnname(mf.ColumnName));
+						sb.Append(QuoteColumnname(mf.Databasefield));
 						sb.Append("=");
-						sb.Append(AddParameter(cmd, mf.ColumnName, mf.Field.GetValue(item)));
+						sb.Append(AddParameter(cmd, mf.Databasefield, mf.Field.GetValue(item)));
 						sb.Append(",");
 					}
 				sb.Length--;
@@ -746,10 +753,10 @@ namespace System.Data.LightDatamodel
 				//    }
 
 				//where
-				if (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(typeinfo.UniqueColumn))
-					AddParameter(cmd, "where" + typeinfo.UniqueColumn, orgitem.m_originalvalues[typeinfo.UniqueColumn]);
+				if (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(typeinfo.PrimaryKey.Databasefield))
+					AddParameter(cmd, "where" + typeinfo.PrimaryKey.Databasefield, orgitem.m_originalvalues[typeinfo.PrimaryKey.Databasefield]);
 				else
-					AddParameter(cmd, "where" + typeinfo.UniqueColumn, typeinfo.UniqueValue(item));
+					AddParameter(cmd, "where" + typeinfo.PrimaryKey.Databasefield, typeinfo.PrimaryKey.Field.GetValue(item));
 
                 try
                 {
@@ -758,7 +765,7 @@ namespace System.Data.LightDatamodel
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Couldn't update row (" + typeinfo.UniqueValue(item).ToString() + ") from table \"" + typeinfo.TableName + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd) );
+					throw new Exception("Couldn't update row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
                 }
             }
 		}
@@ -773,13 +780,13 @@ namespace System.Data.LightDatamodel
 			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())
             {
-                TypeConfiguration.MappedClass typeinfo = m_transformer.TypeConfiguration.GetTypeInfo(item);
+				TypeConfiguration.MappedClass typeinfo = m_parent.Mappings[item.GetType()];
                 cmd.CommandText = GetInsertString(typeinfo);
-                foreach (TypeConfiguration.MappedField mf in typeinfo.Columns.Values)
+                foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
 					if (!mf.IgnoreWithInsert)
 					{
 						object val = mf.Field.GetValue(item);
-                        AddParameter(cmd, mf.ColumnName, val);
+                        AddParameter(cmd, mf.Databasefield, val);
 					}
 
                 try
@@ -790,7 +797,7 @@ namespace System.Data.LightDatamodel
                 }
                 catch (Exception ex)
                 {
-					throw new Exception("Couldn't insert row in table \"" + typeinfo.TableName + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
+					throw new Exception("Couldn't insert row in table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
                 }
             }
 		}

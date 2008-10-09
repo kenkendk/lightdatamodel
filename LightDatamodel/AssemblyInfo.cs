@@ -72,6 +72,9 @@ using System.Runtime.CompilerServices;
 //   (*) Delay Signing is an advanced option - see the Microsoft .NET Framework
 //       documentation for more information on this.
 //
+
 [assembly: AssemblyDelaySign(false)]
+#pragma warning disable 1699
 [assembly: AssemblyKeyFile("..\\..\\LightDatamodel.snk")]
 [assembly: AssemblyKeyName("LightDatamodel")]
+#pragma warning restore 1699

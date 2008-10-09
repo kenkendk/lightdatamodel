@@ -56,6 +56,7 @@ namespace TestApp
 			Users newuser = new Users();
 			newuser.ID = fetcher.Compute<int, Users>("MAX(ID)", "") + 1;
 			newuser.Name = "Hans";
+			newuser.CreatedDate = DateTime.Now;
 			fetcher.Commit(newuser);
 
 			//retrive it
@@ -64,8 +65,12 @@ namespace TestApp
 			//delete
 			fetcher.DeleteObject<Users>(newuser.ID);
 
-			//test joins
-			string husnr = u[0].Address.HouseNumber;
+			P o = new P();
+			o.Test = "laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaang text";
+			fetcher.Add(o);
+			fetcher.Commit(o);
+
+			o = fetcher.GetObjectById<P>(13);
 
 
 			int i = 0;

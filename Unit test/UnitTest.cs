@@ -22,6 +22,7 @@ using System.IO;
 using System.Data;
 using System.Reflection;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data.LightDatamodel;
 using System.Data.LightDatamodel.QueryModel;
 
@@ -38,25 +39,139 @@ namespace Datamodel.UnitTest
 		[STAThread]
 		static void Main(string[] args)
 		{
-			string filename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "unittest.sqlite3");
-			if (File.Exists(filename))
-				File.Delete(filename);
+			System.Console.WriteLine("Starting test...");
+			int start = System.Environment.TickCount;
 
-            System.Data.SQLite.SQLiteConnection con = new System.Data.SQLite.SQLiteConnection("New=True;Version=3;Data Source=" + filename);
+			string filename = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "unittest.sqlite3");
+			if (File.Exists(filename)) File.Delete(filename);
+
+			System.Data.SQLite.SQLiteConnection con = new System.Data.SQLite.SQLiteConnection("New=True;Version=3;Data Source=" + filename);
 			con.Open();
 
 
 			IDbCommand cmd = con.CreateCommand();
-			using(StreamReader sr = new StreamReader(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("UnitTest.DB Schema.sql"), System.Text.Encoding.Default, true))
+			using (StreamReader sr = new StreamReader(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("UnitTest.DB Schema.sql"), System.Text.Encoding.Default, true))
 				cmd.CommandText = sr.ReadToEnd();
-
 			cmd.ExecuteNonQuery();
 
+			System.Console.WriteLine("Basic operations...");
+			int basicstart = System.Environment.TickCount;
 			TestBasicOperations(con);
+			int basicend = System.Environment.TickCount;
+			System.Console.WriteLine("" + (basicend - basicstart) + " ms");
+
+			System.Console.WriteLine("MultiDictionary...");
+			int multistart = System.Environment.TickCount;
+			TestMultiDictionary();
+			TestCache();
+			int multiend = System.Environment.TickCount;
+			System.Console.WriteLine("" + (multiend - multistart) + " ms");
+
+			System.Console.WriteLine("Cached operations...");
+			int cachedstart = System.Environment.TickCount;
 			TestCachedOperations(con);
-			TestRelations(con);
+			int cachedend = System.Environment.TickCount;
+			System.Console.WriteLine("" + (cachedend - cachedstart) + " ms");
+
+			System.Console.WriteLine("Query model...");
+			int querystart = System.Environment.TickCount;
 			TestQueryModel(con);
-            TestRelationsExtended(con);
+			int queryend = System.Environment.TickCount;
+			System.Console.WriteLine("" + (queryend - querystart) + " ms");
+
+			System.Console.WriteLine("Assyncron fetcher...");
+			int assynstart = System.Environment.TickCount;
+			TestFetcherAssyncron(con);
+			int assynend = System.Environment.TickCount;
+			System.Console.WriteLine("" + (assynend - assynstart) + " ms");
+
+			System.Console.WriteLine("Cached assyncron fetcher...");
+			assynstart = System.Environment.TickCount;
+			TestCachedFetcherAssyncron(con);
+			assynend = System.Environment.TickCount;
+			System.Console.WriteLine("" + (assynend - assynstart) + " ms");
+
+			//System.Console.WriteLine("Relations operations...");
+			//int relationsstart = System.Environment.TickCount;
+			//TestRelations(con);
+			//int relationsend = System.Environment.TickCount;
+			//System.Console.WriteLine("" + (relationsend - relationsstart) + " ms");
+
+			//System.Console.WriteLine("Relations extended...");
+			//int extendedstart = System.Environment.TickCount;
+			//TestRelationsExtended(con);
+			int extendedend = System.Environment.TickCount;
+			//System.Console.WriteLine("" + (extendedend - extendedstart) + " ms");
+
+			System.Console.WriteLine("Done! Whole process took " + (extendedend - start) + " ms");
+			System.Console.ReadKey();
+		}
+
+		public static void TestMultiDictionary()
+		{
+			MultiDictionary<int, string> test = new MultiDictionary<int, string>();
+
+			//test the empty one
+			foreach (KeyValuePair<int, string> k in test)
+			{
+				int dummy = test.Count;
+			}
+			foreach (string str in test.Values)
+			{
+				int dummy = test.Count;
+			}
+			try
+			{
+				//this one is meant to fail
+				foreach (string ko in test.Values[0])
+				{
+					int dummy = test.Count;
+				}
+			}
+			catch
+			{
+			}
+
+			test.Add(1, "ost1");
+			test.Add(1, "ko1");
+			test.Add(1, "fisk1");
+			test.Add(2, "ost2");
+			test.Add(3, "ost3");
+			test.Add(2, "ko2");
+
+			if (test.Count != 6) throw new Exception("Bah!");
+
+			int c = 0;
+			foreach (KeyValuePair<int, string> k in test)
+			{
+				if (k.Key < 1 || k.Key > 3) throw new Exception("Bah!");
+				if (k.Value != "ost" + k.Key && k.Value != "ko" + k.Key && k.Value != "fisk" + k.Key) throw new Exception("Bah!");
+				c++;
+			}
+			if (c != 6) throw new Exception("Bah!");
+
+			c = 0;
+			foreach (string str in test.Values)
+			{
+				c++;
+			}
+			if (c != 6) throw new Exception("Bah!");
+
+			if (test.Items[1].Count != 3) throw new Exception("Bah!");
+
+			test.Remove(2, "ost2");
+			if (test.Count != 5) throw new Exception("Bah!");
+
+			test.Remove(1);
+			if (test.Count != 2) throw new Exception("Bah!");
+
+			c = 0;
+			foreach (string str in test.Items)
+			{
+				c++;
+			}
+			if (c != 2) throw new Exception("Bah!");
+
 		}
 
 		/// <summary>
@@ -115,6 +230,69 @@ namespace Datamodel.UnitTest
 				fetcher.DeleteObject(n);
 			tmp = fetcher.GetObjects<Note>("NoteText = ? OR NoteText Is ?", "", DBNull.Value);
 			if (tmp.Length != 0) throw new Exception("Bah!");
+		}
+
+		public static void TestCache()
+		{
+			DataFetcherCached.Cache test = new DataFetcherCached.Cache();
+
+			//test the empty one
+			foreach (IDataClass k in test)
+			{
+				int dummy = test.Count;
+			}
+			foreach (IDataClass k in test.GetObjects(typeof(Project)))
+			{
+				int dummy = test.Count;
+			}
+
+			test.Add(typeof(Project), "ID", 1, new Project());
+			test.Add(typeof(Project), "ID", 2, new Project());
+			test.Add(typeof(Project), "ID", 3, new Project());
+			test.Add(typeof(Project), "ID", 4, new Project());
+			test.Add(typeof(Project), "ID", 5, new Project());
+			test.Add(typeof(Project), "ID", 4, new Project());		//the same OoOOoOoOOooo
+
+			if (test.Count != 6) throw new Exception("Bah!");
+
+			int c = 0;
+			foreach (IDataClass k in test)
+			{
+				c++;
+				if (c > 10) throw new Exception("Bah!");
+			}
+			if (c != 6) throw new Exception("Bah!");
+
+			c = 0;
+			foreach (IDataClass k in test.GetObjects(typeof(Project)))
+			{
+				c++;
+			}
+			if (c != 6) throw new Exception("Bah!");
+
+			Project p = (Project)test[typeof(Project), "ID", 1];
+
+			test.RemoveObject(typeof(Project), "ID", 1, p);
+			if (test.Count != 5) throw new Exception("Bah!");
+
+			p = (Project)test[typeof(Project), "ID", 4];
+			test.RemoveObject(typeof(Project), "ID", 4, p);
+			if (test.Count != 4) throw new Exception("Bah!");
+
+			c = 0;
+			foreach (IDataClass k in test)
+			{
+				c++;
+			}
+			if (c != 4) throw new Exception("Bah!");
+
+			c = 0;
+			foreach (IDataClass k in test.GetObjects(typeof(Project)))
+			{
+				c++;
+			}
+			if (c != 4) throw new Exception("Bah!");
+
 		}
 
 		/// <summary>
@@ -188,22 +366,37 @@ namespace Datamodel.UnitTest
 			if (tmp.Length != 3) throw new Exception("NOOOOOO!!!!! HOW DO I LOCATE ALL EMPTY POSTS?????????");
 			foreach (Note n in tmp)
 				fetcher.DeleteObject(n);
+
+			//test case sentivity
+			Note casesentivity = new Note();
+			casesentivity.NoteText = "HerErEnText";
+			fetcher.Add(casesentivity);
+			fetcher.Commit(casesentivity);
+			Note[] casetest = fetcher.GetObjects<Note>("NoteText = ?", "Hererentext");
+			if (casetest == null || casetest.Length == 0) throw new Exception("This is most likely wrong");
 		}
 
 		public static void TestQueryModel(IDbConnection con)
 		{
-            DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
+			DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
 
-			Operation op1 = new Operation(Operators.GreaterThan, new OperationOrParameter[] {new Parameter("ID", true), new Parameter(0, false)});
-			Operation op2 = new Operation(Operators.LessThan, new OperationOrParameter[] {new Parameter("ID", true), new Parameter(1000, false)});
-			Operation op3 = new Operation(Operators.And, new OperationOrParameter[] {op1, op2});
+			//Avoid ID's being equal with note and project
+			for (int i = 0; i < 100; i++)
+			{
+				hub.Add(new Project());
+			}
+			hub.CommitAll();
+
+			Operation op1 = new Operation(Operators.GreaterThan, new OperationOrParameter[] { new Parameter("ID", true), new Parameter(0, false) });
+			Operation op2 = new Operation(Operators.LessThan, new OperationOrParameter[] { new Parameter("ID", true), new Parameter(1000, false) });
+			Operation op3 = new Operation(Operators.And, new OperationOrParameter[] { op1, op2 });
 
 			object[] f = hub.GetObjects(typeof(Project), "");
-            foreach (Project p in f)
-                if (p.ID > 3)
-                    hub.DeleteObject(p);
-            hub.CommitAll();
-            f = hub.GetObjects<Project>();
+			foreach (Project p in f)
+				if (p.ID > 3)
+					hub.DeleteObject(p);
+			hub.CommitAll();
+			f = hub.GetObjects<Project>();
 
 			object[] q = hub.GetObjects(typeof(Project), op3);
 			if (q.Length != f.Length)
@@ -269,33 +462,33 @@ namespace Datamodel.UnitTest
 
 		public static void TestRelations(IDbConnection con)
 		{
-            DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
+			DataFetcherWithRelations hub = new DataFetcherWithRelations(new SQLiteDataProvider(con));
 
-            //Avoid ID's being equal with note and project
-            for(int i = 0; i < 100; i++)
-                hub.Add(new Project());
+			//Avoid ID's being equal with note and project
+			for (int i = 0; i < 100; i++)
+				hub.Add(new Project());
 
-            //hub.CommitAll();
+			//hub.CommitAll();
 
-            DataFetcherNested nd = new DataFetcherNested(hub);
+			DataFetcherNested nd = new DataFetcherNested(hub);
 
-            Note n = (Note)nd.Add(new Note());
-            Project p = (Project)nd.Add(new Project());
+			Note n = (Note)nd.Add(new Note());
+			Project p = (Project)nd.Add(new Project());
 			p.ProjectNote = n;
 			Guid pg = p.Guid;
-            Guid ng = n.Guid;
+			Guid ng = n.Guid;
 
-            if (p.DataParent != nd)
-                throw new Exception("Bad dataparent");
-            if (n.DataParent != nd)
-                throw new Exception("Bad dataparent");
+			if (p.DataParent != nd)
+				throw new Exception("Bad dataparent");
+			if (n.DataParent != nd)
+				throw new Exception("Bad dataparent");
 
-            if (p.ProjectNote != n)
-                throw new Exception("Bad relation");
-            if (n.ProjectNotes.Count != 1)
-                throw new Exception("Bad relation");
-            if (n.ProjectNotes[0] != p)
-                throw new Exception("Bad relation");
+			if (p.ProjectNote != n)
+				throw new Exception("Bad relation");
+			if (n.ProjectNotes.Count != 1)
+				throw new Exception("Bad relation");
+			if (n.ProjectNotes[0] != p)
+				throw new Exception("Bad relation");
 
 			nd.CommitAll();
 
@@ -314,10 +507,10 @@ namespace Datamodel.UnitTest
 			if (n.ExistsInDB)
 				throw new Exception("Note has wrong flag");
 
-            if (p.DataParent != hub)
-                throw new Exception("Bad dataparent");
-            if (n.DataParent != hub)
-                throw new Exception("Bad dataparent");
+			if (p.DataParent != hub)
+				throw new Exception("Bad dataparent");
+			if (n.DataParent != hub)
+				throw new Exception("Bad dataparent");
 
 			hub.CommitAll();
 
@@ -329,7 +522,7 @@ namespace Datamodel.UnitTest
 			if (p.ProjectNoteID != n.ID)
 				throw new Exception("Failed to update reverse ID");
 
-            nd = new DataFetcherNested(hub);
+			nd = new DataFetcherNested(hub);
 			p = (Project)nd.GetObjectByGuid(pg);
 			if (p == null)
 				throw new Exception("Failed to load item from guid");
@@ -339,47 +532,47 @@ namespace Datamodel.UnitTest
 				throw new Exception("Failed to update reverse ID");
 
 			long pid = p.ID;
-            long nid = n.ID;
+			long nid = n.ID;
 
 			hub.DiscardObject(hub.GetObjectByGuid(p.Guid) as IDataClass);
 			hub.DiscardObject(hub.GetObjectByGuid(n.Guid) as IDataClass);
 
-            nd = new DataFetcherNested(hub);
+			nd = new DataFetcherNested(hub);
 			p = (Project)nd.GetObjectById(typeof(Project), pid);
 			if (p == null)
 				throw new Exception("Failed to load item from DB");
-            if (p.DataParent != nd)
-                throw new Exception("Invalid dataparent");
+			if (p.DataParent != nd)
+				throw new Exception("Invalid dataparent");
 			if (!p.ExistsInDB)
 				throw new Exception("Project has wrong flag");
 
-            if (p.ProjectNote == null)
-                throw new Exception("Failed to load relation from DB");
-            if (p.ProjectNote.ID != nid)
-                throw new Exception("Loaded wrong relation");
+			if (p.ProjectNote == null)
+				throw new Exception("Failed to load relation from DB");
+			if (p.ProjectNote.ID != nid)
+				throw new Exception("Loaded wrong relation");
 
-            n = p.ProjectNote;
+			n = p.ProjectNote;
 
-            hub.DiscardObject(hub.GetObjectByGuid(p.Guid) as IDataClass);
-            hub.DiscardObject(hub.GetObjectByGuid(n.Guid) as IDataClass);
-            nd = new DataFetcherNested(hub);
-            n = (Note)nd.GetObjectById(typeof(Note), nid);
-            if (n == null)
-                throw new Exception("Failed to load item from DB");
-            if (n.DataParent != nd)
-                throw new Exception("Invalid dataparent");
-            if (!n.ExistsInDB)
-                throw new Exception("Note has wrong flag");
-            if (n.ProjectNotes.Count != 1)
-                throw new Exception("Failed to load relation from DB");
-            if (n.ProjectNotes[0].ID != pid)
-                throw new Exception("Loaded wrong relation");
+			hub.DiscardObject(hub.GetObjectByGuid(p.Guid) as IDataClass);
+			hub.DiscardObject(hub.GetObjectByGuid(n.Guid) as IDataClass);
+			nd = new DataFetcherNested(hub);
+			n = (Note)nd.GetObjectById(typeof(Note), nid);
+			if (n == null)
+				throw new Exception("Failed to load item from DB");
+			if (n.DataParent != nd)
+				throw new Exception("Invalid dataparent");
+			if (!n.ExistsInDB)
+				throw new Exception("Note has wrong flag");
+			if (n.ProjectNotes.Count != 1)
+				throw new Exception("Failed to load relation from DB");
+			if (n.ProjectNotes[0].ID != pid)
+				throw new Exception("Loaded wrong relation");
 
-            p = n.ProjectNotes[0];
+			p = n.ProjectNotes[0];
 			n = (Note)nd.Add(new Note());
 			n.NoteText = "Newly created link";
-            if (p.CurrentTaskNote != null)
-                throw new Exception("Assignment before actual, this usually means you have caught the default object");
+			if (p.CurrentTaskNote != null)
+				throw new Exception("Assignment before actual, this usually means you have caught the default object");
 			p.CurrentTaskNote = n;
 			if (p.CurrentTaskNote == null)
 				throw new Exception("Failed to assign a new object on an existing project");
@@ -390,12 +583,12 @@ namespace Datamodel.UnitTest
 			if (n.ExistsInDB)
 				throw new Exception("Note has wrong flag");
 
-            if (!n.TaskNotes.Contains(p))
-                throw new Exception("Failed to contain reverse");
+			if (!n.TaskNotes.Contains(p))
+				throw new Exception("Failed to contain reverse");
 
 			pg = p.Guid;
 			ng = n.Guid;
-						
+
 			nd.CommitAll();
 
 			p = (Project)hub.GetObjectByGuid(pg);
@@ -406,12 +599,12 @@ namespace Datamodel.UnitTest
 			if (n.ExistsInDB)
 				throw new Exception("Note has wrong flag");
 
-            if (p.CurrentTaskNote == null)
-                throw new Exception("Failed to assign a new object on an existing project");
-            if (p.CurrentTaskNote.NoteText != "Newly created link")
-                throw new Exception("Failed to assign a new object on an existing project");
-            if (!n.TaskNotes.Contains(p))
-                throw new Exception("Failed to contain reverse");
+			if (p.CurrentTaskNote == null)
+				throw new Exception("Failed to assign a new object on an existing project");
+			if (p.CurrentTaskNote.NoteText != "Newly created link")
+				throw new Exception("Failed to assign a new object on an existing project");
+			if (!n.TaskNotes.Contains(p))
+				throw new Exception("Failed to contain reverse");
 
 			hub.CommitAll();
 
@@ -425,17 +618,17 @@ namespace Datamodel.UnitTest
 
 			nid = p.CurrentTaskNoteID;
 
-            nd = new System.Data.LightDatamodel.DataFetcherNested(hub);
+			nd = new System.Data.LightDatamodel.DataFetcherNested(hub);
 
 			n = (Note)nd.GetObjectById(typeof(Note), nid);
-            p = (Project)nd.Add(new Project());
+			p = (Project)nd.Add(new Project());
 			p.Title = "A new project";
 			p.ProjectNote = n;
 
-            if (n.ProjectNotes == null || n.ProjectNotes.Count == 0)
-                throw new Exception("Reverse property failed on create");
+			if (n.ProjectNotes == null || n.ProjectNotes.Count == 0)
+				throw new Exception("Reverse property failed on create");
 
-            pg = p.Guid;
+			pg = p.Guid;
 			ng = n.Guid;
 
 			nd.CommitAll();
@@ -464,7 +657,7 @@ namespace Datamodel.UnitTest
 				throw new Exception("Failed to update reverse ID");
 
 			p = (Project)hub.Add(new Project());
-            n = (Note)hub.Add(new Note());
+			n = (Note)hub.Add(new Note());
 			n.NoteText = "1";
 			p.Title = "2";
 			p.ProjectNote = n;
@@ -472,7 +665,7 @@ namespace Datamodel.UnitTest
 			pg = p.Guid;
 			ng = n.Guid;
 
-            nd = new DataFetcherNested(hub);
+			nd = new DataFetcherNested(hub);
 			p = (Project)nd.GetObjectByGuid(pg);
 			if (p.ProjectNote == null)
 				throw new Exception("Failed to pass on created object");
@@ -497,156 +690,327 @@ namespace Datamodel.UnitTest
 			if (p.ProjectNoteID != n.ID)
 				throw new Exception("Failed to update reverse ID");
 
-            hub.ClearCache();
+			hub.ClearCache();
 
-            p = (Project)hub.Add(new Project());
-            n = (Note)hub.Add(new Note());
+			p = (Project)hub.Add(new Project());
+			n = (Note)hub.Add(new Note());
 
-            n.ProjectNotes.Add(p);
+			n.ProjectNotes.Add(p);
 
-            if (p.ProjectNote == null)
-                throw new Exception("Failed to update reverse collection");
+			if (p.ProjectNote == null)
+				throw new Exception("Failed to update reverse collection");
 
-            hub.CommitAll();
+			hub.CommitAll();
 
-            nid = p.ProjectNoteID;
-            p.ProjectNote = null;
-            if (n.ProjectNotes.Count != 0)
-                throw new Exception("Failed to update reverse item");
+			nid = p.ProjectNoteID;
+			p.ProjectNote = null;
+			if (n.ProjectNotes.Count != 0)
+				throw new Exception("Failed to update reverse item");
 
-            if (p.ProjectNoteID == nid)
-                throw new Exception("Failed to set reverse ID after removal");
+			if (p.ProjectNoteID == nid)
+				throw new Exception("Failed to set reverse ID after removal");
 
-            n = hub.GetObjectById<Note>(nid);
-            p.ProjectNote = n;
-            n.ProjectNotes.Remove(p);
+			n = hub.GetObjectById<Note>(nid);
+			p.ProjectNote = n;
+			n.ProjectNotes.Remove(p);
 
-            if (p.ProjectNote != null)
-                throw new Exception("Failed to update reverse item");
-            if (p.ProjectNoteID == nid)
-                throw new Exception("Failed to set reverse ID after removal");
-
-            
-
-            hub.CommitAll();
-
-            p.ProjectNote = n;
-
-            if (n.ProjectNotes.Count != 1)
-                throw new Exception("Failed to update reverse collection");
-
-            hub.CommitAll();
+			if (p.ProjectNote != null)
+				throw new Exception("Failed to update reverse item");
+			if (p.ProjectNoteID == nid)
+				throw new Exception("Failed to set reverse ID after removal");
 
 
-            p.ProjectNote = null;
-            hub.DeleteObject(n);
 
-            hub.CommitAll();
+			hub.CommitAll();
+
+			p.ProjectNote = n;
+
+			if (n.ProjectNotes.Count != 1)
+				throw new Exception("Failed to update reverse collection");
+
+			hub.CommitAll();
 
 
-            pid = p.ID;
-            hub.ClearCache();
+			p.ProjectNote = null;
+			hub.DeleteObject(n);
 
-            nd = new DataFetcherNested(hub);
-            p = nd.GetObjectById<Project>(pid);
-            pg = nd.RelationManager.GetGuidForObject(p);
-            Project test = hub.GetObjectByGuid<Project>(pg);
-            pg = hub.RelationManager.GetGuidForObject(test);
-            object delid = p.UniqueValue;
-            nd.DeleteObject(p);
-            Guid delg = nd.RelationManager.GetGuidForObject(p);		//aren't this supposed to fail?
-                                                                    //Sort of, but since it's a nested fetcher, and not committed, 
-                                                                    //the basefetcher can still retrieve the item
-                                                                    //But it ONLY works for Guid access
-            pg = hub.RelationManager.GetGuidForObject(test);
-            nd.CommitAll();
-            test = (Project)hub.RelationManager.GetObjectByGuid(pg);
-            pg = hub.RelationManager.GetGuidForObject(test);
-            hub.CommitAll();
+			hub.CommitAll();
 
-            p = hub.GetObjectById<Project>(delid);
-            if (p != null)
-                throw new Exception("Failed to actually remove item");
 
-            p = hub.GetObjectByGuid<Project>(delg);
-            if (p != null)
-                throw new Exception("Failed to actually remove item");
+			pid = p.ID;
+			hub.ClearCache();
 
-            p = (Project)hub.Add(new Project());
-            p.ProjectNoteID = 1;
-            if (p.ProjectNote == null)
-                throw new Exception("Failed to set relation through ID update");
-            p.ProjectNoteID = -1;
-            if (p.ProjectNote != null)
-                throw new Exception("Failed to set relation through ID update");
+			nd = new DataFetcherNested(hub);
+			p = nd.GetObjectById<Project>(pid);
+			pg = nd.GetGuidForObject(p);
+			Project test = hub.GetObjectByGuid<Project>(pg);
+			pg = hub.GetGuidForObject(test);
+			object delid = p.ID;
+			nd.DeleteObject(p);
+			Guid delg = nd.GetGuidForObject(p);		//aren't this supposed to fail?
+			//Sort of, but since it's a nested fetcher, and not committed, 
+			//the basefetcher can still retrieve the item
+			//But it ONLY works for Guid access
+			pg = hub.GetGuidForObject(test);
+			nd.CommitAll();
+			test = (Project)hub.GetObjectByGuid(pg);
+			pg = hub.GetGuidForObject(test);
+			hub.CommitAll();
+
+			p = hub.GetObjectById<Project>(delid);
+			if (p != null)
+				throw new Exception("Failed to actually remove item");
+
+			p = hub.GetObjectByGuid<Project>(delg);
+			if (p != null)
+				throw new Exception("Failed to actually remove item");
+
+			p = (Project)hub.Add(new Project());
+			p.ProjectNoteID = 1;
+			if (p.ProjectNote == null)
+				throw new Exception("Failed to set relation through ID update");
+			p.ProjectNoteID = -1;
+			if (p.ProjectNote != null)
+				throw new Exception("Failed to set relation through ID update");
 
 		}
 
-        public static void TestRelationsExtended(IDbConnection con)
-        {
-            DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
-            Project p = hub.Add<Project>();
-            Note n = hub.Add<Note>();
-            p.ProjectNote = n;
-            hub.CommitAll();
+		public static void TestRelationsExtended(IDbConnection con)
+		{
+			DataFetcherWithRelations hub = new DataFetcherWithRelations(new SQLiteDataProvider(con));
+			Project p = hub.Add<Project>();
+			Note n = hub.Add<Note>();
+			p.ProjectNote = n;
+			hub.CommitAll();
 
-            long i = p.ID;
-            long j = n.ID;
+			long i = p.ID;
+			long j = n.ID;
 
-            hub.ClearCache();
+			hub.ClearCache();
 
-            DataFetcherNested nd = new DataFetcherNested(hub);
-            p = nd.GetObjectById<Project>(i);
+			DataFetcherNested nd = new DataFetcherNested(hub);
+			p = nd.GetObjectById<Project>(i);
 
-            if (p.ProjectNote == null)
-                throw new Exception("Failed to load item");
+			if (p.ProjectNote == null)
+				throw new Exception("Failed to load item");
 
-            hub.ClearCache();
+			hub.ClearCache();
 
-            nd = new DataFetcherNested(hub);
-            n = nd.GetObjectById<Note>(j);
+			nd = new DataFetcherNested(hub);
+			n = nd.GetObjectById<Note>(j);
 
-            if (n.ProjectNotes.Count != 1)
-                throw new Exception("Failed to load item");
+			if (n.ProjectNotes.Count != 1)
+				throw new Exception("Failed to load item");
 
-            hub.ClearCache();
+			hub.ClearCache();
 
-            n = hub.GetObjectById<Note>(j);
+			n = hub.GetObjectById<Note>(j);
 
-            nd = new DataFetcherNested(hub);
-            n = nd.GetObjectById<Note>(j);
+			nd = new DataFetcherNested(hub);
+			n = nd.GetObjectById<Note>(j);
 
-            if (n.ProjectNotes.Count != 1)
-                throw new Exception("Failed to load item");
+			if (n.ProjectNotes.Count != 1)
+				throw new Exception("Failed to load item");
 
-            p = nd.Add<Project>();
-            n = nd.Add<Note>();
-            n.ProjectNotes.Add(p);
+			p = nd.Add<Project>();
+			n = nd.Add<Note>();
+			n.ProjectNotes.Add(p);
 
-            nd.CommitAll();
-            hub.CommitAll();
+			nd.CommitAll();
+			hub.CommitAll();
 
-            foreach(Note nx in hub.GetObjects<Note>())
-                n = nx;
+			foreach (Note nx in hub.GetObjects<Note>())
+				n = nx;
 
-            if (n.ProjectNotes.Count != 1)
-                throw new Exception("Failed to set item");
-
-
-            hub.ClearCache();
-            n = nd.Add<Note>();
-            p = nd.Add<Project>();
-            n.ProjectNotes.Add(p);
-
-            hub.CommitAll();
-
-            if (n.ProjectNotes.Count != 1)
-                throw new Exception("Failed to set item");
-
-            if (p.ProjectNote == null)
-                throw new Exception("Failed to set item");
+			if (n.ProjectNotes.Count != 1)
+				throw new Exception("Failed to set item");
 
 
-        }
+			hub.ClearCache();
+			n = nd.Add<Note>();
+			p = nd.Add<Project>();
+			n.ProjectNotes.Add(p);
+
+			hub.CommitAll();
+
+			if (n.ProjectNotes.Count != 1)
+				throw new Exception("Failed to set item");
+
+			if (p.ProjectNote == null)
+				throw new Exception("Failed to set item");
+
+
+		}
+
+		private static void TestFetcherAssyncron(IDbConnection con)
+		{
+			//conn
+			DataFetcher fetcher = new DataFetcher(new SQLiteDataProvider(con));
+
+			int count = 10;
+			AssyncronWorker[] aw = new AssyncronWorker[count];
+			for (int i = 0; i < count; i++)
+			{
+				aw[i] = new AssyncronWorker(fetcher);
+				aw[i].StartAssyncronTest();
+			}
+
+			//wait for them to exit
+			bool wait = true;
+			while (wait)
+			{
+				wait = false;
+				for (int i = 0; i < count; i++)
+				{
+					if (aw[i].Thread.IsAlive)
+					{
+						wait = true;
+						break;
+					}
+				}
+				if (wait) System.Threading.Thread.Sleep(100);
+			}
+		}
+
+		private static void TestCachedFetcherAssyncron(IDbConnection con)
+		{
+			//conn
+			DataFetcherCached fetcher = new DataFetcherCached(new SQLiteDataProvider(con));
+
+			int count = 10;
+			AssyncronWorker[] aw = new AssyncronWorker[count];
+			for (int i = 0; i < count; i++)
+			{
+				aw[i] = new AssyncronWorker(fetcher);
+				aw[i].StartAssyncronTest();
+			}
+
+			//wait for them to exit
+			bool wait = true;
+			while (wait)
+			{
+				wait = false;
+				for (int i = 0; i < count; i++)
+				{
+					if (aw[i].Thread.IsAlive)
+					{
+						wait = true;
+						break;
+					}
+				}
+				if (wait) System.Threading.Thread.Sleep(100);
+			}
+		}
+
+		/// <summary>
+		/// This will perform a serie of fetcher operations, meant for stressing the fetcher in assyncron mode
+		/// </summary>
+		private class AssyncronWorker
+		{
+			private IDataFetcher m_conn;
+			private IDataFetcherCached m_cached;
+			private System.Threading.Thread m_thread;
+			private const int m_count = 10;
+
+			public System.Threading.Thread Thread { get { return m_thread; } }
+
+			public AssyncronWorker(IDataFetcher connection)
+			{
+				m_conn = connection;
+				m_cached = connection as IDataFetcherCached;
+			}
+
+			private void PerformTest()
+			{
+				Random rnd = new Random();
+
+				//insert
+				Project[] ps = new Project[m_count];
+				Note[] ns = new Note[m_count];
+				for (int i = 0; i < m_count; i++)
+				{
+					try
+					{
+						ps[i] = new Project();
+						m_conn.Commit(ps[i]);
+						ns[i] = new Note();
+						m_conn.Commit(ns[i]);
+					}
+					catch (MissingPrimaryKeyException ex)
+					{
+						//this can happen if the object is deleted, right after creation, but before refresh
+						//I'm not sure wheter we should deal with this or not
+					}
+				}
+
+				//load 
+				for (int i = 0; i < 100; i++)
+				{
+					m_conn.GetObjectById<Project>(ps[rnd.Next(0, m_count - 1)].ID);
+					m_conn.GetObjectById<Note>(ns[rnd.Next(0, m_count - 1)].ID);
+				}
+
+				m_conn.GetObjects<Project>();
+				m_conn.GetObjects<Note>();
+
+				for (int i = 0; i < 100; i++)
+				{
+					m_conn.GetObjectById<Project>(ps[rnd.Next(0, m_count - 1)].ID);
+					m_conn.GetObjectById<Note>(ns[rnd.Next(0, m_count - 1)].ID);
+				}
+
+				//delete all!!!
+				ps = m_conn.GetObjects<Project>();
+				ns = m_conn.GetObjects<Note>();
+				foreach (Project p in ps)
+				{
+					try
+					{
+						m_conn.DeleteObject(p);
+					}
+					catch (MissingPrimaryKeyException ex)
+					{
+						//Again, this might already be deleted
+					}
+				}
+				foreach (Note n in ns)
+				{
+					try
+					{
+						m_conn.DeleteObject(n);
+					}
+					catch (MissingPrimaryKeyException ex)
+					{
+						//Again, this might already be deleted
+					}
+				}
+
+				//cache
+				if (m_cached != null)
+				{
+					bool success = false;
+					while (!success)
+					{
+						try
+						{
+							m_cached.CommitAll();
+							success = true;
+						}
+						catch (MissingPrimaryKeyException ex)
+						{
+							//Again, this might already be deleted
+						}
+					}
+				}
+
+				m_thread.Abort();	//end
+			}
+
+			public void StartAssyncronTest()
+			{
+				m_thread = new System.Threading.Thread(new System.Threading.ThreadStart(this.PerformTest));
+				m_thread.Start();
+			}
+		}
 	}
 }

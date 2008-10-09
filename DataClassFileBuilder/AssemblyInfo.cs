@@ -73,5 +73,7 @@ using System.Runtime.CompilerServices;
 //       documentation for more information on this.
 //
 [assembly: AssemblyDelaySign(false)]
+#pragma warning disable 1699
 [assembly: AssemblyKeyFile("..\\..\\LightDatamodel.snk")]
 [assembly: AssemblyKeyName("LightDatamodel")]
+#pragma warning restore 1699

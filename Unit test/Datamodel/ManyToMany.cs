@@ -1,49 +1,30 @@
-#region Disclaimer / License
-// Copyright (C) 2008, Kenneth Skovhede
-// http://www.hexad.dk, opensource@hexad.dk
-// 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// Lesser General Public License for more details.
-// 
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-// 
-#endregion
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
-/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=C:\Documents and Settings\Kenneth\Dokumenter\LightDatamodel\Unit test\Datamodel\UnitTest.sqlite3;" />
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\workspace\Ny version2 LightDatamodel\Unit test\Datamodel\UnitTest.sqlite3;" />
 /// <type>Table</type>
 /// <namespace>Datamodel.UnitTest</namespace>
 /// <name>ManyToMany</name>
 /// <sql></sql>
 /// </metadata>
 
+using System.Data.LightDatamodel;
+using System.Data.LightDatamodel.DataClassAttributes;
+
 namespace Datamodel.UnitTest
 {
 
-	public partial class ManyToMany : System.Data.LightDatamodel.DataClassBase
+	[DatabaseTable("ManyToMany")]
+	public partial class ManyToMany : DataClassBase
 	{
 
 #region " private members "
 
-		[System.Data.LightDatamodel.MemberModifierAutoIncrement()]
-		private System.Int64 m_ID = 0;
-		private System.Int64 m_LeftID = 0;
-		private System.Int64 m_RightID = 0;
-#endregion
-
-#region " unique value "
-
-		public override object UniqueValue {get{return m_ID;}}
-		public override string UniqueColumn {get{return "ID";}}
+		[AutoIncrement, PrimaryKey, DatabaseField("ID")]
+		private System.Int64 m_ID = rnd.Next(int.MinValue, -1);
+		[DatabaseField("LeftID")]
+		private System.Int64 m_LeftID = long.MinValue;
+		[DatabaseField("RightID")]
+		private System.Int64 m_RightID = long.MinValue;
 #endregion
 
 #region " properties "

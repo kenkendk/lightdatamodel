@@ -42,11 +42,11 @@ namespace System.Data.LightDatamodel
 		internal protected static Random rnd = new Random();		//used to provide unique (almost) to new objects
 
 		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
-        public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
+        //public RelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
 		public bool IsDirty{get{return m_isdirty;}}
 		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
-		public abstract string UniqueColumn	{get;}
-		public abstract object UniqueValue{get;}
+		//public abstract string UniqueColumn	{get;}
+		//public abstract object UniqueValue{get;}
         //public void SetDirty() { m_isdirty = true; }
 
 		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
@@ -111,7 +111,7 @@ namespace System.Data.LightDatamodel
 		}
 
 		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
-		public IRelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
+		//public RelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
 		public bool IsDirty { get { return false; } }
 
 		public void SetDirty()
@@ -126,8 +126,8 @@ namespace System.Data.LightDatamodel
 				//meh
 			}
 		}
-		public string UniqueColumn { get { return null; } }
-		public object UniqueValue { get { return null; } }
+		//public string UniqueColumn { get { return null; } }
+		//public object UniqueValue { get { return null; } }
 
 		#endregion
 

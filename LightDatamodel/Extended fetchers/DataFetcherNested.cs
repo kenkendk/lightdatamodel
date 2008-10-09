@@ -27,13 +27,14 @@ namespace System.Data.LightDatamodel
 	/// <summary>
 	/// Nested data fetcher, use as an in memory transaction
 	/// </summary>
-	public class DataFetcherNested : DataFetcherCached
+	public class DataFetcherNested : DataFetcherWithRelations
 	{
-        private IDataFetcherCached m_baseFetcher;
-		public DataFetcherNested(IDataFetcherCached basefetcher) : base(basefetcher.Provider)
+		private DataFetcherWithRelations m_baseFetcher;
+		public DataFetcherNested(DataFetcherWithRelations basefetcher)
+			: base(basefetcher.Provider)
 		{
-            m_transformer = basefetcher.ObjectTransformer;
-            m_relationManager = new RelationManager(this);
+            //m_transformer = basefetcher.ObjectTransformer;
+            //m_relationManager = new RelationManager(this);
             m_baseFetcher = basefetcher;
 
 		}
@@ -58,19 +59,19 @@ namespace System.Data.LightDatamodel
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public override object GetObjectByGuid(Guid key)
-        {
-            object item = base.GetObjectByGuid(key);
-            if (item == null)
-            {
-                item = m_baseFetcher.GetObjectByGuid(key);
-                if (item == null) return null;
+		public override IDataClass GetObjectByGuid(Guid key)
+		{
+			IDataClass item = base.GetObjectByGuid(key);
+			if (item == null)
+			{
+				item = m_baseFetcher.GetObjectByGuid(key);
+				if (item == null) return null;
 
-                InsertObjectsInCache(new object[] { ProcessLoad(item) });
-            }
+				InsertObjectsInCache(new object[] { ProcessLoad(item) });
+			}
 
-            return item;
-        }
+			return item;
+		}
 
         #region Provider interactions
         /* The methods in this regions does all interaction with the provider.
@@ -98,9 +99,9 @@ namespace System.Data.LightDatamodel
         private object ProcessLoad(object tmp)
         {
             object res = null;
-            Guid g = (tmp as IDataClass).RelationManager.GetGuidForObject(tmp as IDataClass);
-			if (m_relationManager != null && m_relationManager.HasGuid(g))
-                res = m_relationManager.GetObjectByGuid(g);
+            Guid g = GetGuidForObject(tmp as IDataClass);
+			if (HasGuid(g))
+                res = GetObjectByGuid(g);
             else
             {
                 res = Activator.CreateInstance(tmp.GetType());
@@ -122,16 +123,16 @@ namespace System.Data.LightDatamodel
 
         protected override void UpdateObject(object obj)
         {
-            ObjectTransformer.CopyObject(obj, m_baseFetcher.GetObjectByGuid(this.RelationManager.GetGuidForObject((IDataClass)obj)));
+            ObjectTransformer.CopyObject(obj, m_baseFetcher.GetObjectByGuid(GetGuidForObject((IDataClass)obj)));
 			if (((IDataClass)obj).IsDirty)
-				((DataClassBase)m_baseFetcher.GetObjectByGuid(this.RelationManager.GetGuidForObject((IDataClass)obj))).m_isdirty = true;
+				((DataClassBase)m_baseFetcher.GetObjectByGuid(GetGuidForObject((IDataClass)obj))).m_isdirty = true;
         }
 
         protected override void RemoveObject(object obj)
         {
-            object tmp = m_baseFetcher.GetObjectByGuid(m_relationManager.GetGuidForObject((IDataClass)obj));
+            object tmp = m_baseFetcher.GetObjectByGuid(GetGuidForObject((IDataClass)obj));
             m_baseFetcher.DeleteObject(tmp);
-            m_relationManager.UnregisterObject((IDataClass)obj);
+            UnregisterObject((IDataClass)obj);
         }
 
         #endregion

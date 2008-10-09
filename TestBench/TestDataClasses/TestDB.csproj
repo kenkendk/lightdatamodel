@@ -1,1 +1,103 @@
-﻿<?xml version="1.0" encoding="UTF-8"?><Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"><PropertyGroup><ProjectType>Local</ProjectType><ProductVersion>8.0.50727</ProductVersion><SchemaVersion>2.0</SchemaVersion><ProjectGuid>{62da9c9b-ddae-4f9a-8f11-7966d55c2d0f}</ProjectGuid><Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration><Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform><ApplicationIcon /><AssemblyKeyContainerName /><AssemblyName>TestDB</AssemblyName><AssemblyOriginatorKeyFile>LightDatamodel.snk</AssemblyOriginatorKeyFile><DefaultClientScript>JScript</DefaultClientScript><DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout><DefaultTargetSchema>IE50</DefaultTargetSchema><DelaySign>false</DelaySign><OutputType>Library</OutputType><RootNamespace>Datamodel.TestDB</RootNamespace><RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent><StartupObject /><FileUpgradeFlags /><UpgradeBackupLocation /><SignAssembly>true</SignAssembly></PropertyGroup><PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "><OutputPath>bin\Debug\</OutputPath><AllowUnsafeBlocks>false</AllowUnsafeBlocks><BaseAddress>285212672</BaseAddress><CheckForOverflowUnderflow>false</CheckForOverflowUnderflow><ConfigurationOverrideFile></ConfigurationOverrideFile><DefineConstants>DEBUG;TRACE</DefineConstants><DocumentationFile></DocumentationFile><DebugSymbols>true</DebugSymbols><FileAlignment>4096</FileAlignment><NoStdLib>false</NoStdLib><NoWarn></NoWarn><Optimize>false</Optimize><RegisterForComInterop>false</RegisterForComInterop><RemoveIntegerChecks>false</RemoveIntegerChecks><TreatWarningsAsErrors>false</TreatWarningsAsErrors><WarningLevel>4</WarningLevel><DebugType>full</DebugType><ErrorReport>prompt</ErrorReport></PropertyGroup><PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' "><OutputPath>bin\Debug\</OutputPath><AllowUnsafeBlocks>false</AllowUnsafeBlocks><BaseAddress>285212672</BaseAddress><CheckForOverflowUnderflow>false</CheckForOverflowUnderflow><ConfigurationOverrideFile></ConfigurationOverrideFile><DefineConstants>TRACE</DefineConstants><DocumentationFile></DocumentationFile><DebugSymbols>false</DebugSymbols><FileAlignment>4096</FileAlignment><NoStdLib>false</NoStdLib><NoWarn></NoWarn><Optimize>true</Optimize><RegisterForComInterop>false</RegisterForComInterop><RemoveIntegerChecks>false</RemoveIntegerChecks><TreatWarningsAsErrors>false</TreatWarningsAsErrors><WarningLevel>4</WarningLevel><DebugType>none</DebugType><ErrorReport>prompt</ErrorReport></PropertyGroup><ItemGroup><Reference Include="System"><Name>System</Name></Reference><Reference Include="System.Data"><Name>System.Data</Name></Reference><Reference Include="System.XML"><Name>System.XML</Name></Reference><Reference Include="LightDatamodel"><Name>LightDatamodel</Name><HintPath>.\LightDatamodel.dll</HintPath></Reference></ItemGroup><ItemGroup><Compile Include="AssemblyInfo.cs" /><Compile Include="Companies.cs" /><Compile Include="CompanyVisits.cs" /><Compile Include="UserAdresses.cs" /><Compile Include="Users.cs" /><Compile Include="P.cs" /></ItemGroup><ItemGroup><None Include="LightDatamodel.snk" /></ItemGroup><Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" /></Project>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{62DA9C9B-DDAE-4F9A-8F11-7966D55C2D0F}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon />
+    <AssemblyKeyContainerName />
+    <AssemblyName>TestDB</AssemblyName>
+    <AssemblyOriginatorKeyFile>LightDatamodel.snk</AssemblyOriginatorKeyFile>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Datamodel.TestDB</RootNamespace>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <StartupObject />
+    <FileUpgradeFlags />
+    <UpgradeBackupLocation />
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>full</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>false</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <NoStdLib>false</NoStdLib>
+    <NoWarn>
+    </NoWarn>
+    <Optimize>true</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>none</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <Name>System</Name>
+    </Reference>
+    <Reference Include="System.Data">
+      <Name>System.Data</Name>
+    </Reference>
+    <Reference Include="System.XML">
+      <Name>System.XML</Name>
+    </Reference>
+    <Reference Include="LightDatamodel">
+      <Name>LightDatamodel</Name>
+      <HintPath>.\LightDatamodel.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Companies.cs" />
+    <Compile Include="CompanyVisits.cs" />
+    <Compile Include="UserAdresses.cs" />
+    <Compile Include="Users.cs" />
+    <Compile Include="P.cs" />
+    <Compile Include="sdfsdfs.cs" />
+    <Compile Include="sfdsfs.cs" />
+    <Compile Include="fdgfdg.cs" />
+    <Compile Include="fdgfdgfdg.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LightDatamodel.snk" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>
