@@ -115,7 +115,7 @@ namespace System.Data.LightDatamodel
 
         #endregion
 
- 		protected virtual DataClassLevels GetDataClassLevel(Type type)
+ 		protected DataClassLevels GetDataClassLevel(Type type)
 		{
 			do
 			{
@@ -133,7 +133,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="filter"></param>
 		/// <param name="parameters"></param>
 		/// <returns></returns>
-		public virtual DATACLASS GetObject<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
+		public DATACLASS GetObject<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
 		{
 			DATACLASS[] ret = GetObjects<DATACLASS>(filter, parameters);
 			if (ret != null && ret.Length > 0) return ret[0];
@@ -145,7 +145,7 @@ namespace System.Data.LightDatamodel
         /// </summary>
         /// <typeparam name="DATACLASS"></typeparam>
         /// <returns></returns>
-		public virtual DATACLASS[] GetObjects<DATACLASS>() where DATACLASS : IDataClass
+		public DATACLASS[] GetObjects<DATACLASS>() where DATACLASS : IDataClass
 		{
 			return GetObjects<DATACLASS>(null, null);
 		}
@@ -158,7 +158,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="filter">The filter used to select objects</param>
 		/// <returns>All matching objects</returns>
-		public virtual DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
+		public DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
 		{
 			return GetObjects<DATACLASS>(QueryModel.Parser.ParseQuery(filter, parameters));
 		}
@@ -188,7 +188,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="type"></param>
 		/// <returns></returns>
-		public virtual object[] GetObjects(Type type)
+		public object[] GetObjects(Type type)
 		{
 			return GetObjects(type, "", null);
 		}
@@ -203,7 +203,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="filter">The filter used to select objects</param>
 		/// <param name="parameters"></param>
 		/// <returns>All matching objects</returns>
-		public virtual object[] GetObjects(Type type, string filter, params object[] parameters)
+		public object[] GetObjects(Type type, string filter, params object[] parameters)
 		{
 			return GetObjects(type, QueryModel.Parser.ParseQuery(filter, parameters));
 		}
@@ -240,7 +240,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="id">ID of the item</param>
 		/// <param name="type">Type of the item to delete</param>
-		public virtual void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass
+		public void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass
 		{
 			DeleteObject(GetObjectById<DATACLASS>(id));
 		}
@@ -258,7 +258,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="type"></param>
 		/// <param name="id"></param>
 		/// <returns></returns>
-		public virtual DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass
+		public DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass
 		{
             return (DATACLASS)GetObjectById(typeof(DATACLASS), id);
 		}
@@ -292,11 +292,9 @@ namespace System.Data.LightDatamodel
         /// </summary>
         /// <typeparam name="DATACLASS"></typeparam>
         /// <returns></returns>
-		public virtual DATACLASS Add<DATACLASS>() where DATACLASS : IDataClass
+		public DATACLASS Add<DATACLASS>() where DATACLASS : IDataClass
 		{
-			DATACLASS newobj = Activator.CreateInstance<DATACLASS>();
-			Add((IDataClass)newobj);
-			return newobj;
+			return (DATACLASS)Add(typeof(DATACLASS));
 		}
 
         /// <summary>
@@ -304,7 +302,7 @@ namespace System.Data.LightDatamodel
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public virtual object Add(Type type)
+        public object Add(Type type)
 		{
 			object newobj = Activator.CreateInstance(type);
 			Add((IDataClass)newobj);
@@ -369,11 +367,20 @@ namespace System.Data.LightDatamodel
 			OnAfterDataConnection(obj, DataActions.Fetch);
 		}
 
+		/// <summary>
+		/// Commits an object into the data source and refreshes it
+		/// </summary>
+		/// <param name="obj"></param>
+		public void Commit(IDataClass obj)
+		{
+			Commit(obj, true);
+		}
+
         /// <summary>
         /// Commits an object into the data source
         /// </summary>
         /// <param name="obj"></param>
-		public virtual void Commit(IDataClass obj)
+		public virtual void Commit(IDataClass obj, bool refreshobject)
 		{
 			//new object?
 			if ((obj as DataClassBase).m_dataparent == null) Add(obj);
@@ -388,7 +395,7 @@ namespace System.Data.LightDatamodel
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Update);
 
                 //Try to read data back from database, but not from a nested
-                if (this as DataFetcherNested == null) RefreshObject(obj);
+				if (this as DataFetcherNested == null && refreshobject) RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.New)
 			{
@@ -399,7 +406,7 @@ namespace System.Data.LightDatamodel
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Insert);
 
                 //Try to read data back from database, but not from a nested
-                if (this as DataFetcherNested == null) RefreshObject(obj);
+				if (this as DataFetcherNested == null && refreshobject) RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.Deleted)
 			{
@@ -417,9 +424,9 @@ namespace System.Data.LightDatamodel
         /// Since there is no cache on the basic provider, it does nothing.
 		/// </summary>
 		/// <param name="obj">The object to discard</param>
-        public virtual void DiscardObject(IDataClass obj)
-        {
-        }
+		//public virtual void DiscardObject(IDataClass obj)
+		//{
+		//}
 
 
         public virtual void Dispose()

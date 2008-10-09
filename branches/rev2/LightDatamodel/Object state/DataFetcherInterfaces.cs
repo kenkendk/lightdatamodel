@@ -52,7 +52,6 @@ namespace System.Data.LightDatamodel
 		void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass;
         void DeleteObject(object item);
 		void RefreshObject(IDataClass obj);
-        void DiscardObject(IDataClass obj);
 		TypeConfiguration Mappings { get; }
 	}
 

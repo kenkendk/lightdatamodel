@@ -154,10 +154,14 @@ namespace System.Data.LightDatamodel
         {
             if (!m_cachedDelete.ContainsKey(typeinfo.Type))
             {
-                System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                sb.Append("DELETE FROM ");
-                sb.Append(QuoteTablename(typeinfo.Tablename));
-                m_cachedDelete[typeinfo.Type] = sb.ToString();
+				lock (m_cachedDelete)
+				{
+					if (m_cachedDelete.ContainsKey(typeinfo.Type)) return m_cachedDelete[typeinfo.Type];	//double lock
+					System.Text.StringBuilder sb = new System.Text.StringBuilder();
+					sb.Append("DELETE FROM ");
+					sb.Append(QuoteTablename(typeinfo.Tablename));
+					m_cachedDelete[typeinfo.Type] = sb.ToString();
+				}
             }
 
             return m_cachedDelete[typeinfo.Type];
@@ -172,18 +176,22 @@ namespace System.Data.LightDatamodel
         {
             if (!m_identityWhere.ContainsKey(typeinfo.Type))
             {
-                if (typeinfo.PrimaryKey == null)
-                    throw new Exception("Cannot delete row from table \"" + typeinfo.Tablename + "\" because the table has no primary key");
+				lock (m_identityWhere)
+				{
+					if (m_identityWhere.ContainsKey(typeinfo.Type)) return m_identityWhere[typeinfo.Type]; //double lock
 
-                //Dummy parameter holder
-                IDbCommand cmd = m_connection.CreateCommand();
+					if (typeinfo.PrimaryKey == null) throw new Exception("Cannot delete row from table \"" + typeinfo.Tablename + "\" because the table has no primary key");
 
-                System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                sb.Append(" WHERE ");
-                sb.Append(QuoteColumnname(typeinfo.PrimaryKey.Databasefield));
-                sb.Append("=");
-				sb.Append(AddParameter(cmd, "where" + typeinfo.PrimaryKey.Databasefield, ""));
-                m_identityWhere[typeinfo.Type] = sb.ToString();
+					//Dummy parameter holder
+					IDbCommand cmd = m_connection.CreateCommand();
+
+					System.Text.StringBuilder sb = new System.Text.StringBuilder();
+					sb.Append(" WHERE ");
+					sb.Append(QuoteColumnname(typeinfo.PrimaryKey.Databasefield));
+					sb.Append("=");
+					sb.Append(AddParameter(cmd, "where" + typeinfo.PrimaryKey.Databasefield, ""));
+					m_identityWhere[typeinfo.Type] = sb.ToString();
+				}
             }
 
             return m_identityWhere[typeinfo.Type];
@@ -198,21 +206,26 @@ namespace System.Data.LightDatamodel
         {
             if (!m_cachedSelect.ContainsKey(typeinfo.Type))
             {
-				//check for view
-				if (!String.IsNullOrEmpty(typeinfo.ViewSQL) && typeinfo.ViewSQL != "?") return typeinfo.ViewSQL;
+				lock (m_cachedSelect)
+				{
+					if (m_cachedSelect.ContainsKey(typeinfo.Type)) return m_cachedSelect[typeinfo.Type]; //double lock
 
-                System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                sb.Append("SELECT ");
-                foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
-                    if (!mf.IgnoreWithSelect)
-                    {
-                        sb.Append(QuoteColumnname(mf.Databasefield));
-                        sb.Append(",");
-                    }
-                sb.Length--;
-                sb.Append(" FROM ");
-                sb.Append(QuoteTablename(typeinfo.Tablename));
-                m_cachedSelect[typeinfo.Type] = sb.ToString();
+					//check for view
+					if (!String.IsNullOrEmpty(typeinfo.ViewSQL) && typeinfo.ViewSQL != "?") return typeinfo.ViewSQL;
+
+					System.Text.StringBuilder sb = new System.Text.StringBuilder();
+					sb.Append("SELECT ");
+					foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
+						if (!mf.IgnoreWithSelect)
+						{
+							sb.Append(QuoteColumnname(mf.Databasefield));
+							sb.Append(",");
+						}
+					sb.Length--;
+					sb.Append(" FROM ");
+					sb.Append(QuoteTablename(typeinfo.Tablename));
+					m_cachedSelect[typeinfo.Type] = sb.ToString();
+				}
             }
 
             return m_cachedSelect[typeinfo.Type];
@@ -258,28 +271,33 @@ namespace System.Data.LightDatamodel
         {
             if (!m_cachedInsert.ContainsKey(typeinfo.Type))
             {
-                //Dummy parameter holder
-                IDbCommand cmd = m_connection.CreateCommand();
+				lock (m_cachedInsert)
+				{
+					if (m_cachedInsert.ContainsKey(typeinfo.Type)) return m_cachedInsert[typeinfo.Type]; //double lock
 
-                System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                System.Text.StringBuilder sb2 = new System.Text.StringBuilder();
-                sb.Append("INSERT INTO ");
-                sb.Append(QuoteTablename(typeinfo.Tablename));
-                sb.Append(" (");
-                foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
-                    if (!mf.IgnoreWithInsert)
-                    {
-                        sb.Append(QuoteColumnname(mf.Databasefield));
-                        sb.Append(",");
-                        sb2.Append(AddParameter(cmd, mf.Databasefield, ""));
-                        sb2.Append(",");
-                    }
-                sb.Length--;
-                sb2.Length--;
-                sb.Append(") VALUES (");
-                sb.Append(sb2.ToString());
-                sb.Append(")");
-                m_cachedInsert[typeinfo.Type] = sb.ToString();
+					//Dummy parameter holder
+					IDbCommand cmd = m_connection.CreateCommand();
+
+					System.Text.StringBuilder sb = new System.Text.StringBuilder();
+					System.Text.StringBuilder sb2 = new System.Text.StringBuilder();
+					sb.Append("INSERT INTO ");
+					sb.Append(QuoteTablename(typeinfo.Tablename));
+					sb.Append(" (");
+					foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
+						if (!mf.IgnoreWithInsert)
+						{
+							sb.Append(QuoteColumnname(mf.Databasefield));
+							sb.Append(",");
+							sb2.Append(AddParameter(cmd, mf.Databasefield, ""));
+							sb2.Append(",");
+						}
+					sb.Length--;
+					sb2.Length--;
+					sb.Append(") VALUES (");
+					sb.Append(sb2.ToString());
+					sb.Append(")");
+					m_cachedInsert[typeinfo.Type] = sb.ToString();
+				}
             }
 
             return m_cachedInsert[typeinfo.Type];
@@ -429,16 +447,19 @@ namespace System.Data.LightDatamodel
 
             cmd.CommandText = GetDeleteString(typeinfo) + GetIdentityWhere(typeinfo);
 			AddParameter(cmd, "where" + typeinfo.PrimaryKey.Databasefield, typeinfo.PrimaryKey.Field.GetValue(item));
-            
-            try
+
+			try
 			{
 				int r = cmd.ExecuteNonQuery();
-				if (r != 1)
-					throw new Exception("Delete was expected to delete 1 rows, but deleted: " + r.ToString());
+				if (r != 1) throw new MissingPrimaryKeyException("Delete was expected to delete 1 rows, but deleted: " + r.ToString());
 			}
-			catch(Exception ex)
+			catch (MissingPrimaryKeyException)
 			{
-				throw new MissingPrimaryKeyException("Couldn't delete row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
+				throw;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Couldn't delete row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
 			}
 		}
 
@@ -761,8 +782,12 @@ namespace System.Data.LightDatamodel
                 try
                 {
                     int r = cmd.ExecuteNonQuery();
-                    if (r != 1) throw new Exception("Row update was expected to update 1 row, but updated: " + r.ToString());
+					if (r != 1) throw new MissingPrimaryKeyException("Row update was expected to update 1 row, but updated: " + r.ToString());
                 }
+				catch (MissingPrimaryKeyException)
+				{
+					throw;
+				}
                 catch (Exception ex)
                 {
 					throw new Exception("Couldn't update row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
@@ -792,9 +817,12 @@ namespace System.Data.LightDatamodel
                 try
                 {
                     int r = cmd.ExecuteNonQuery();
-                    if (r != 1)
-                        throw new Exception("The insert was expected to update 1 row, but updated: " + r.ToString());
+                    if (r != 1) throw new MissingPrimaryKeyException("The insert was expected to update 1 row, but updated: " + r.ToString());
                 }
+				catch (MissingPrimaryKeyException)
+				{
+					throw;
+				}
                 catch (Exception ex)
                 {
 					throw new Exception("Couldn't insert row in table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));

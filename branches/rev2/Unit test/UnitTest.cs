@@ -852,7 +852,7 @@ namespace Datamodel.UnitTest
 			for (int i = 0; i < count; i++)
 			{
 				aw[i] = new AssyncronWorker(fetcher);
-				aw[i].StartAssyncronTest();
+				aw[i].StartAssyncronTest("TestTråd " + i);
 			}
 
 			//wait for them to exit
@@ -882,7 +882,7 @@ namespace Datamodel.UnitTest
 			for (int i = 0; i < count; i++)
 			{
 				aw[i] = new AssyncronWorker(fetcher);
-				aw[i].StartAssyncronTest();
+				aw[i].StartAssyncronTest("TestTråd " + i);
 			}
 
 			//wait for them to exit
@@ -924,6 +924,11 @@ namespace Datamodel.UnitTest
 			{
 				Random rnd = new Random();
 
+				if (m_thread.Name == "TestTråd 5")
+				{
+					int ko = 1;
+				}
+
 				//insert
 				Project[] ps = new Project[m_count];
 				Note[] ns = new Note[m_count];
@@ -943,21 +948,21 @@ namespace Datamodel.UnitTest
 					}
 				}
 
-				//load 
-				for (int i = 0; i < 100; i++)
-				{
-					m_conn.GetObjectById<Project>(ps[rnd.Next(0, m_count - 1)].ID);
-					m_conn.GetObjectById<Note>(ns[rnd.Next(0, m_count - 1)].ID);
-				}
+				////load 
+				//for (int i = 0; i < 100; i++)
+				//{
+				//    m_conn.GetObjectById<Project>(ps[rnd.Next(0, m_count - 1)].ID);
+				//    m_conn.GetObjectById<Note>(ns[rnd.Next(0, m_count - 1)].ID);
+				//}
 
-				m_conn.GetObjects<Project>();
-				m_conn.GetObjects<Note>();
+				//m_conn.GetObjects<Project>();
+				//m_conn.GetObjects<Note>();
 
-				for (int i = 0; i < 100; i++)
-				{
-					m_conn.GetObjectById<Project>(ps[rnd.Next(0, m_count - 1)].ID);
-					m_conn.GetObjectById<Note>(ns[rnd.Next(0, m_count - 1)].ID);
-				}
+				//for (int i = 0; i < 100; i++)
+				//{
+				//    m_conn.GetObjectById<Project>(ps[rnd.Next(0, m_count - 1)].ID);
+				//    m_conn.GetObjectById<Note>(ns[rnd.Next(0, m_count - 1)].ID);
+				//}
 
 				//delete all!!!
 				ps = m_conn.GetObjects<Project>();
@@ -1006,9 +1011,10 @@ namespace Datamodel.UnitTest
 				m_thread.Abort();	//end
 			}
 
-			public void StartAssyncronTest()
+			public void StartAssyncronTest(string threadname)
 			{
 				m_thread = new System.Threading.Thread(new System.Threading.ThreadStart(this.PerformTest));
+				m_thread.Name = threadname;
 				m_thread.Start();
 			}
 		}
