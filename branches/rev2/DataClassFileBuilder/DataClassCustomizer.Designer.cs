@@ -77,6 +77,8 @@
 			this.label3 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
+			this.TableIgnoreCheck = new System.Windows.Forms.CheckBox();
+			this.FieldIndexCheck = new System.Windows.Forms.CheckBox();
 			this.panel1.SuspendLayout();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
@@ -94,7 +96,7 @@
 			this.panel1.Controls.Add(this.CancelBtn);
 			this.panel1.Controls.Add(this.OKBtn);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.panel1.Location = new System.Drawing.Point(0, 523);
+			this.panel1.Location = new System.Drawing.Point(0, 563);
 			this.panel1.Name = "panel1";
 			this.panel1.Size = new System.Drawing.Size(553, 41);
 			this.panel1.TabIndex = 0;
@@ -138,7 +140,7 @@
 			this.splitContainer1.Panel2.Controls.Add(this.ReferenceProperties);
 			this.splitContainer1.Panel2.Controls.Add(this.TableProperties);
 			this.splitContainer1.Panel2.Controls.Add(this.FieldProperties);
-			this.splitContainer1.Size = new System.Drawing.Size(553, 523);
+			this.splitContainer1.Size = new System.Drawing.Size(553, 563);
 			this.splitContainer1.SplitterDistance = 200;
 			this.splitContainer1.TabIndex = 1;
 			// 
@@ -195,7 +197,7 @@
 			this.treeView.Location = new System.Drawing.Point(8, 32);
 			this.treeView.Name = "treeView";
 			this.treeView.SelectedImageIndex = 0;
-			this.treeView.Size = new System.Drawing.Size(184, 482);
+			this.treeView.Size = new System.Drawing.Size(184, 522);
 			this.treeView.TabIndex = 0;
 			this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
 			// 
@@ -216,7 +218,7 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.IgnoredFieldProperties.Controls.Add(this.IgnoredFieldName);
 			this.IgnoredFieldProperties.Controls.Add(this.label11);
-			this.IgnoredFieldProperties.Location = new System.Drawing.Point(8, 464);
+			this.IgnoredFieldProperties.Location = new System.Drawing.Point(8, 504);
 			this.IgnoredFieldProperties.Name = "IgnoredFieldProperties";
 			this.IgnoredFieldProperties.Size = new System.Drawing.Size(335, 48);
 			this.IgnoredFieldProperties.TabIndex = 2;
@@ -261,7 +263,7 @@
 			this.ReferenceProperties.Controls.Add(this.label6);
 			this.ReferenceProperties.Controls.Add(this.label7);
 			this.ReferenceProperties.Controls.Add(this.label8);
-			this.ReferenceProperties.Location = new System.Drawing.Point(8, 208);
+			this.ReferenceProperties.Location = new System.Drawing.Point(8, 224);
 			this.ReferenceProperties.Name = "ReferenceProperties";
 			this.ReferenceProperties.Size = new System.Drawing.Size(335, 192);
 			this.ReferenceProperties.TabIndex = 0;
@@ -431,11 +433,12 @@
 			// 
 			this.TableProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
+			this.TableProperties.Controls.Add(this.TableIgnoreCheck);
 			this.TableProperties.Controls.Add(this.TableTablename);
 			this.TableProperties.Controls.Add(this.label1);
-			this.TableProperties.Location = new System.Drawing.Point(8, 408);
+			this.TableProperties.Location = new System.Drawing.Point(8, 424);
 			this.TableProperties.Name = "TableProperties";
-			this.TableProperties.Size = new System.Drawing.Size(335, 48);
+			this.TableProperties.Size = new System.Drawing.Size(335, 72);
 			this.TableProperties.TabIndex = 1;
 			this.TableProperties.TabStop = false;
 			this.TableProperties.Text = "Table properties";
@@ -463,6 +466,7 @@
 			// 
 			this.FieldProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
+			this.FieldProperties.Controls.Add(this.FieldIndexCheck);
 			this.FieldProperties.Controls.Add(this.FieldDefaultValue);
 			this.FieldProperties.Controls.Add(this.label12);
 			this.FieldProperties.Controls.Add(this.FieldPropertyname);
@@ -478,7 +482,7 @@
 			this.FieldProperties.Controls.Add(this.label2);
 			this.FieldProperties.Location = new System.Drawing.Point(8, 8);
 			this.FieldProperties.Name = "FieldProperties";
-			this.FieldProperties.Size = new System.Drawing.Size(335, 192);
+			this.FieldProperties.Size = new System.Drawing.Size(335, 208);
 			this.FieldProperties.TabIndex = 1;
 			this.FieldProperties.TabStop = false;
 			this.FieldProperties.Text = "Field properties";
@@ -618,12 +622,34 @@
 			// 
 			this.errorProvider1.ContainerControl = this;
 			// 
+			// TableIgnoreCheck
+			// 
+			this.TableIgnoreCheck.AutoSize = true;
+			this.TableIgnoreCheck.Location = new System.Drawing.Point(16, 40);
+			this.TableIgnoreCheck.Name = "TableIgnoreCheck";
+			this.TableIgnoreCheck.Size = new System.Drawing.Size(56, 17);
+			this.TableIgnoreCheck.TabIndex = 6;
+			this.TableIgnoreCheck.Text = "Ignore";
+			this.TableIgnoreCheck.UseVisualStyleBackColor = true;
+			this.TableIgnoreCheck.CheckedChanged += new System.EventHandler(this.TableIgnoreCheck_CheckedChanged);
+			// 
+			// FieldIndexCheck
+			// 
+			this.FieldIndexCheck.AutoSize = true;
+			this.FieldIndexCheck.Location = new System.Drawing.Point(16, 184);
+			this.FieldIndexCheck.Name = "FieldIndexCheck";
+			this.FieldIndexCheck.Size = new System.Drawing.Size(52, 17);
+			this.FieldIndexCheck.TabIndex = 15;
+			this.FieldIndexCheck.Text = "Index";
+			this.FieldIndexCheck.UseVisualStyleBackColor = true;
+			this.FieldIndexCheck.CheckedChanged += new System.EventHandler(this.FieldIndexCheck_CheckedChanged);
+			// 
 			// DataClassCustomizer
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.CancelBtn;
-			this.ClientSize = new System.Drawing.Size(553, 564);
+			this.ClientSize = new System.Drawing.Size(553, 604);
 			this.Controls.Add(this.splitContainer1);
 			this.Controls.Add(this.panel1);
 			this.Name = "DataClassCustomizer";
@@ -697,6 +723,8 @@
         private System.Windows.Forms.Label label13;
 		private System.Windows.Forms.ComboBox ReferenceType;
 		private System.Windows.Forms.Label label14;
+		private System.Windows.Forms.CheckBox TableIgnoreCheck;
+		private System.Windows.Forms.CheckBox FieldIndexCheck;
 
     }
 }

@@ -374,6 +374,19 @@ namespace Datamodel.UnitTest
 			fetcher.Commit(casesentivity);
 			Note[] casetest = fetcher.GetObjects<Note>("NoteText = ?", "Hererentext");
 			if (casetest == null || casetest.Length == 0) throw new Exception("This is most likely wrong");
+
+			//test index
+			fetcher.AddIndex(typeof(Note), "NoteText");
+			Note n4 = fetcher.GetObjectByIndex<Note>("NoteText", "HerErEnText");
+			if (n4 == null) throw new Exception("Bah!");
+			for (int i = 0; i < 10; i++)
+			{
+				Note n5 = new Note();
+				n5.NoteText = "HerErEnText";
+				fetcher.Add(n5);
+			}
+			Note[] ns = fetcher.GetObjectsByIndex<Note>("NoteText", "HerErEnText");
+			if (ns == null || ns.Length < 11) throw new Exception("Bah");
 		}
 
 		public static void TestQueryModel(IDbConnection con)
@@ -384,6 +397,7 @@ namespace Datamodel.UnitTest
 			for (int i = 0; i < 100; i++)
 			{
 				hub.Add(new Project());
+				int ko = hub.LocalCache.Count;
 			}
 			hub.CommitAll();
 
