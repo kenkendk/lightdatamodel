@@ -35,19 +35,16 @@ namespace System.Data.LightDatamodel
 		internal protected IDataFetcher m_dataparent;
 		internal protected ObjectStates m_state = ObjectStates.Default;
 		internal protected Dictionary<string, object> m_originalvalues;
+		internal protected static Random rnd = new Random();		//used to provide unique (almost) to new objects
+
 		public event DataChangeEventHandler BeforeDataChange;
 		public event DataChangeEventHandler AfterDataChange;
 		public event DataConnectionEventHandler BeforeDataCommit;
 		public event DataConnectionEventHandler AfterDataCommit;
-		internal protected static Random rnd = new Random();		//used to provide unique (almost) to new objects
 
 		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
-        //public RelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
 		public bool IsDirty{get{return m_isdirty;}}
 		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
-		//public abstract string UniqueColumn	{get;}
-		//public abstract object UniqueValue{get;}
-        //public void SetDirty() { m_isdirty = true; }
 
 		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{

@@ -21,7 +21,7 @@ namespace Datamodel.UnitTest
 
 		[AutoIncrement, PrimaryKey, DatabaseField("ID")]
 		private System.Int64 m_ID = rnd.Next(int.MinValue, -1);
-		[DatabaseField("Text")]
+		[Index, DatabaseField("Text")]
 		private System.String m_Text = "";
 #endregion
 

@@ -27,8 +27,6 @@ namespace System.Data.LightDatamodel
 	{
 		event ObjectStateChangeHandler ObjectAddRemove;
 		
-		//DATACLASS GetObjectByGuid<DATACLASS>(Guid guid) where DATACLASS : IDataClass;
-		//object GetObjectByGuid(Guid guid);
 		object[] GetObjectsFromCache(Type type, QueryModel.Operation query);
 		object[] GetObjectsFromCache(Type type, string filter, params object[] parameters);
 		DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass;
@@ -37,8 +35,15 @@ namespace System.Data.LightDatamodel
 		object GetObjectFromCache(Type type, string filter, params object[] parameters);
 		DATACLASS GetObjectFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass;
 		DATACLASS GetObjectFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
-		//void Remove(IDataClass obj);
-        //RelationManager RelationManager { get; }
+
+		object GetObjectByIndex(Type type, string indexname, object indexvalue);
+		DATACLASS GetObjectByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
+		object[] GetObjectsByIndex(Type type, string indexname, object indexvalue);
+		DATACLASS[] GetObjectsByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
+
+		void AddIndex(Type type, string indexname);
+		void RemoveIndex(Type type, string indexname);
+
 		bool IsDirty { get; }
 		void ClearCache();
 		void CommitAll();
@@ -53,32 +58,5 @@ namespace System.Data.LightDatamodel
 	/// <param name="oldstate"></param>
 	/// <param name="newstate"></param>
 	public delegate void ObjectStateChangeHandler(object sender, IDataClass obj, ObjectStates oldstate, ObjectStates newstate);
-
-	//public interface IRelationManager
-	//{
-	//    bool ExistsInDb(IDataClass item);
-	//    Guid GetGuidForObject(IDataClass item);
-	//    IDataClass GetObjectByGuid(Guid g);
-	//    T GetReferenceObject<T>(string propertyname, IDataClass owner);
-	//    IDataClass GetReferenceObject(string propertyname, IDataClass owner);
-	//    GenericListWrapper<T, IDataClass> GetReferenceCollection<T>(string propertyname, IDataClass owner) where T : IDataClass;
-
-	//    void SetReferenceObject(string propertyname, IDataClass owner, IDataClass value);
-	//    void SetReferenceObject<T>(string propertyname, IDataClass owner, T value) where T : IDataClass;
-
-	//    //string GetUniqueColumn(Type type);
-	//    bool IsRegistered(IDataClass item);
-	//    void ReassignGuid(Guid oldGuid, Guid newGuid);
-	//    Guid RegisterObject(Guid g, IDataClass item);
-	//    Guid RegisterObject(IDataClass item);
-	//    void UnregisterObject(IDataClass item);
-	//    void UnregisterObject(Guid g);
-	//    void SetExistsInDb(IDataClass item, bool state);
-	//    void DeleteObject(IDataClass itm);
-
-	//    Dictionary<string, List<Guid>> GetReferenceObjects(Type type, Guid item);
-	//    void SetReferenceObjects(Type type, Guid item, Dictionary<string, List<Guid>> references);
-	//    bool HasGuid(Guid g);
-	//}
 
 }

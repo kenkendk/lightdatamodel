@@ -259,7 +259,7 @@
           <IgnoreWithSelect>false</IgnoreWithSelect>
           <IgnoreWithUpdate>false</IgnoreWithUpdate>
           <IgnoreWithInsert>false</IgnoreWithInsert>
-          <Index>false</Index>
+          <Index>true</Index>
         </Column>
       </Columns>
       <Ignore>false</Ignore>

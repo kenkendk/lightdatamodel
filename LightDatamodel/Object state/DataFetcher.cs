@@ -29,7 +29,6 @@ namespace System.Data.LightDatamodel
 	public class DataFetcher : IDataFetcher
 	{
 		protected IDataProvider m_provider;
-        //protected IObjectTransformer m_transformer;
 		protected TypeConfiguration m_mappings = new TypeConfiguration();
 
 		public event DataChangeEventHandler BeforeDataChange;
@@ -38,15 +37,12 @@ namespace System.Data.LightDatamodel
 		public event DataConnectionEventHandler AfterDataConnection;
 
 		public IDataProvider Provider { get { return m_provider; } }
-        //public IObjectTransformer ObjectTransformer { get { return m_transformer; } }
 		public TypeConfiguration Mappings { get { return m_mappings; } }
 
 		public DataFetcher(IDataProvider provider)
 		{
 			m_provider = provider;
 			m_provider.Parent = this;
-			//m_transformer = new ObjectTransformer();
-			//m_provider.Transformer = m_transformer;
         }
 
         #region Provider interactions
@@ -140,6 +136,20 @@ namespace System.Data.LightDatamodel
 			return default(DATACLASS);
 		}
 
+		/// <summary>
+		/// Returns 1 object given by filter
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="filter"></param>
+		/// <param name="parameters"></param>
+		/// <returns></returns>
+		public object GetObject(Type type, string filter, params object[] parameters)
+		{
+			object[] ret = GetObjects(type, filter, parameters);
+			if (ret != null && ret.Length > 0) return ret[0];
+			return null;
+		}
+
         /// <summary>
         /// Returns all objects of a given type in the data source
         /// </summary>
@@ -163,6 +173,15 @@ namespace System.Data.LightDatamodel
 			return GetObjects<DATACLASS>(QueryModel.Parser.ParseQuery(filter, parameters));
 		}
 
+		/// <summary>
+		/// This will load a list of arbitary objects
+		/// If the given object is a DataClassBase it will be hooked into the DataFetcher
+		/// DataCustomClassBase will also have it's values filled
+		/// All others will just be filled with the data
+		/// </summary>
+		/// <typeparam name="DATACLASS"></typeparam>
+		/// <param name="operation"></param>
+		/// <returns></returns>
 		public virtual DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass
 		{
 			Type type = typeof(DATACLASS);
@@ -208,6 +227,15 @@ namespace System.Data.LightDatamodel
 			return GetObjects(type, QueryModel.Parser.ParseQuery(filter, parameters));
 		}
 
+		/// <summary>
+		/// This will load a list of arbitary objects
+		/// If the given object is a DataClassBase it will be hooked into the DataFetcher
+		/// DataCustomClassBase will also have it's values filled
+		/// All others will just be filled with the data
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="operation"></param>
+		/// <returns></returns>
 		public virtual object[] GetObjects(Type type, QueryModel.Operation operation)
 		{
 			string tablename = type.Name;
@@ -245,13 +273,6 @@ namespace System.Data.LightDatamodel
 			DeleteObject(GetObjectById<DATACLASS>(id));
 		}
 
-		///// <summary>
-		///// Commits all cached objects, actually does nothing since there is no cache on this fetcher
-		///// </summary>
-		//public virtual void CommitAll()
-		//{
-		//}
-
 		/// <summary>
 		/// This will load the given DataClassBase object
 		/// </summary>
@@ -271,7 +292,6 @@ namespace System.Data.LightDatamodel
         /// <returns></returns>
 		public virtual object GetObjectById(Type type, object id)
 		{
-			//string tablename = type.Name;
 
 			if (GetDataClassLevel(type) < DataClassLevels.Base) throw new Exception("This object cannot be fetched by primary key. Use GetObjects instead");
 
@@ -326,11 +346,19 @@ namespace System.Data.LightDatamodel
 		/// <param name="obj">The object to insert</param>
 		protected virtual void HookObject(IDataClass obj)		//TODO: This should be merged with Add
 		{
-			(obj as DataClassBase).BeforeDataChange += new DataChangeEventHandler(obj_BeforeDataChange);
-			(obj as DataClassBase).AfterDataChange += new DataChangeEventHandler(obj_AfterDataChange);
+			(obj as DataClassBase).BeforeDataChange += new DataChangeEventHandler(OnBeforeDataChange);
+			(obj as DataClassBase).AfterDataChange += new DataChangeEventHandler(OnAfterDataChange);
 			(obj as DataClassBase).m_dataparent = this;
 		}
 
+		/// <summary>
+		/// This will evaluate a scalar ... not sure that this is a good function
+		/// </summary>
+		/// <typeparam name="RETURNVALUE"></typeparam>
+		/// <typeparam name="DATACLASS"></typeparam>
+		/// <param name="expression"></param>
+		/// <param name="filter"></param>
+		/// <returns></returns>
 		public virtual RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter)
 		{
 			OnBeforeDataConnection(null, DataActions.Fetch);
@@ -393,9 +421,7 @@ namespace System.Data.LightDatamodel
                 UpdateObject(obj);
 				OnAfterDataConnection(obj, DataActions.Update);
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Update);
-
-                //Try to read data back from database, but not from a nested
-				if (this as DataFetcherNested == null && refreshobject) RefreshObject(obj);
+				if (refreshobject) RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.New)
 			{
@@ -404,9 +430,7 @@ namespace System.Data.LightDatamodel
                 InsertObject(obj);
 				OnAfterDataConnection(obj, DataActions.Insert);
 				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Insert);
-
-                //Try to read data back from database, but not from a nested
-				if (this as DataFetcherNested == null && refreshobject) RefreshObject(obj);
+				if (refreshobject) RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.Deleted)
 			{
@@ -419,28 +443,17 @@ namespace System.Data.LightDatamodel
 
 		}
 
-        /// <summary>
-		/// Discards all changes from the object, and removes it from the internal cache.
-        /// Since there is no cache on the basic provider, it does nothing.
-		/// </summary>
-		/// <param name="obj">The object to discard</param>
-		//public virtual void DiscardObject(IDataClass obj)
-		//{
-		//}
-
-
         public virtual void Dispose()
         {
             m_provider = null;
-            //m_transformer = null;
         }
 
-		protected virtual void obj_BeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
+		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			if(BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
 		}
 
-		protected virtual void obj_AfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
+		protected virtual void OnAfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			if(AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
 		}

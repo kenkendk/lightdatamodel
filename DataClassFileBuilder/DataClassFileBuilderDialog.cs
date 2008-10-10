@@ -1029,15 +1029,6 @@ namespace DataClassFileBuilder
                     }
                     sw.Write("#endregion\n\n");
 
-                    //overrides
-					//if (mapping.ViewSQL == null)
-					//{
-					//    sw.Write("#region \" unique value \"\n\n");
-					//    sw.Write("\t\tpublic override object UniqueValue {get{return " + (mapping.PrimaryKey  != null ? mapping.PrimaryKey.Field.Name : "null") + ";}}\n");
-					//    sw.Write("\t\tpublic override string UniqueColumn {get{return \"" + (mapping.PrimaryKey  != null ? mapping.PrimaryKey.Databasefield : "") + "\";}}\n");
-					//    sw.Write("#endregion\n\n");
-					//}
-
                     //properties
                     sw.Write("#region \" properties \"\n\n");
                     foreach(ConfigurationContainer.Column mf in mapping.Columns)

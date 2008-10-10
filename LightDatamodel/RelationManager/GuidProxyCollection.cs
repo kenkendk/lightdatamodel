@@ -47,7 +47,7 @@ namespace System.Data.LightDatamodel
             return m_list.IndexOf(m_manager.GetGuidForObject(item));
         }
 
-        public void Insert(int index, IDataClass item)
+        void IList<IDataClass>.Insert(int index, IDataClass item)		//hidden
         {
             throw new NotImplementedException("Use the add method instead");
         }

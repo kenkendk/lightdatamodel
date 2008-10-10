@@ -117,11 +117,6 @@ namespace DataClassFileBuilder
             }
         }
 
-        private void toolStripButton1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
             RemoveButton.Enabled = treeView.SelectedNode != null;
@@ -133,12 +128,13 @@ namespace DataClassFileBuilder
             {
                 m_isUpdating = true;
                 Control m = null;
-				//if (e.Node.Tag as TypeConfiguration.IgnoredClass != null)
-				//{
-				//    TypeConfiguration.IgnoredClass ic = e.Node.Tag as TypeConfiguration.IgnoredClass;
-				//    m = TableProperties;
-				//    TableTablename.Text = ic.Tablename;
-				//}
+				if (e.Node.Tag as ConfigurationContainer.Table != null)
+				{
+					ConfigurationContainer.Table ic = e.Node.Tag as ConfigurationContainer.Table;
+					m = TableProperties;
+					TableTablename.Text = ic.Name;
+					TableIgnoreCheck.Checked = ic.Ignore;
+				}
 				//else if (e.Node.Tag as TypeConfiguration.IgnoredField != null)
 				//{
 				//    TypeConfiguration.IgnoredField i = e.Node.Tag as TypeConfiguration.IgnoredField;
@@ -245,6 +241,20 @@ namespace DataClassFileBuilder
 			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).IgnoreWithSelect = FieldExcludeSelect.Checked;
         }
 
+		private void FieldIndexCheck_CheckedChanged(object sender, EventArgs e)
+		{
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Index = FieldIndexCheck.Checked;
+		}
+
+		private void TableIgnoreCheck_CheckedChanged(object sender, EventArgs e)
+		{
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Table == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Table).Ignore = TableIgnoreCheck.Checked;
+		}
+
         private void ReferenceColumnname_TextChanged(object sender, EventArgs e)
         {
             ReferenceReversePropertyname.Items.Clear();
@@ -303,10 +313,10 @@ namespace DataClassFileBuilder
 
         private void TableTablename_TextChanged(object sender, EventArgs e)
         {
-			//if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.IgnoredClass == null)
-			//    return;
-			//treeView.SelectedNode.Text = TableTablename.Text;
-			//(treeView.SelectedNode.Tag as TypeConfiguration.IgnoredClass).Tablename = TableTablename.Text;
+			if (m_isUpdating || treeView.SelectedNode == null)
+			    return;
+			treeView.SelectedNode.Text = TableTablename.Text;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Table).Name = TableTablename.Text;
         }
 
         private void IgnoredFieldName_TextChanged(object sender, EventArgs e)

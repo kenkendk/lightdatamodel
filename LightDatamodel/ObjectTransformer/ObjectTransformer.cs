@@ -29,9 +29,6 @@ namespace System.Data.LightDatamodel
 	/// </summary>
 	public class ObjectTransformer
 	{
-		//private TypeConfiguration m_configuration = new TypeConfiguration();
-
-		//public TypeConfiguration TypeConfiguration { get { return m_configuration; } }
 
         /// <summary>
         /// Creates a new copy of the given item
@@ -116,6 +113,13 @@ namespace System.Data.LightDatamodel
             return obj;
         }
 
+		/// <summary>
+		/// This will transform the DB-result to objects of the given type
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="reader"></param>
+		/// <param name="provider"></param>
+		/// <returns></returns>
         public static object[] TransformToObjects(Type type, IDataReader reader, IDataProvider provider)
         {
             List<object> items = new List<object>();
@@ -129,6 +133,13 @@ namespace System.Data.LightDatamodel
             return items.ToArray();
         }
 
+		/// <summary>
+		/// This will transform the DB-result to objects of the given type
+		/// </summary>
+		/// <typeparam name="DATACLASS"></typeparam>
+		/// <param name="reader"></param>
+		/// <param name="provider"></param>
+		/// <returns></returns>
         public static DATACLASS[] TransformToObjects<DATACLASS>(IDataReader reader, IDataProvider provider)
         {
             List<DATACLASS> items = new List<DATACLASS>();
