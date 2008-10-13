@@ -486,7 +486,8 @@ namespace System.Data.LightDatamodel
                     if (updateId && m_existsInDb.ContainsKey(owner) && m_existsInDb[owner])
                         SetIdValue(relationKey, ownerType, owner, null, true);
 
-                    rels[owner].RemoveAt(0);
+                    if (rels[owner].Count > 0)
+                        rels[owner].RemoveAt(0);
 
                     //Update the other end
                     if (m_config.IsCollection(objType, relationKey))

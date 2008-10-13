@@ -34,12 +34,10 @@ namespace System.Data.LightDatamodel
         //where Ty : class
     {
         private IList<Ty> m_list;
-        private Enumerator<Tx> m_enum;
 
         public GenericListWrapper(IList<Ty> inner)
         {
             m_list = inner;
-            m_enum = new Enumerator<Tx>(m_list.GetEnumerator());
         }
 
         #region IList<Tx> Members
@@ -117,7 +115,7 @@ namespace System.Data.LightDatamodel
 
         public IEnumerator<Tx> GetEnumerator()
         {
-            return m_enum;
+            return new Enumerator<Tx>(m_list.GetEnumerator());
         }
 
         #endregion
