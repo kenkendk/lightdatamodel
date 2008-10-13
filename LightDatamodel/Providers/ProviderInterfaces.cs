@@ -54,8 +54,21 @@ namespace System.Data.LightDatamodel
 		void CommitTransaction(Guid id);
 		void RollbackTransaction(Guid id);
 		void Close();
-		//IObjectTransformer Transformer { get; set; }
 		IDataFetcher Parent { get; set;}
+	}
+
+	/// <summary>
+	/// This should be thrown when an update/delete/create cen't fetch/find a given object
+	/// </summary>
+	public class NoSuchObjectException : Exception
+	{
+		private object m_object;
+		public object Object { get{ return m_object;}}
+
+		public NoSuchObjectException(string message, object obj) : base(message)
+		{
+			m_object = obj;
+		}
 	}
 
 	/// <summary>

@@ -235,64 +235,71 @@ namespace Datamodel.UnitTest
 		public static void TestCache()
 		{
 			DataFetcherCached.Cache test = new DataFetcherCached.Cache();
-
-			//test the empty one
-			foreach (IDataClass k in test)
+			try
 			{
-				int dummy = test.Count;
+				test.Lock.AcquireWriterLock(-1);
+
+				//test the empty one
+				foreach (IDataClass k in test)
+				{
+					int dummy = test.Count;
+				}
+				foreach (IDataClass k in test.GetObjects(typeof(Project)))
+				{
+					int dummy = test.Count;
+				}
+
+				test.Add(typeof(Project), "ID", 1, new Project());
+				test.Add(typeof(Project), "ID", 2, new Project());
+				test.Add(typeof(Project), "ID", 3, new Project());
+				test.Add(typeof(Project), "ID", 4, new Project());
+				test.Add(typeof(Project), "ID", 5, new Project());
+				test.Add(typeof(Project), "ID", 4, new Project());		//the same OoOOoOoOOooo
+
+				if (test.Count != 6) throw new Exception("Bah!");
+
+				int c = 0;
+				foreach (IDataClass k in test)
+				{
+					c++;
+					if (c > 10) throw new Exception("Bah!");
+				}
+				if (c != 6) throw new Exception("Bah!");
+
+				c = 0;
+				foreach (IDataClass k in test.GetObjects(typeof(Project)))
+				{
+					c++;
+				}
+				if (c != 6) throw new Exception("Bah!");
+
+				Project p = (Project)test[typeof(Project), "ID", 1];
+
+				test.RemoveObject(typeof(Project), "ID", 1, p);
+				if (test.Count != 5) throw new Exception("Bah!");
+
+				p = (Project)test[typeof(Project), "ID", 4];
+				test.RemoveObject(typeof(Project), "ID", 4, p);
+				if (test.Count != 4) throw new Exception("Bah!");
+
+				c = 0;
+				foreach (IDataClass k in test)
+				{
+					c++;
+				}
+				if (c != 4) throw new Exception("Bah!");
+
+				c = 0;
+				foreach (IDataClass k in test.GetObjects(typeof(Project)))
+				{
+					c++;
+				}
+				if (c != 4) throw new Exception("Bah!");
 			}
-			foreach (IDataClass k in test.GetObjects(typeof(Project)))
+			finally
 			{
-				int dummy = test.Count;
+				test.Lock.ReleaseWriterLock();
 			}
-
-			test.Add(typeof(Project), "ID", 1, new Project());
-			test.Add(typeof(Project), "ID", 2, new Project());
-			test.Add(typeof(Project), "ID", 3, new Project());
-			test.Add(typeof(Project), "ID", 4, new Project());
-			test.Add(typeof(Project), "ID", 5, new Project());
-			test.Add(typeof(Project), "ID", 4, new Project());		//the same OoOOoOoOOooo
-
-			if (test.Count != 6) throw new Exception("Bah!");
-
-			int c = 0;
-			foreach (IDataClass k in test)
-			{
-				c++;
-				if (c > 10) throw new Exception("Bah!");
-			}
-			if (c != 6) throw new Exception("Bah!");
-
-			c = 0;
-			foreach (IDataClass k in test.GetObjects(typeof(Project)))
-			{
-				c++;
-			}
-			if (c != 6) throw new Exception("Bah!");
-
-			Project p = (Project)test[typeof(Project), "ID", 1];
-
-			test.RemoveObject(typeof(Project), "ID", 1, p);
-			if (test.Count != 5) throw new Exception("Bah!");
-
-			p = (Project)test[typeof(Project), "ID", 4];
-			test.RemoveObject(typeof(Project), "ID", 4, p);
-			if (test.Count != 4) throw new Exception("Bah!");
-
-			c = 0;
-			foreach (IDataClass k in test)
-			{
-				c++;
-			}
-			if (c != 4) throw new Exception("Bah!");
-
-			c = 0;
-			foreach (IDataClass k in test.GetObjects(typeof(Project)))
-			{
-				c++;
-			}
-			if (c != 4) throw new Exception("Bah!");
-
 		}
 
 		/// <summary>
@@ -397,7 +404,6 @@ namespace Datamodel.UnitTest
 			for (int i = 0; i < 100; i++)
 			{
 				hub.Add(new Project());
-				int ko = hub.LocalCache.Count;
 			}
 			hub.CommitAll();
 
@@ -940,7 +946,7 @@ namespace Datamodel.UnitTest
 
 				if (m_thread.Name == "TestTråd 5")
 				{
-					int ko = 1;
+					int ko = 1;		// <-- place break point here
 				}
 
 				//insert
@@ -955,7 +961,7 @@ namespace Datamodel.UnitTest
 						ns[i] = new Note();
 						m_conn.Commit(ns[i]);
 					}
-					catch (MissingPrimaryKeyException ex)
+					catch (NoSuchObjectException ex)
 					{
 						//this can happen if the object is deleted, right after creation, but before refresh
 						//I'm not sure wheter we should deal with this or not
@@ -987,7 +993,7 @@ namespace Datamodel.UnitTest
 					{
 						m_conn.DeleteObject(p);
 					}
-					catch (MissingPrimaryKeyException ex)
+					catch (NoSuchObjectException ex)
 					{
 						//Again, this might already be deleted
 					}
@@ -998,7 +1004,7 @@ namespace Datamodel.UnitTest
 					{
 						m_conn.DeleteObject(n);
 					}
-					catch (MissingPrimaryKeyException ex)
+					catch (NoSuchObjectException ex)
 					{
 						//Again, this might already be deleted
 					}
@@ -1015,9 +1021,10 @@ namespace Datamodel.UnitTest
 							m_cached.CommitAll();
 							success = true;
 						}
-						catch (MissingPrimaryKeyException ex)
+						catch (NoSuchObjectException ex)
 						{
-							//Again, this might already be deleted
+							//discard the object and try again
+							m_cached.DiscardObject(ex.Object as IDataClass);
 						}
 					}
 				}

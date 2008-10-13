@@ -46,13 +46,13 @@ namespace System.Data.LightDatamodel
 		public bool IsDirty{get{return m_isdirty;}}
 		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
 
-		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
+		protected virtual internal void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			if(object.Equals(oldvalue, newvalue)) return;
 			if(BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
 		}
 
-		protected virtual void OnAfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
+		protected virtual internal void OnAfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			if(object.Equals(oldvalue, newvalue)) return;
 			if (m_originalvalues == null) m_originalvalues = new Dictionary<string, object>();
