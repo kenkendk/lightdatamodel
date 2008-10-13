@@ -32,6 +32,9 @@ namespace System.Data.LightDatamodel
 		protected Cache m_cache = new Cache();
 		protected Dictionary<Type, Dictionary<string, string>> m_loadreducer = new Dictionary<Type, Dictionary<string, string>>();
 		private System.Threading.ReaderWriterLock m_transactionlock = new System.Threading.ReaderWriterLock();
+#if DEBUG
+		private static bool m_isintransaction = false;
+#endif
 
 		public event ObjectStateChangeHandler ObjectAddRemove;
 
@@ -57,11 +60,14 @@ namespace System.Data.LightDatamodel
 				{
 					try
 					{
-						//we assume that the keys already exists ... see ReaderWriterLock
+						//we assume that the keys already exists 
 						m_list[type][indexname][indexvalue] = value;
 					}
 					catch
 					{
+#if DEBUG
+						if (!Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 						//the keys doesn't exists ... this is very expensive (the try-catch that is)
 						if (!m_list.ContainsKey(type)) m_list.Add(type, new Dictionary<string, MultiDictionary<object, IDataClass>>());
 						if (!m_list[type].ContainsKey(indexname)) m_list[type].Add(indexname, new MultiDictionary<object, IDataClass>());
@@ -79,6 +85,9 @@ namespace System.Data.LightDatamodel
 			/// <param name="newvalue"></param>
 			public void ReindexObject(object obj, string indexname, object oldvalue, object newvalue)
 			{
+#if DEBUG
+				if (!Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				RemoveObject(obj.GetType(), indexname, oldvalue, (IDataClass)obj);
 				Add(obj.GetType(), indexname, newvalue, (IDataClass)obj);
 			}
@@ -104,6 +113,9 @@ namespace System.Data.LightDatamodel
 			{
 				get
 				{
+#if DEBUG
+					if (!Lock.IsReaderLockHeld && !Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 					int count = 0;
 					foreach (KeyValuePair<Type, Dictionary<string, MultiDictionary<object, IDataClass>>> itm in m_list)
 					{
@@ -126,6 +138,9 @@ namespace System.Data.LightDatamodel
 			/// <returns></returns>
 			public IDataClass[] GetObjects(Type type, string indexname, object indexvalue)
 			{
+#if DEBUG
+				if (!Lock.IsReaderLockHeld && !Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				ICollection<IDataClass> list = m_list[type][indexname].Items[indexvalue];
 				IDataClass[] ret = new IDataClass[list == null ? 0 : list.Count];
 				int c = 0;
@@ -136,6 +151,9 @@ namespace System.Data.LightDatamodel
 
 			public DATACLASS[] GetObjects<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass
 			{
+#if DEBUG
+				if (!Lock.IsReaderLockHeld && !Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				ICollection<IDataClass> list = m_list[typeof(DATACLASS)][indexname].Items[indexvalue];
 				DATACLASS[] ret = new DATACLASS[list == null ? 0 : list.Count];
 				int c = 0;
@@ -181,6 +199,9 @@ namespace System.Data.LightDatamodel
 			/// <returns></returns>
 			public TypeObjectCollection GetObjects(Type type)
 			{
+#if DEBUG
+				if (!Lock.IsReaderLockHeld && !Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				return new TypeObjectCollection(this, type);
 			}
 
@@ -189,6 +210,9 @@ namespace System.Data.LightDatamodel
 			/// </summary>
 			public void ClearAllUnchanged()
 			{
+#if DEBUG
+				if (!Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				foreach (KeyValuePair<Type, Dictionary<string, MultiDictionary<object, IDataClass>>> type in m_list)
 					foreach (KeyValuePair<string, MultiDictionary<object, IDataClass>> index in type.Value)
 					{
@@ -204,6 +228,9 @@ namespace System.Data.LightDatamodel
 			/// <param name="indexname"></param>
 			public void AddIndex(Type type, string indexname)
 			{
+#if DEBUG
+				if (!Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				//add index
 				if (!m_list.ContainsKey(type)) m_list.Add(type, new Dictionary<string, MultiDictionary<object, IDataClass>>());
 				if (!m_list[type].ContainsKey(indexname)) m_list[type].Add(indexname, new MultiDictionary<object, IDataClass>());
@@ -217,6 +244,9 @@ namespace System.Data.LightDatamodel
 			/// <returns></returns>
 			public bool RemoveIndex(Type type, string indexname)
 			{
+#if DEBUG
+				if (!Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				if (!m_list.ContainsKey(type)) return false;
 				return m_list[type].Remove(indexname);
 			}
@@ -228,6 +258,9 @@ namespace System.Data.LightDatamodel
 			/// <returns></returns>
 			public bool RemoveIndex(Type type)
 			{
+#if DEBUG
+				if (!Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				return m_list.Remove(type);
 			}
 
@@ -242,7 +275,7 @@ namespace System.Data.LightDatamodel
 			}
 
 			/// <summary>
-			/// This is used for removing an object
+			/// This is used for removing an object. Will not remove from Deleted
 			/// </summary>
 			/// <param name="type"></param>
 			/// <param name="indexname"></param>
@@ -250,17 +283,23 @@ namespace System.Data.LightDatamodel
 			/// <returns></returns>
 			public bool RemoveObject(Type type, string indexname, object indexvalue, IDataClass item)
 			{
+#if DEBUG
+				if (!Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				return m_list[type][indexname].Remove(indexvalue, item);
 			}
 
 			public IEnumerator<IDataClass> GetEnumerator()
 			{
+#if DEBUG
+				if (!Lock.IsReaderLockHeld && !Lock.IsWriterLockHeld) throw new Exception("This will need lock");
+#endif
 				return new Enumerator(this.m_list);
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
 			{
-				return new Enumerator(this.m_list);
+				return GetEnumerator();
 			}
 
 			public class Enumerator : IEnumerator<IDataClass>
@@ -388,11 +427,15 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_transactionlock.AcquireWriterLock(-1);		//only 1 of this function (CommitAll) may run
+#if DEBUG
+				if (m_isintransaction) throw new Exception("Already in transaction!");
+				m_isintransaction = true;
+#endif
 
 				//get objects
 				try
 				{
-					m_cache.Lock.AcquireReaderLock(-1);
+					m_cache.Lock.AcquireReaderLock(-1);			//different lock
 					deletedobjects = new LinkedList<IDataClass>(m_cache.DeletedObjects);
 					newobjects = new LinkedList<IDataClass>();
 					updatedobjects = new LinkedList<IDataClass>();
@@ -410,15 +453,17 @@ namespace System.Data.LightDatamodel
 					m_cache.Lock.ReleaseReaderLock();
 				}
 
-				//start commiting
-				m_provider.BeginTransaction(transactionID); //SQLite can only handle 1 transaction ... and not writing from multiple threads isn't that bad, is it?
-				inTransaction = true;
+				if (deletedobjects.Count == 0 && newobjects.Count == 0 && updatedobjects.Count == 0) return;		//don't get me started
 
+				//start commiting
 				try
 				{
+					m_provider.BeginTransaction(transactionID); //SQLite can only handle 1 transaction ... and not writing from multiple threads isn't that bad, is it?
+					inTransaction = true;
+
 					//delete (First we delete. In case we've delete a primary key, that also will be inserted)
 					foreach (IDataClass c in deletedobjects)
-						base.Commit(c); //no lock
+						base.Commit(c, false); //no lock
 
 					//update (second we update. In case we changed some primary keys, that also will be inserted)
 					foreach (IDataClass c in updatedobjects)
@@ -426,7 +471,7 @@ namespace System.Data.LightDatamodel
 
 					//create
 					foreach (IDataClass c in newobjects)
-						base.Commit(c, false); //no lock
+						base.Commit(c, false); //no lock ... //will also rebalance objects in cache (means lock)
 
 					m_provider.CommitTransaction(transactionID);
 					inTransaction = false;
@@ -436,33 +481,34 @@ namespace System.Data.LightDatamodel
 					if (inTransaction) m_provider.RollbackTransaction(transactionID);
 				}
 
-				if (inTransaction) throw new Exception("Can this happen????");
+				//refresh objects ... only do this if the transaction is a success ... kind of "commit objects"
+				foreach (IDataClass c in newobjects)
+					RefreshObject(c);
+				foreach (IDataClass c in updatedobjects)
+					RefreshObject(c);
+
+				//commit objects to cache
+				if (deletedobjects.Count > 0)
+				{
+					try
+					{
+						m_cache.Lock.AcquireWriterLock(-1);
+						foreach (IDataClass c in deletedobjects)
+							m_cache.DeletedObjects.Remove(c);
+					}
+					finally
+					{
+						m_cache.Lock.ReleaseWriterLock();
+					}
+				}
 
 			}
 			finally
 			{
+				#if DEBUG
+				m_isintransaction = false;
+				#endif
 				m_transactionlock.ReleaseWriterLock();
-			}
-
-			//refresh objects ... only do this if the transaction is a success ... kind of "commit objects"
-			foreach (IDataClass c in newobjects)
-				RefreshObject(c);
-			foreach (IDataClass c in updatedobjects)
-				RefreshObject(c);
-
-			//commit objects to cache
-			if (deletedobjects.Count > 0)
-			{
-				try
-				{
-					m_cache.Lock.AcquireWriterLock(-1);
-					foreach (IDataClass c in deletedobjects)
-						m_cache.DeletedObjects.Remove(c);
-				}
-				finally
-				{
-					m_cache.Lock.ReleaseWriterLock();
-				}
 			}
 
 			//recursive commit
@@ -571,6 +617,7 @@ namespace System.Data.LightDatamodel
 				{
 					m_cache.RemoveObject(obj.GetType(), index.Databasefield, index.Field.GetValue(obj), obj);
 				}
+				m_cache.DeletedObjects.Remove(obj);		//it could be a deleted object
 			}
 			finally
 			{
@@ -761,8 +808,14 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_cache.Lock.AcquireWriterLock(-1);
-				m_cache.RemoveObject(item.GetType(), m_mappings[item.GetType()].PrimaryKey.Databasefield, m_mappings[item.GetType()].PrimaryKey.Field.GetValue(obj), obj);
-				if(obj.ObjectState != ObjectStates.New) m_cache.DeletedObjects.Add(obj);
+				bool removed = m_cache.RemoveObject(item.GetType(), m_mappings[item.GetType()].PrimaryKey.Databasefield, m_mappings[item.GetType()].PrimaryKey.Field.GetValue(obj), obj);
+				if (removed && obj.ObjectState != ObjectStates.New)	//only add object 1 time
+				{
+					//check if it's already in delete que
+					QueryModel.Operation op = QueryModel.Parser.ParseQuery("GetType.FullName = ? AND " + m_mappings[item.GetType()].PrimaryKey.Property.Name + " = ?", item.GetType().FullName, m_mappings[item.GetType()].PrimaryKey.Field.GetValue(item));
+					object[] o = op.EvaluateList(m_cache.DeletedObjects);
+					if (o == null || o.Length == 0) m_cache.DeletedObjects.Add(obj);
+				}
 				(obj as DataClassBase).m_state = ObjectStates.Deleted;
 			}
 			finally
@@ -1049,7 +1102,18 @@ namespace System.Data.LightDatamodel
 		protected override void OnAfterDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
 			//check if it's an index changing	(Will this be a performance killer I wonder?)
-			if (m_mappings[sender.GetType()][propertyname].Index) m_cache.ReindexObject(sender, propertyname, oldvalue, newvalue);
+			if (m_mappings[sender.GetType()][propertyname].Index)
+			{
+				try
+				{
+					m_cache.Lock.AcquireWriterLock(-1);
+					m_cache.ReindexObject(sender, propertyname, oldvalue, newvalue);
+				}
+				finally
+				{
+					m_cache.Lock.ReleaseWriterLock();
+				}
+			}
 
 			//send event
 			base.OnAfterDataChange(sender, propertyname, oldvalue, newvalue);

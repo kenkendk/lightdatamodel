@@ -21,6 +21,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Data.LightDatamodel.DataClassAttributes;
 
 namespace System.Data.LightDatamodel
 {
@@ -64,8 +65,36 @@ namespace System.Data.LightDatamodel
             if (target.GetType() != source.GetType()) throw new Exception("Objects must be of same type");
 
 			FieldInfo[] fields = source.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly); ;
-            foreach (FieldInfo fi in fields)
-                fi.SetValue(target, fi.GetValue(source));
+			object s, t;
+			DataClassBase targetbase = target as DataClassBase;
+			if(targetbase != null)
+			{
+				//fire events if possible
+				foreach (FieldInfo fi in fields)
+				{
+					s = fi.GetValue(source);
+					t = fi.GetValue(target);
+					if (!object.Equals(s, t))		//only copy differating objects
+					{
+						DatabaseField dbf = TypeConfiguration.MappedClass.GetAttribute<DatabaseField>(fi);
+						if(dbf == null)
+						{
+							fi.SetValue(target, s);
+						}
+						else
+						{
+							targetbase.OnBeforeDataChange(target,dbf.Fieldname , t, s);
+							fi.SetValue(target, s);
+							targetbase.OnAfterDataChange(target, dbf.Fieldname , t, s);
+						}
+					}
+				}
+			}
+			else
+			{
+				foreach (FieldInfo fi in fields)
+					fi.SetValue(target, fi.GetValue(source));
+			}
 
 			DataFetcherWithRelations sourceManager = null;
 			DataFetcherWithRelations targetManager = null;

@@ -29,5 +29,10 @@ namespace Datamodel.UnitTest
 		public System.Guid Guid { get { return ((DataFetcherWithRelations)this.DataParent).GetGuidForObject(this); } }
 		public bool ExistsInDB { get { return ((DataFetcherWithRelations)this.DataParent).ExistsInDb(this); } }
 
+		public override string ToString()
+		{
+			return "Proj " + m_ID.ToString();
+		}
+
     }
 }

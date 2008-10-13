@@ -451,9 +451,9 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				int r = cmd.ExecuteNonQuery();
-				if (r != 1) throw new MissingPrimaryKeyException("Delete was expected to delete 1 rows, but deleted: " + r.ToString());
+				if (r != 1) throw new NoSuchObjectException("Delete was expected to delete 1 rows (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + "), but deleted: " + r.ToString(), item);
 			}
-			catch (MissingPrimaryKeyException)
+			catch (NoSuchObjectException)
 			{
 				throw;
 			}
@@ -747,6 +747,7 @@ namespace System.Data.LightDatamodel
 				sb.Append("UPDATE ");
 				sb.Append(QuoteTablename(typeinfo.Tablename));
 				sb.Append(" SET ");
+				bool hasedits = false;
 				foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
 					if (!mf.IgnoreWithUpdate && (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(mf.Databasefield)))
 					{
@@ -754,7 +755,9 @@ namespace System.Data.LightDatamodel
 						sb.Append("=");
 						sb.Append(AddParameter(cmd, mf.Databasefield, mf.Field.GetValue(item)));
 						sb.Append(",");
+						hasedits = true;
 					}
+				if (!hasedits) return;
 				sb.Length--;
                 //cmd.CommandText = GetUpdateString(typeinfo) + GetIdentityWhere(typeinfo);
 				cmd.CommandText = sb.ToString() + GetIdentityWhere(typeinfo);
@@ -782,9 +785,9 @@ namespace System.Data.LightDatamodel
                 try
                 {
                     int r = cmd.ExecuteNonQuery();
-					if (r != 1) throw new MissingPrimaryKeyException("Row update was expected to update 1 row, but updated: " + r.ToString());
+					if (r != 1) throw new NoSuchObjectException("Row update was expected to update 1 row, but updated: " + r.ToString(), item);
                 }
-				catch (MissingPrimaryKeyException)
+				catch (NoSuchObjectException)
 				{
 					throw;
 				}
@@ -817,9 +820,9 @@ namespace System.Data.LightDatamodel
                 try
                 {
                     int r = cmd.ExecuteNonQuery();
-                    if (r != 1) throw new MissingPrimaryKeyException("The insert was expected to update 1 row, but updated: " + r.ToString());
+					if (r != 1) throw new NoSuchObjectException("The insert was expected to update 1 row, but updated: " + r.ToString(), item);
                 }
-				catch (MissingPrimaryKeyException)
+				catch (NoSuchObjectException)
 				{
 					throw;
 				}

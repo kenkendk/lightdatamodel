@@ -46,6 +46,11 @@ namespace System.Data.LightDatamodel
 
 		bool IsDirty { get; }
 		void ClearCache();
+
+		/// <summary>
+		/// Will commit all cached objects to the DB
+		/// </summary>
+		/// <exception cref="">NoSuchObjectException</exception>
 		void CommitAll();
 		void DiscardObject(IDataClass obj);
 	}
