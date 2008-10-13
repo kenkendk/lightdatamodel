@@ -57,53 +57,45 @@ namespace Datamodel.UnitTest
 			System.Console.WriteLine("Basic operations...");
 			int basicstart = System.Environment.TickCount;
 			TestBasicOperations(con);
-			int basicend = System.Environment.TickCount;
-			System.Console.WriteLine("" + (basicend - basicstart) + " ms");
+			System.Console.WriteLine("" + (System.Environment.TickCount - basicstart) + " ms");
 
 			System.Console.WriteLine("MultiDictionary...");
 			int multistart = System.Environment.TickCount;
 			TestMultiDictionary();
 			TestCache();
-			int multiend = System.Environment.TickCount;
-			System.Console.WriteLine("" + (multiend - multistart) + " ms");
+			System.Console.WriteLine("" + (System.Environment.TickCount - multistart) + " ms");
 
 			System.Console.WriteLine("Cached operations...");
 			int cachedstart = System.Environment.TickCount;
 			TestCachedOperations(con);
-			int cachedend = System.Environment.TickCount;
-			System.Console.WriteLine("" + (cachedend - cachedstart) + " ms");
+			System.Console.WriteLine("" + (System.Environment.TickCount - cachedstart) + " ms");
 
 			System.Console.WriteLine("Query model...");
 			int querystart = System.Environment.TickCount;
 			TestQueryModel(con);
-			int queryend = System.Environment.TickCount;
-			System.Console.WriteLine("" + (queryend - querystart) + " ms");
+			System.Console.WriteLine("" + (System.Environment.TickCount - querystart) + " ms");
 
-			System.Console.WriteLine("Assyncron fetcher...");
-			int assynstart = System.Environment.TickCount;
-			TestFetcherAssyncron(con);
-			int assynend = System.Environment.TickCount;
-			System.Console.WriteLine("" + (assynend - assynstart) + " ms");
+			//System.Console.WriteLine("Assyncron fetcher...");
+			//int assynstart = System.Environment.TickCount;
+			//TestFetcherAssyncron(con);
+			//System.Console.WriteLine("" + (System.Environment.TickCount - assynstart) + " ms");
 
-			System.Console.WriteLine("Cached assyncron fetcher...");
-			assynstart = System.Environment.TickCount;
-			TestCachedFetcherAssyncron(con);
-			assynend = System.Environment.TickCount;
-			System.Console.WriteLine("" + (assynend - assynstart) + " ms");
+			//System.Console.WriteLine("Cached assyncron fetcher...");
+			//assynstart = System.Environment.TickCount;
+			//TestCachedFetcherAssyncron(con);
+			//System.Console.WriteLine("" + (System.Environment.TickCount - assynstart) + " ms");
 
-			//System.Console.WriteLine("Relations operations...");
-			//int relationsstart = System.Environment.TickCount;
-			//TestRelations(con);
-			//int relationsend = System.Environment.TickCount;
-			//System.Console.WriteLine("" + (relationsend - relationsstart) + " ms");
+			System.Console.WriteLine("Relations operations...");
+			int relationsstart = System.Environment.TickCount;
+			TestRelations(con);
+			System.Console.WriteLine("" + (System.Environment.TickCount - relationsstart) + " ms");
 
-			//System.Console.WriteLine("Relations extended...");
-			//int extendedstart = System.Environment.TickCount;
-			//TestRelationsExtended(con);
-			int extendedend = System.Environment.TickCount;
-			//System.Console.WriteLine("" + (extendedend - extendedstart) + " ms");
+			System.Console.WriteLine("Relations extended...");
+			int extendedstart = System.Environment.TickCount;
+			TestRelationsExtended(con);
+			System.Console.WriteLine("" + (System.Environment.TickCount - extendedstart) + " ms");
 
-			System.Console.WriteLine("Done! Whole process took " + (extendedend - start) + " ms");
+			System.Console.WriteLine("Done! Whole process took " + (System.Environment.TickCount - start) + " ms");
 			System.Console.ReadKey();
 		}
 
@@ -488,7 +480,7 @@ namespace Datamodel.UnitTest
 			for (int i = 0; i < 100; i++)
 				hub.Add(new Project());
 
-			//hub.CommitAll();
+			hub.CommitAll();
 
 			DataFetcherNested nd = new DataFetcherNested(hub);
 
@@ -752,7 +744,7 @@ namespace Datamodel.UnitTest
 
 
 			p.ProjectNote = null;
-			hub.DeleteObject(n);
+			hub.DeleteObjectFromReferences(n);
 
 			hub.CommitAll();
 
@@ -766,7 +758,7 @@ namespace Datamodel.UnitTest
 			Project test = hub.GetObjectByGuid<Project>(pg);
 			pg = hub.GetGuidForObject(test);
 			object delid = p.ID;
-			nd.DeleteObject(p);
+			nd.DeleteObjectFromReferences(p);
 			Guid delg = nd.GetGuidForObject(p);		//aren't this supposed to fail?
 			//Sort of, but since it's a nested fetcher, and not committed, 
 			//the basefetcher can still retrieve the item

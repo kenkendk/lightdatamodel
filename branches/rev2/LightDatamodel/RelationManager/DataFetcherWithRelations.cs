@@ -33,6 +33,7 @@ namespace System.Data.LightDatamodel
         /// This contains all known objects
         /// </summary>
         private Dictionary<Guid, IDataClass> m_hookedObjects;
+
         /// <summary>
         /// This contains all known objects
         /// </summary>
@@ -178,7 +179,7 @@ namespace System.Data.LightDatamodel
         /// Remove an object, and clear all references to it on other objects
         /// </summary>
         /// <param name="itm"></param>
-        public void DeleteObject(IDataClass itm)
+        public void DeleteObjectFromReferences(IDataClass itm)
         {
             if (itm == null || !m_revHookedObjects.ContainsKey(itm))
                 return;
@@ -789,7 +790,58 @@ namespace System.Data.LightDatamodel
                         SetReferenceObjectInternal(relationKey, type, item, Guid.Empty, false);
                 }
            }
-        }
+	   }
+
+	   #region " overrides "
+
+	   public override IDataClass Add(IDataClass newobj)
+		{
+			IDataClass obj = base.Add(newobj);
+			RegisterObject(newobj);
+			SetExistsInDb(newobj, false);
+			return obj;
+		}
+
+		protected override void HookObject(IDataClass obj)
+		{
+			base.HookObject(obj);
+			if (!IsRegistered(obj)) RegisterObject(obj);
+		}
+
+		public override void DiscardObject(IDataClass obj)
+		{
+			base.DiscardObject(obj);
+			UnregisterObject(obj);
+		}
+
+		protected override IDataClass[] InsertObjectsInCache(object[] data)
+		{
+			IDataClass[] objs = base.InsertObjectsInCache(data);
+			foreach(IDataClass obj in objs)
+				SetExistsInDb(obj, true);
+		}
+
+		public override void DeleteObject(object item)
+		{
+			base.DeleteObject(item);
+			UnregisterObject(obj);
+		}
+
+		public override void Commit(IDataClass obj, bool refreshobject)
+		{
+			base.Commit(obj, refreshobject);
+			if (obj.ObjectState == ObjectStates.Deleted && IsRegistered(obj)) DeleteObjectFromReferences(obj);
+		}
+
+		public override void ClearCache()
+		{
+			base.ClearCache();
+			UnregisterObject(m_cache[key][obj]);
+		}
+
+	   #endregion
+
+		#region " Config "
 
 		public class RelationManagerConfig
 		{
@@ -926,5 +978,7 @@ namespace System.Data.LightDatamodel
 				return m_isCollection[type][relationKey];
 			}
 		}
+
+	   #endregion
 	}
 }
