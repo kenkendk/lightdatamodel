@@ -602,7 +602,7 @@ namespace System.Data.LightDatamodel
 		/// Discards all changes from the object, and removes it from the internal cache
 		/// </summary>
 		/// <param name="obj">The object to discard</param>
-		public void DiscardObject(IDataClass obj)
+		public virtual void DiscardObject(IDataClass obj)
 		{
 			//lock (m_loadreducer)
 			{
@@ -746,7 +746,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		protected IDataClass[] InsertObjectsInCache(object[] data)
+		protected virtual IDataClass[] InsertObjectsInCache(object[] data)
 		{
 			List<IDataClass> res = new List<IDataClass>();
 
@@ -1075,7 +1075,7 @@ namespace System.Data.LightDatamodel
 		/// <summary>
 		/// Clears the cache, and removes all non-modified items 
 		/// </summary>
-		public void ClearCache()
+		public virtual void ClearCache()
 		{
 			//lock (m_loadreducer)
 			{
