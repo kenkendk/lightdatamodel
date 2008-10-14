@@ -1,4 +1,4 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
@@ -101,9 +101,12 @@
     <Compile Include="Extended fetchers\DataFetcherNested.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\QueryModel.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="QueryModel\Comparer.cs" />
+    <Compile Include="QueryModel\Enums.cs" />
+    <Compile Include="QueryModel\Operation.cs" />
+    <Compile Include="QueryModel\OperationOrParameter.cs" />
+    <Compile Include="QueryModel\Parameter.cs" />
+    <Compile Include="QueryModel\Parser.cs" />
     <Compile Include="Object state\DataClassBase.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -128,6 +131,8 @@
     <Compile Include="Providers\SQLiteDataProvider.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="QueryModel\Query.cs" />
+    <Compile Include="QueryModel\Sorting.cs" />
     <Compile Include="RelationManager\GenericListWrapper.cs" />
     <Compile Include="RelationManager\GuidProxyCollection.cs" />
     <Compile Include="RelationManager\RelationManager.cs" />
