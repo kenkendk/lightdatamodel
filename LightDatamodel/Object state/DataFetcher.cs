@@ -157,7 +157,7 @@ namespace System.Data.LightDatamodel
 		/// <returns>All matching objects</returns>
 		public virtual DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
 		{
-			return GetObjects<DATACLASS>(QueryModel.Parser.ParseQuery(filter, parameters));
+			return GetObjects<DATACLASS>(Query.Parse(filter, parameters));
 		}
 
 		public virtual DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass
@@ -202,7 +202,7 @@ namespace System.Data.LightDatamodel
 		/// <returns>All matching objects</returns>
 		public virtual object[] GetObjects(Type type, string filter, params object[] parameters)
 		{
-			return GetObjects(type, QueryModel.Parser.ParseQuery(filter, parameters));
+			return GetObjects(type, Query.Parse(filter, parameters));
 		}
 
 		public virtual object[] GetObjects(Type type, QueryModel.Operation operation)
@@ -275,7 +275,7 @@ namespace System.Data.LightDatamodel
 			//Fetch From Data source
 			IDataClass newobj = (IDataClass)Activator.CreateInstance(type);
 			OnBeforeDataConnection(newobj, DataActions.Fetch);
-            object[] items = LoadObjects(type, QueryModel.Parser.ParseQuery(newobj.UniqueColumn + "=?", id));
+            object[] items = LoadObjects(type, Query.Equal(Query.Property(newobj.UniqueColumn), Query.Value(id)));
             if (items == null || items.Length == 0)
                 return null;
 
@@ -358,7 +358,7 @@ namespace System.Data.LightDatamodel
 
 			string tablename = obj.GetType().Name;
 			OnBeforeDataConnection(obj, DataActions.Fetch);
-            object[] items = LoadObjects(obj.GetType(), QueryModel.Parser.ParseQuery(obj.UniqueColumn + "=?", obj.UniqueValue));
+            object[] items = LoadObjects(obj.GetType(), Query.Equal(Query.Property(obj.UniqueColumn), Query.Value(obj.UniqueValue)));
             if (items == null || items.Length == 0) throw new Exception("Row (" + obj.UniqueValue + ") from table \"" + tablename + "\" can't be fetched");
             if (items.Length != 1) throw new Exception("Row (" + obj.UniqueValue + ") from table \"" + tablename + "\" gave " + items.Length.ToString() + " rows");
             ObjectTransformer.CopyObject(items[0], obj);
