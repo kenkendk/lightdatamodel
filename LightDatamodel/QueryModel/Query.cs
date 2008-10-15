@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data.LightDatamodel.QueryModel;
+using System.Collections;
 
 namespace System.Data.LightDatamodel
 {
@@ -237,6 +238,59 @@ namespace System.Data.LightDatamodel
         public static Operation NOP()
         {
             return new Operation(Operators.NOP);
+        }
+
+        /// <summary>
+        /// Searches a list with a given operation as the evaluator
+        /// </summary>
+        /// <param name="op">The operation to filter the list with</param>
+        /// <param name="items">The list to search</param>
+        /// <param name="parameters">Extra unbound parameters</param>
+        /// <returns>All objects matching the criteria</returns>
+        public static object[] SearchLinear(Operation op, IEnumerable items, params object[] parameters)
+        {
+            return op.EvaluateList(items, parameters);
+        }
+
+        /// <summary>
+        /// Searches a list with a given operation as the evaluator
+        /// </summary>
+        /// <typeparam name="T">The type of objects to return</typeparam>
+        /// <param name="op">The operation to filter the list with</param>
+        /// <param name="items">The list to search</param>
+        /// <param name="parameters">Extra unbound parameters</param>
+        /// <returns>All objects matching the criteria</returns>
+        public static T[] SearchLinear<T>(Operation op, IEnumerable items, params object[] parameters)
+        {
+            return op.EvaluateList<T>(items, parameters);
+        }
+
+        /// <summary>
+        /// Searches a list with a given operation as the evaluator, and returns the first match or null if no such match is found.
+        /// </summary>
+        /// <param name="op">The operation to filter the list with</param>
+        /// <param name="items">The list to search</param>
+        /// <param name="parameters">Extra unbound parameters</param>
+        /// <returns>The object matching the criteria, or null</returns>
+        public static object FindFirst(Operation op, IEnumerable items, params object[] parameters)
+        {
+            foreach (object o in items)
+                if (Operation.ResAsBool(op.Evaluate(o, parameters)))
+                    return o;
+            return null;
+        }
+
+        /// <summary>
+        /// Searches a list with a given operation as the evaluator, and returns the first match or null if no such match is found.
+        /// </summary>
+        /// <typeparam name="T">The type of object to return</typeparam>
+        /// <param name="op">The operation to filter the list with</param>
+        /// <param name="items">The list to search</param>
+        /// <param name="parameters">Extra unbound parameters</param>
+        /// <returns>The object matching the criteria, or null</returns>
+        public static T FindFirst<T>(Operation op, IEnumerable items, params object[] parameters)
+        {
+            return (T)FindFirst(op, items, parameters);
         }
     }
 }

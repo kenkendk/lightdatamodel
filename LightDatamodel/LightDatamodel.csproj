@@ -101,12 +101,13 @@
     <Compile Include="Extended fetchers\DataFetcherNested.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="QueryModel\Comparer.cs" />
-    <Compile Include="QueryModel\Enums.cs" />
-    <Compile Include="QueryModel\Operation.cs" />
-    <Compile Include="QueryModel\OperationOrParameter.cs" />
-    <Compile Include="QueryModel\Parameter.cs" />
-    <Compile Include="QueryModel\Parser.cs" />
+    <Compile Include="QueryModel\Compare and Sort\Compare.cs" />
+    <Compile Include="QueryModel\Compare and Sort\Sorting.cs" />
+    <Compile Include="QueryModel\Operations\Enums.cs" />
+    <Compile Include="QueryModel\Operations\Operation.cs" />
+    <Compile Include="QueryModel\Operations\OperationOrParameter.cs" />
+    <Compile Include="QueryModel\Operations\Parameter.cs" />
+    <Compile Include="QueryModel\Parser\Parser.cs" />
     <Compile Include="Object state\DataClassBase.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -132,7 +133,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="QueryModel\Query.cs" />
-    <Compile Include="QueryModel\Sorting.cs" />
     <Compile Include="RelationManager\GenericListWrapper.cs" />
     <Compile Include="RelationManager\GuidProxyCollection.cs" />
     <Compile Include="RelationManager\RelationManager.cs" />
