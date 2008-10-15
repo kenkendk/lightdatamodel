@@ -436,8 +436,7 @@ namespace System.Data.LightDatamodel
                                 Query.Equal(Query.Property("UniqueValue"), Query.Value(dbitem.UniqueValue))
                             );
 
-
-                        if (opdeleted.EvaluateList(m_deletedobjects).Length > 0) continue;
+                        if (Query.FindFirst(opdeleted, m_deletedobjects) != null) continue;
 
                         dbitem.m_dataparent = this;
                         dbitem.m_state = ObjectStates.Default;

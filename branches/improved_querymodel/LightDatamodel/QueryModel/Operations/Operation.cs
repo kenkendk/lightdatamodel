@@ -223,7 +223,7 @@ namespace System.Data.LightDatamodel.QueryModel
         /// </summary>
         /// <param name="item">The item to convert to a boolean</param>
         /// <returns>The most appropriate boolean return value</returns>
-        protected bool ResAsBool(object item)
+        public static bool ResAsBool(object item)
         {
             if (item == null)
                 return false;
