@@ -61,6 +61,44 @@ namespace System.Data.LightDatamodel
         }
 
         /// <summary>
+        /// Returns a new parameter that performs a function call
+        /// </summary>
+        /// <param name="name">The name of the function to call</param>
+        /// <param name="arguments">Any arguments the function takes</param>
+        /// <returns>A function call parameter</returns>
+        public static Parameter FunctionCall(string name, params OperationOrParameter[] arguments)
+        {
+            return new Parameter(name, arguments);
+        }
+
+        /// <summary>
+        /// Returns a property that is called in another context
+        /// </summary>
+        /// <param name="bindcontext">The context to call it in</param>
+        /// <param name="name">The name of the property to call</param>
+        /// <returns>A property parameter</returns>
+        public static Parameter SubProperty(Parameter bindcontext, string name)
+        {
+            Parameter p = Property(name);
+            p.BindContext = bindcontext;
+            return p;
+        }
+
+        /// <summary>
+        /// Returns a function call that is called in another context
+        /// </summary>
+        /// <param name="bindcontext">The context to call it in</param>
+        /// <param name="name">The name of the function to call</param>
+        /// <param name="arguments">Any arguments the function takes</param>
+        /// <returns>A function call parameter</returns>
+        public static Parameter SubFunctionCall(Parameter bindcontext, string name, params OperationOrParameter[] arguments)
+        {
+            Parameter p = FunctionCall(name, arguments);
+            p.BindContext = bindcontext;
+            return p;
+        }
+
+        /// <summary>
         /// Returns an operation that is an equality test.
         /// </summary>
         /// <param name="op1">The left hand side of the comparision</param>

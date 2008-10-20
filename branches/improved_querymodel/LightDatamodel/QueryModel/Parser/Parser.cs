@@ -213,25 +213,17 @@ namespace System.Data.LightDatamodel.QueryModel
             if (paircount != 0)
                 throw new Exception("Failed to find closing match for " + curpair);
 
-            //Stage 2, build tree
 
-            //Sort out operator precedence
-            SortedList<int, List<int>> operators = new SortedList<int, List<int>>();
+            //Covert all string tokens to operands
             ArrayList parsed = new ArrayList();
             List<SortableParameter> sortorders = null;
-            int pix = 0;
+
             while (tokens.Count > 0)
             {
                 string opr = tokens.Dequeue();
                 if (OperatorList.ContainsKey(opr.ToUpper()))
                 {
                     Operators op = OperatorList[opr.ToUpper()];
-                    int precedence = 10;
-                    if (OperatorPrecedence.ContainsKey(op))
-                        precedence = OperatorPrecedence[op];
-                    if (!operators.ContainsKey(precedence))
-                        operators.Add(precedence, new List<int>());
-                    operators[precedence].Add(pix);
                     parsed.Add(op);
                 }
                 else if (opr.ToUpper().Equals("ORDER"))
@@ -265,12 +257,65 @@ namespace System.Data.LightDatamodel.QueryModel
                 else
                 {
                     OperationOrParameter[] opm = TokenAsParameter(opr, parameters, ref bindIndex);
-                    if (opm.Length == 1)
-                        parsed.Add(opm[0]);
-                    else
-                        parsed.Add(opm);
+                    parsed.Add(opm);
                 }
-                pix++;
+            }
+
+
+            //Combine function calls into a single operand
+            for (int i = 0; i < parsed.Count - 1; i++)
+                if (
+                    parsed[i] as OperationOrParameter[] != null && 
+                    (parsed[i] as OperationOrParameter[]).Length == 1 &&
+                    (parsed[i] as OperationOrParameter[])[0] as Parameter != null &&
+                    ((parsed[i] as OperationOrParameter[])[0] as Parameter).IsColumn && 
+                    parsed[i + 1] as OperationOrParameter[] != null)
+                {
+                    Parameter func = (parsed[i] as OperationOrParameter[])[0] as Parameter;
+                    parsed[i] = new Parameter(func.Value, parsed[i + 1] as OperationOrParameter[]);
+                    parsed.RemoveAt(i + 1);
+                    i--;
+                }
+
+            for (int i = 0; i < parsed.Count; i++)
+                if (parsed[i] as OperationOrParameter[] != null && (parsed[i] as OperationOrParameter[]).Length == 1)
+                    parsed[i] = (parsed[i] as OperationOrParameter[])[0];
+
+            //Check for sequences like "GetType().FullName"
+            for (int i = 1; i < parsed.Count; i++)
+                if (
+                    parsed[i-1] as Parameter != null && 
+                    (parsed[i-1] as Parameter).IsFunction &&
+                    parsed[i] as Parameter != null &&
+                    (parsed[i] as Parameter).IsColumn && 
+                    (parsed[i] as Parameter).Value as String != null &&
+                    ((parsed[i] as Parameter).Value as String).StartsWith(".")
+                )
+                {
+                    (parsed[i] as Parameter).BindContext = parsed[i-1] as Parameter;
+                    parsed[i - 1] = parsed[i];
+                    parsed.RemoveAt(i);
+                    i--;
+                }
+
+
+
+
+
+            //Sort out operator precedence
+            SortedList<int, List<int>> operators = new SortedList<int, List<int>>();
+            for(int pix = 0; pix < parsed.Count; pix++)
+            {
+                if (parsed[pix] is Operators)
+                {
+                    Operators op = (Operators)parsed[pix];
+                    int precedence = 10;
+                    if (OperatorPrecedence.ContainsKey(op))
+                        precedence = OperatorPrecedence[op];
+                    if (!operators.ContainsKey(precedence))
+                        operators.Add(precedence, new List<int>());
+                    operators[precedence].Add(pix);
+                }
             }
 
             //Build tree, bind the top binding operators first
