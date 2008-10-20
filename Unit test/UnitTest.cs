@@ -194,9 +194,9 @@ namespace Datamodel.UnitTest
 		{
             DataFetcherCached hub = new DataFetcherCached(new SQLiteDataProvider(con));
 
-			Operation op1 = new Operation(Operators.GreaterThan, new OperationOrParameter[] {new Parameter("ID", true), new Parameter(0, false)});
-			Operation op2 = new Operation(Operators.LessThan, new OperationOrParameter[] {new Parameter("ID", true), new Parameter(1000, false)});
-			Operation op3 = new Operation(Operators.And, new OperationOrParameter[] {op1, op2});
+			Operation op1 = Query.GreaterThan(Query.Property("ID"), Query.Value(0));
+			Operation op2 = Query.LessThan(Query.Property("ID"), Query.Value(1000));
+            Operation op3 = Query.And(op1, op2);
 
 			object[] f = hub.GetObjects(typeof(Project), "");
             foreach (Project p in f)
@@ -211,7 +211,23 @@ namespace Datamodel.UnitTest
 
 			int listlen = f.Length;
 
-			Operation op = Parser.ParseQuery("ID = 5 AND X = \"test\" AND Y = 5.3");
+            Operation opy1 = Query.Parse("GetType() Is ?", typeof(string));
+            Operation opy2 = Query.Parse("GetType().FullName = ?", typeof(string).FullName);
+            Operation opy3 = Query.Parse("GetType().Assembly.GetType().FullName = ?", typeof(string).Assembly.GetType().FullName);
+            Operation opy4 = Query.Parse("::System.Convert.ToString(GetType().FullName) = ?", typeof(string).FullName);
+
+            object[] testitems = new object[] { "", 4, 'c' };
+
+            if (opy1.EvaluateList(testitems).Length != 1)
+                throw new Exception("Invalid function call");
+            if (opy2.EvaluateList(testitems).Length != 1)
+                throw new Exception("Invalid function call");
+            if (opy3.EvaluateList(testitems).Length != 3)
+                throw new Exception("Invalid function call");
+            if (opy4.EvaluateList(testitems).Length != 1)
+                throw new Exception("Invalid function call");
+
+			Operation op = Query.Parse("ID = 5 AND X = \"test\" AND Y = 5.3");
 
 			System.Data.LightDatamodel.QueryModel.Operation opx =
 				new Operation(Operators.In, new OperationOrParameter[] {
@@ -238,7 +254,7 @@ namespace Datamodel.UnitTest
 			if (op.EvaluateList(f).Length != 2)
 				throw new Exception("Bad result from the IIF operator");
 
-			op = Parser.ParseQuery("GetType.FullName = \"" + typeof(Project).FullName + "\" AND ID = 1");
+			op = Parser.ParseQuery("GetType().FullName = \"" + typeof(Project).FullName + "\" AND ID = 1");
 			if (op.EvaluateList(f).Length != 1)
 				throw new Exception("Bad result from the method operator");
 
@@ -246,7 +262,7 @@ namespace Datamodel.UnitTest
 			l.Add("invalid obj");
 
 			//This will break if the evaluation is not lazy
-			op = Parser.ParseQuery("GetType.FullName = \"" + typeof(Project).FullName + "\" AND ID = 1");
+			op = Parser.ParseQuery("GetType().FullName = \"" + typeof(Project).FullName + "\" AND ID = 1");
 			if (op.EvaluateList(l).Length != 1)
 				throw new Exception("Bad result from the lazy method operator");
 

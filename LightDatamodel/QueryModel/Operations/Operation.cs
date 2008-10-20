@@ -10,8 +10,8 @@ namespace System.Data.LightDatamodel.QueryModel
     /// </summary>
     public class Operation : OperationOrParameter
     {
-        private OperationOrParameter[] m_parameters;
-        private Operators m_operator;
+        protected OperationOrParameter[] m_parameters;
+        protected Operators m_operator;
         public override bool IsOperation { get { return true; } }
 
         /// <summary>
@@ -161,8 +161,8 @@ namespace System.Data.LightDatamodel.QueryModel
                         if (andOp == null || andOp.Operator != Operators.And || andOp.Parameters == null || andOp.Parameters.Length != 2)
                             throw new Exception("Bad parameter for the between operator!");
 
-                        object min = andOp.Parameters[0].Evaluate(item, parameters);
-                        object max = andOp.Parameters[1].Evaluate(item, parameters);
+                        object min = res[0].Result;
+                        object max = res[1].Result;
 
                         //Swap if needed
                         if (Comparer.CompareTo(min, max) < 0)
@@ -186,6 +186,7 @@ namespace System.Data.LightDatamodel.QueryModel
 
             }
         }
+
 
         /// <summary>
         /// Evaluates a list of objects against the query
