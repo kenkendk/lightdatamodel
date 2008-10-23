@@ -211,10 +211,16 @@ namespace Datamodel.UnitTest
 
 			int listlen = f.Length;
 
+            //Basic function invocation
             Operation opy1 = Query.Parse("GetType() Is ?", typeof(string));
+            //Function invocation and use of a property on the result
             Operation opy2 = Query.Parse("GetType().FullName = ?", typeof(string).FullName);
+            //Longer nesting of the above, the left and right hand side are equvalent
             Operation opy3 = Query.Parse("GetType().Assembly.GetType().FullName = ?", typeof(string).Assembly.GetType().FullName);
-            Operation opy4 = Query.Parse("::System.Convert.ToString(GetType().FullName) = ?", typeof(string).FullName);
+            //Static function invocation, and use of the this column
+            Operation opy4 = Query.Parse("::System.Convert.ToString(this) = ?", "4");
+            //The left and right hand side are equvalent
+            Operation opy5 = Query.Parse("this.GetType() is GetType()");
 
             object[] testitems = new object[] { "", 4, 'c' };
 
@@ -225,6 +231,8 @@ namespace Datamodel.UnitTest
             if (opy3.EvaluateList(testitems).Length != 3)
                 throw new Exception("Invalid function call");
             if (opy4.EvaluateList(testitems).Length != 1)
+                throw new Exception("Invalid function call");
+            if (opy5.EvaluateList(testitems).Length != 3)
                 throw new Exception("Invalid function call");
 
 			Operation op = Query.Parse("ID = 5 AND X = \"test\" AND Y = 5.3");
