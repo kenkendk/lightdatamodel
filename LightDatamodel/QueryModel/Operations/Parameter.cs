@@ -1,3 +1,22 @@
+#region Disclaimer / License
+// Copyright (C) 2008, Kenneth Skovhede
+// http://www.hexad.dk, opensource@hexad.dk
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+// 
+#endregion
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,6 +34,7 @@ namespace System.Data.LightDatamodel.QueryModel
         private object m_value;
         private int m_boundIndex = -1;
         public override bool IsOperation { get { return false; } }
+        public Type m_cachedStaticType = null;
 
         /// <summary>
         /// Constructs a new ubound parameter that may be bound at construction time
@@ -109,6 +129,7 @@ namespace System.Data.LightDatamodel.QueryModel
                 return null;
 
             object retval;
+            Type queryType;
 
             string v = m_value as String;
 
@@ -117,6 +138,7 @@ namespace System.Data.LightDatamodel.QueryModel
                 retval = m_bindContext.Evaluate(item, parameters);
                 if (v.StartsWith("."))
                     v = v.Substring(1);
+                queryType = retval == null ? null : retval.GetType();
             }
             else
             {
@@ -125,33 +147,45 @@ namespace System.Data.LightDatamodel.QueryModel
                     v = v.Substring(2);
                     string[] ns = v.Split('.');
 
-                    Type bestMatch = null;
-                    foreach (System.Reflection.Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-                        foreach (System.Type t in asm.GetExportedTypes())
-                            if (v.StartsWith(t.FullName) && (bestMatch == null || t.FullName.Length > bestMatch.FullName.Length))
-                                bestMatch = t;
+                    if (m_cachedStaticType == null)
+                    {
+                        foreach (System.Reflection.Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+                            foreach (System.Type t in asm.GetExportedTypes())
+                                if (v.StartsWith(t.FullName) && (m_cachedStaticType == null || t.FullName.Length > m_cachedStaticType.FullName.Length))
+                                    m_cachedStaticType = t;
+                    }
 
-                    if (bestMatch == null)
+                    if (m_cachedStaticType == null)
                         throw new Exception("Unable to find static match for " + v);
-                    else
-                        retval = bestMatch;
-                    v = v.Substring(bestMatch.FullName.Length + 1); // 1 == '.'.Length
-                    //TODO: retval is the type, but should be the object
-                    //We can't get the object because it is static
+
+                    v = v.Substring(m_cachedStaticType.FullName.Length + 1); // 1 == '.'.Length
+                    queryType = m_cachedStaticType;
+                    retval = null;
                 }
                 else
+                {
                     retval = item;
+                    queryType = retval == null ? null : retval.GetType();
+                }
             }
+
 
             string[] parts = v.Split('.');
             for (int i = 0; i < parts.Length; i++)
             {
-                System.Reflection.PropertyInfo pi = retval.GetType().GetProperty(parts[i]);
+                if (m_bindContext == null && i == 0 && parts.Length > 0 && parts[0].Trim().ToLower() == "this")
+                {
+                    retval = item;
+                    queryType = retval == null ? null : retval.GetType();
+                    continue;
+                }
+
+                System.Reflection.PropertyInfo pi = queryType.GetProperty(parts[i]);
                 if (pi == null)
-                    pi = retval.GetType().GetProperty(parts[i], System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.FlattenHierarchy);
+                    pi = queryType.GetProperty(parts[i], System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.FlattenHierarchy);
                 if (pi == null && i == parts.Length - 1)
                 {
-                    System.Reflection.MemberInfo[] mis = retval.GetType().GetMethods();
+                    System.Reflection.MemberInfo[] mis = queryType.GetMethods();
                     System.Reflection.MethodInfo mi = null;
                     foreach(System.Reflection.MethodInfo mix in mis)
                         if (mix.Name == parts[i] && mix.GetParameters().Length == m_functionArgs.Length)
@@ -161,15 +195,11 @@ namespace System.Data.LightDatamodel.QueryModel
                         }
 
                     if (mi == null)
-                        throw new Exception("Failed to find method named " + parts[i] + " which takes " + m_functionArgs.Length.ToString() + " arguments, on type " + retval.GetType().FullName);
-
-
-                    if (mi == null)
-                        mi = retval.GetType().GetMethod(parts[i], System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.FlattenHierarchy);
-                    if (mi == null)
-                        throw new Exception("Invalid parameter: " + parts[i] + " no such public property or method found\nWas looking for method with path '" + (string)m_value + "' on type: " + retval.GetType().FullName);
+                        throw new Exception("Invalid parameter: " + parts[i] + " no such public property or method found\nWas looking for method with path '" + (string)m_value + "' on type: " + queryType.FullName + ", which takes " + m_functionArgs.Length.ToString() + " argument(s)");
 
                     retval = mi.Invoke(retval, UnwrapFunctionArguments(item, parameters));
+                    queryType = retval == null ? null : retval.GetType();
+
                 }
                 else if (pi == null)
                 {
@@ -180,6 +210,7 @@ namespace System.Data.LightDatamodel.QueryModel
                     if (i == parts.Length - 1 && m_functionArgs != null)
                         throw new Exception("Tried to execute property as function with arguments");
                     retval = pi.GetValue(retval, null);
+                    queryType = retval == null ? null : retval.GetType();
                 }
 
                 if (retval == null)
