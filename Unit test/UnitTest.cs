@@ -296,6 +296,7 @@ namespace Datamodel.UnitTest
 					c++;
 				}
 				if (c != 4) throw new Exception("Bah!");
+
 			}
 			finally
 			{
@@ -395,6 +396,15 @@ namespace Datamodel.UnitTest
 			}
 			Note[] ns = fetcher.GetObjectsByIndex<Note>("NoteText", "HerErEnText");
 			if (ns == null || ns.Length < 11) throw new Exception("Bah");
+
+			//test view
+			Project p1 = fetcher.Add<Project>();
+			Project p2 = fetcher.Add<Project>();
+			fetcher.Commit(p1);
+			fetcher.Commit(p2);
+			int np = fetcher.GetObjects<Project>().Length;
+			int nv = fetcher.GetObjects<TestView>().Length;
+			if (np != nv) throw new Exception("Bah");
 		}
 
 		public static void TestQueryModel(IDbConnection con)
