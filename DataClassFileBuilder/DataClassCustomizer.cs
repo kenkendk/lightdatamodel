@@ -257,9 +257,9 @@ namespace DataClassFileBuilder
 
         private void ReferenceColumnname_TextChanged(object sender, EventArgs e)
         {
-            ReferenceReversePropertyname.Items.Clear();
-			if (treeView.SelectedNode != null && treeView.SelectedNode.Parent != null && treeView.SelectedNode.Parent.Tag as ConfigurationContainer.Table != null)
-				ReferenceReversePropertyname.Items.Add((treeView.SelectedNode.Parent.Tag as ConfigurationContainer.Table).Name);
+			//ReferenceReversePropertyname.Items.Clear();
+			//if (treeView.SelectedNode != null && treeView.SelectedNode.Parent != null && treeView.SelectedNode.Parent.Tag as ConfigurationContainer.Table != null)
+			//    ReferenceReversePropertyname.Items.Add((treeView.SelectedNode.Parent.Tag as ConfigurationContainer.Table).Name);
 
 			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
                 return;
@@ -348,7 +348,10 @@ namespace DataClassFileBuilder
             else
             {
 				ConfigurationContainer.Relation rf = new ConfigurationContainer.Relation();
-                rf.Name = Guid.NewGuid().ToString();
+
+				//create new relation name
+                rf.Name = "newrelation";
+
 				rf.Tablename = (table.Tag as ConfigurationContainer.Table).Name;
 				(table.Tag as ConfigurationContainer.Table).Relations.Add(rf);
                 TreeNode field = new TreeNode(rf.Propertyname, IMAGE_REFERENCE, IMAGE_REFERENCE);
@@ -475,12 +478,12 @@ namespace DataClassFileBuilder
         private void ReferenceReverseTablename_SelectedIndexChanged(object sender, EventArgs e)
         {
             ReferenceReverseColumnname.Items.Clear();
-            ReferencePropertyname.Items.Clear();
+            //ReferencePropertyname.Items.Clear();
 
 			foreach (ConfigurationContainer.Table mc in m_classes)
                 if (mc.Name == ReferenceReverseTablename.Text)
                 {
-                    ReferencePropertyname.Items.Add(mc.Name);
+                    //ReferencePropertyname.Items.Add(mc.Name);
                     foreach (ConfigurationContainer.Column col in mc.Columns)
                         ReferenceReverseColumnname.Items.Add(col.Name);
                     break;
@@ -498,12 +501,24 @@ namespace DataClassFileBuilder
 				//else if (n.Tag as TypeConfiguration.IgnoredClass != null)
 				//    m_ignoredclasses.Add(n.Tag as TypeConfiguration.IgnoredClass);
 
+			//validate relation names (They have to be unique)
+			Dictionary<string, ConfigurationContainer.Relation> tmp = new Dictionary<string, ConfigurationContainer.Relation>();
+			foreach (ConfigurationContainer.Table t in m_classes)
+			{
+				foreach (ConfigurationContainer.Relation r in t.Relations)
+					if (r.Name != "newrelation" && !tmp.ContainsKey(r.Name)) tmp.Add(r.Name, r);
+					else
+					{
+						MessageBox.Show("There're two relations with the name \"" + r.Name + "\"", "Double relations", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+						return;
+					}
+			}
+
 			this.DialogResult = DialogResult.OK;
 			this.Close();
         }
 
 		public ConfigurationContainer.Table[] Tables { get { return m_classes.ToArray(); } }
-        //public List<TypeConfiguration.IgnoredClass> Ignored { get { return m_ignoredclasses; } }
 
         private void FieldDefaultValue_TextChanged(object sender, EventArgs e)
         {
@@ -527,12 +542,9 @@ namespace DataClassFileBuilder
 
         private void GenerateRelationKey_Click(object sender, EventArgs e)
         {
-            ReferenceRelationKey.Text = Guid.NewGuid().ToString();
-        }
-
-        private void ReferencePropertyname_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
+				return;
+			ReferenceRelationKey.Text = (treeView.SelectedNode.Tag as ConfigurationContainer.Relation).Tablename + ReferencePropertyname.Text;
         }
 
         private void ReferenceRelationKey_TextChanged(object sender, EventArgs e)

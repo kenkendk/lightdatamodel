@@ -23,24 +23,24 @@ using System.Text;
 namespace System.Collections.Generic
 {
 	[System.Diagnostics.DebuggerDisplay("Count = {Count}"), System.Runtime.InteropServices.ComVisible(false)]
-	public class MultiDictionary<KEY, VALUE> : IDictionary<KEY, VALUE>
+	public sealed class MultiDictionary<TKey, TValue> : IDictionary<TKey, TValue>
 	{
-		private Dictionary<KEY, LinkedList<VALUE>> m_list = new Dictionary<KEY, LinkedList<VALUE>>();
+		private Dictionary<TKey, LinkedList<TValue>> m_list = new Dictionary<TKey, LinkedList<TValue>>();
 		private int m_count = 0;
 
-		public void Add(KEY key, VALUE value)
+		public void Add(TKey key, TValue value)
 		{
-			if (!m_list.ContainsKey(key)) m_list.Add(key, new LinkedList<VALUE>());
-			m_list[key].AddLast(new LinkedListNode<VALUE>(value));
+			if (!m_list.ContainsKey(key)) m_list.Add(key, new LinkedList<TValue>());
+			m_list[key].AddLast(new LinkedListNode<TValue>(value));
 			m_count++;
 		}
 
-		public bool ContainsKey(KEY key)
+		public bool ContainsKey(TKey key)
 		{
 			return m_list.ContainsKey(key);
 		}
 
-		public bool Remove(KEY key)
+		public bool Remove(TKey key)
 		{
 			if (m_list.ContainsKey(key))
 			{
@@ -50,29 +50,29 @@ namespace System.Collections.Generic
 			return false;
 		}
 
-		public bool TryGetValue(KEY key, out VALUE value)
+		public bool TryGetValue(TKey key, out TValue value)
 		{
 			try
 			{
-				LinkedList<VALUE> tmp = new LinkedList<VALUE>();
+				LinkedList<TValue> tmp = new LinkedList<TValue>();
 				bool succed = m_list.TryGetValue(key, out tmp);
 				if (succed) value = tmp.First.Value;
-				else value = default(VALUE);
+				else value = default(TValue);
 				return succed;
 			}
 			catch
 			{
-				value = default(VALUE);
+				value = default(TValue);
 				return false;
 			}
 		}
 
-		public ICollection<KEY> Keys
+		public ICollection<TKey> Keys
 		{
 			get { return m_list.Keys; }
 		}
 
-		ICollection<VALUE> IDictionary<KEY, VALUE>.Values
+		ICollection<TValue> IDictionary<TKey, TValue>.Values
 		{
 			get
 			{
@@ -80,37 +80,36 @@ namespace System.Collections.Generic
 			}
 		}
 
-		public ValueCollection<KEY, VALUE> Values
+		public ValueCollection Values
 		{
 			get
 			{
-				return new ValueCollection<KEY, VALUE>(this);
+				return new ValueCollection(this);
 			}
 		}
 
-#pragma warning disable 693
 		[System.Diagnostics.DebuggerDisplay("Count = {Count}")]
-		public sealed class ValueCollection<KEY, VALUE> : ICollection<VALUE>, IEnumerable<VALUE>
+		public sealed class ValueCollection : ICollection<TValue>, IEnumerable<TValue>
 		{
-			private MultiDictionary<KEY, VALUE> m_parent;
+			private MultiDictionary<TKey, TValue> m_parent;
 
-			public ValueCollection(MultiDictionary<KEY, VALUE> parent)
+			public ValueCollection(MultiDictionary<TKey, TValue> parent)
 			{
 				m_parent = parent;
 			}
 
-			public ICollection<VALUE> this[KEY key]
+			public ICollection<TValue> this[TKey key]
 			{
 				get
 				{
 					if (!m_parent.m_list.ContainsKey(key)) return null;
-					return (ICollection<VALUE>)m_parent.m_list[key];
+					return (ICollection<TValue>)m_parent.m_list[key];
 				}
 			}
 
-			public IEnumerator<VALUE> GetEnumerator()
+			public IEnumerator<TValue> GetEnumerator()
 			{
-				return new Enumerator<VALUE>(m_parent.m_list);
+				return new Enumerator(m_parent.m_list);
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -118,7 +117,7 @@ namespace System.Collections.Generic
 				return GetEnumerator();
 			}
 
-			IEnumerator<VALUE> IEnumerable<VALUE>.GetEnumerator()
+			IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator()
 			{
 				return GetEnumerator();
 			}
@@ -128,49 +127,49 @@ namespace System.Collections.Generic
 				get { return m_parent.Count; }
 			}
 
-			void ICollection<VALUE>.Add(VALUE item)
+			void ICollection<TValue>.Add(TValue item)
 			{
 				throw new NotSupportedException("This Dictionary is read-only");
 			}
 
-			void ICollection<VALUE>.Clear()
+			void ICollection<TValue>.Clear()
 			{
 				throw new NotSupportedException("This Dictionary is read-only");
 			}
 
-			bool ICollection<VALUE>.Contains(VALUE item)
+			bool ICollection<TValue>.Contains(TValue item)
 			{
 				throw new NotSupportedException("This Dictionary is read-only");
 			}
 
-			void ICollection<VALUE>.CopyTo(VALUE[] array, int arrayIndex)
+			void ICollection<TValue>.CopyTo(TValue[] array, int arrayIndex)
 			{
 				throw new NotSupportedException("This Dictionary is read-only");
 			}
 
-			bool ICollection<VALUE>.IsReadOnly
+			bool ICollection<TValue>.IsReadOnly
 			{
 				get { return true; }
 			}
 
-			bool ICollection<VALUE>.Remove(VALUE item)
+			bool ICollection<TValue>.Remove(TValue item)
 			{
 				throw new NotSupportedException("This Dictionary is read-only");
 			}
 
-			public class Enumerator<VALUE> : IEnumerator<VALUE>
+			public sealed class Enumerator : IEnumerator<TValue>, IDisposable
 			{
-				private Dictionary<KEY, LinkedList<VALUE>> m_parent;
-				private Dictionary<KEY, LinkedList<VALUE>>.Enumerator m_keyenumerator;
-				private LinkedList<VALUE>.Enumerator m_valueenumerator;
+				private Dictionary<TKey, LinkedList<TValue>> m_parent;
+				private Dictionary<TKey, LinkedList<TValue>>.Enumerator m_keyenumerator;
+				private LinkedList<TValue>.Enumerator m_valueenumerator;
 
-				public Enumerator(Dictionary<KEY, LinkedList<VALUE>> parent)
+				public Enumerator(Dictionary<TKey, LinkedList<TValue>> parent)
 				{
 					m_parent = parent;
 					Reset();
 				}
 
-				public VALUE Current
+				public TValue Current
 				{
 					get
 					{
@@ -183,6 +182,7 @@ namespace System.Collections.Generic
 					m_parent = null;
 					m_keyenumerator.Dispose();
 					m_valueenumerator.Dispose();
+					GC.SuppressFinalize(this);
 				}
 
 				object IEnumerator.Current
@@ -195,15 +195,15 @@ namespace System.Collections.Generic
 
 				public bool MoveNext()
 				{
-					if (m_valueenumerator.Equals(default(LinkedList<VALUE>.Enumerator)) || !m_valueenumerator.MoveNext())
+					if (m_valueenumerator.Equals(default(LinkedList<TValue>.Enumerator)) || !m_valueenumerator.MoveNext())
 					{
 						do
 						{
-							if (m_keyenumerator.Equals(default(Dictionary<KEY, LinkedList<VALUE>>.Enumerator)) || !m_keyenumerator.MoveNext()) return false;
-							LinkedList<VALUE> tmp = m_keyenumerator.Current.Value;
-							m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<VALUE>.Enumerator);
-							if (!m_valueenumerator.Equals(default(LinkedList<VALUE>.Enumerator))) m_valueenumerator.MoveNext();
-						} while (m_valueenumerator.Equals(default(LinkedList<VALUE>.Enumerator)) || m_valueenumerator.Current == null);
+							if (m_keyenumerator.Equals(default(Dictionary<TKey, LinkedList<TValue>>.Enumerator)) || !m_keyenumerator.MoveNext()) return false;
+							LinkedList<TValue> tmp = m_keyenumerator.Current.Value;
+							m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<TValue>.Enumerator);
+							if (!m_valueenumerator.Equals(default(LinkedList<TValue>.Enumerator))) m_valueenumerator.MoveNext();
+						} while (m_valueenumerator.Equals(default(LinkedList<TValue>.Enumerator)) || m_valueenumerator.Current == null);
 						return true;
 					}
 					else return true;
@@ -214,42 +214,41 @@ namespace System.Collections.Generic
 					if (m_parent != null)
 					{
 						m_keyenumerator = m_parent.GetEnumerator();
-						LinkedList<VALUE> tmp = m_keyenumerator.Current.Value;
-						m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<VALUE>.Enumerator);
+						LinkedList<TValue> tmp = m_keyenumerator.Current.Value;
+						m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<TValue>.Enumerator);
 					}
 				}
 			}
 
 		}
-#pragma warning restore 693
 
-		public VALUE this[KEY key]
+		public TValue this[TKey key]
 		{
 			get
 			{
-				if (!m_list.ContainsKey(key)) return default(VALUE);
-				LinkedListNode<VALUE> n = m_list[key].First;
-				if (n == null) return default(VALUE);
+				if (!m_list.ContainsKey(key)) return default(TValue);
+				LinkedListNode<TValue> n = m_list[key].First;
+				if (n == null) return default(TValue);
 				return n.Value;
 			}
 			set
 			{
-				if (!m_list.ContainsKey(key)) m_list.Add(key, new LinkedList<VALUE>());
-				LinkedListNode<VALUE> node = m_list[key].Find(value);
+				if (!m_list.ContainsKey(key)) m_list.Add(key, new LinkedList<TValue>());
+				LinkedListNode<TValue> node = m_list[key].Find(value);
 				if (node == null) Add(key, value);
 				else node.Value = value;
 			}
 		}
 
-		public ValueCollection<KEY, VALUE> Items
+		public ValueCollection Items
 		{
 			get
 			{
-				return new ValueCollection<KEY, VALUE>(this);
+				return new ValueCollection(this);
 			}
 		}
 
-		public void Add(KeyValuePair<KEY, VALUE> item)
+		public void Add(KeyValuePair<TKey, TValue> item)
 		{
 			Add(item.Key, item.Value);
 		}
@@ -260,19 +259,19 @@ namespace System.Collections.Generic
 			m_list.Clear();
 		}
 
-		public bool Contains(KeyValuePair<KEY, VALUE> item)
+		public bool Contains(KeyValuePair<TKey, TValue> item)
 		{
 			if (m_list.ContainsKey(item.Key))
 			{
-				LinkedListNode<VALUE> node = m_list[item.Key].Find(item.Value);
+				LinkedListNode<TValue> node = m_list[item.Key].Find(item.Value);
 				return node != null;
 			}
 			return false;
 		}
 
-		public void CopyTo(KeyValuePair<KEY, VALUE>[] array, int arrayIndex)
+		public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
 		{
-			foreach (KeyValuePair<KEY, VALUE> item in this)
+			foreach (KeyValuePair<TKey, TValue> item in this)
 			{
 				if (arrayIndex >= array.Length) break;
 				array[arrayIndex++] = item;
@@ -289,12 +288,12 @@ namespace System.Collections.Generic
 			get { return false; }
 		}
 
-		public bool Remove(KeyValuePair<KEY, VALUE> item)
+		public bool Remove(KeyValuePair<TKey, TValue> item)
 		{
 			return Remove(item.Key, item.Value);
 		}
 
-		public bool Remove(KEY key, VALUE value)
+		public bool Remove(TKey key, TValue value)
 		{
 			if (m_list.ContainsKey(key))
 			{
@@ -306,7 +305,7 @@ namespace System.Collections.Generic
 			return false;
 		}
 
-		public IEnumerator<KeyValuePair<KEY, VALUE>> GetEnumerator()
+		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
 		{
 			return new Enumerator(this.m_list);
 		}
@@ -321,32 +320,32 @@ namespace System.Collections.Generic
 			return "MultiDictionary (" + m_count.ToString() + ")";
 		}
 
-		public VALUE[] ToArray()
+		public TValue[] ToArray()
 		{
-			VALUE[] arr = new VALUE[m_count];
+			TValue[] arr = new TValue[m_count];
 			int c = 0;
-			foreach (KeyValuePair<KEY, VALUE> itm in this)
+			foreach (KeyValuePair<TKey, TValue> itm in this)
 				arr[c++] = itm.Value;
 			return arr;
 		}
 
-		public class Enumerator : IEnumerator<KeyValuePair<KEY, VALUE>>
+		public class Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
 		{
-			private Dictionary<KEY, LinkedList<VALUE>> m_parent;
-			private Dictionary<KEY, LinkedList<VALUE>>.Enumerator m_keyenumerator;
-			private LinkedList<VALUE>.Enumerator m_valueenumerator;
+			private Dictionary<TKey, LinkedList<TValue>> m_parent;
+			private Dictionary<TKey, LinkedList<TValue>>.Enumerator m_keyenumerator;
+			private LinkedList<TValue>.Enumerator m_valueenumerator;
 
-			public Enumerator(Dictionary<KEY, LinkedList<VALUE>> parent)
+			public Enumerator(Dictionary<TKey, LinkedList<TValue>> parent)
 			{
 				m_parent = parent;
 				Reset();
 			}
 
-			public KeyValuePair<KEY, VALUE> Current
+			public KeyValuePair<TKey, TValue> Current
 			{
 				get
 				{
-					return new KeyValuePair<KEY, VALUE>(m_keyenumerator.Current.Key, m_valueenumerator.Current);
+					return new KeyValuePair<TKey, TValue>(m_keyenumerator.Current.Key, m_valueenumerator.Current);
 				}
 			}
 
@@ -355,6 +354,7 @@ namespace System.Collections.Generic
 				m_parent = null;
 				m_keyenumerator.Dispose();
 				m_valueenumerator.Dispose();
+				GC.SuppressFinalize(this);
 			}
 
 			object IEnumerator.Current
@@ -367,13 +367,13 @@ namespace System.Collections.Generic
 
 			public bool MoveNext()
 			{
-				if (m_valueenumerator.Equals(default(LinkedList<VALUE>.Enumerator)) || !m_valueenumerator.MoveNext())
+				if (m_valueenumerator.Equals(default(LinkedList<TValue>.Enumerator)) || !m_valueenumerator.MoveNext())
 				{
 					do
 					{
 						if (!m_keyenumerator.MoveNext()) return false;
-						LinkedList<VALUE> tmp = m_keyenumerator.Current.Value;
-						m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<VALUE>.Enumerator);
+						LinkedList<TValue> tmp = m_keyenumerator.Current.Value;
+						m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<TValue>.Enumerator);
 						m_valueenumerator.MoveNext();
 					} while (m_valueenumerator.Current == null);
 					return true;
@@ -384,8 +384,8 @@ namespace System.Collections.Generic
 			public void Reset()
 			{
 				m_keyenumerator = m_parent.GetEnumerator();
-				LinkedList<VALUE> tmp = m_keyenumerator.Current.Value;
-				m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<VALUE>.Enumerator);
+				LinkedList<TValue> tmp = m_keyenumerator.Current.Value;
+				m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<TValue>.Enumerator);
 			}
 		}
 	}

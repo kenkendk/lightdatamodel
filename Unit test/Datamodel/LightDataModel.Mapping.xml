@@ -54,7 +54,7 @@
       <Ignore>false</Ignore>
       <Relations>
         <Relation>
-          <Name>c3a06cc7-9649-4cb9-beca-db6ad822cf94</Name>
+          <Name>ProjectCurrentTaskNote</Name>
           <Databasefield>CurrentTaskNoteID</Databasefield>
           <Propertyname>CurrentTaskNote</Propertyname>
           <Type>ManyToOne</Type>
@@ -64,7 +64,7 @@
           <Tablename>Project</Tablename>
         </Relation>
         <Relation>
-          <Name>227fe561-039d-4337-b2b7-67ed95f32637</Name>
+          <Name>ProjectProjectNote</Name>
           <Databasefield>ProjectNoteID</Databasefield>
           <Propertyname>ProjectNote</Propertyname>
           <Type>ManyToOne</Type>

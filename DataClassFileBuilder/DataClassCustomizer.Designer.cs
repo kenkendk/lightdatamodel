@@ -29,7 +29,20 @@
         private void InitializeComponent()
         {
 			this.components = new System.ComponentModel.Container();
+			System.Windows.Forms.GroupBox groupBox1;
+			System.Windows.Forms.GroupBox groupBox2;
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataClassCustomizer));
+			System.Windows.Forms.Label label15;
+			this.ReferenceColumnname = new System.Windows.Forms.ComboBox();
+			this.ReferencePropertyname = new System.Windows.Forms.TextBox();
+			this.label8 = new System.Windows.Forms.Label();
+			this.label6 = new System.Windows.Forms.Label();
+			this.ReferenceReversePropertyname = new System.Windows.Forms.TextBox();
+			this.label7 = new System.Windows.Forms.Label();
+			this.ReferenceReverseTablename = new System.Windows.Forms.ComboBox();
+			this.label9 = new System.Windows.Forms.Label();
+			this.ReferenceReverseColumnname = new System.Windows.Forms.ComboBox();
+			this.label10 = new System.Windows.Forms.Label();
 			this.panel1 = new System.Windows.Forms.Panel();
 			this.CancelBtn = new System.Windows.Forms.Button();
 			this.OKBtn = new System.Windows.Forms.Button();
@@ -49,20 +62,12 @@
 			this.GenerateRelationKey = new System.Windows.Forms.Button();
 			this.ReferenceRelationKey = new System.Windows.Forms.TextBox();
 			this.label13 = new System.Windows.Forms.Label();
-			this.ReferenceReversePropertyname = new System.Windows.Forms.ComboBox();
-			this.label10 = new System.Windows.Forms.Label();
-			this.ReferenceReverseColumnname = new System.Windows.Forms.ComboBox();
-			this.label9 = new System.Windows.Forms.Label();
-			this.ReferencePropertyname = new System.Windows.Forms.ComboBox();
-			this.ReferenceReverseTablename = new System.Windows.Forms.ComboBox();
-			this.ReferenceColumnname = new System.Windows.Forms.TextBox();
-			this.label6 = new System.Windows.Forms.Label();
-			this.label7 = new System.Windows.Forms.Label();
-			this.label8 = new System.Windows.Forms.Label();
 			this.TableProperties = new System.Windows.Forms.GroupBox();
+			this.TableIgnoreCheck = new System.Windows.Forms.CheckBox();
 			this.TableTablename = new System.Windows.Forms.TextBox();
 			this.label1 = new System.Windows.Forms.Label();
 			this.FieldProperties = new System.Windows.Forms.GroupBox();
+			this.FieldIndexCheck = new System.Windows.Forms.CheckBox();
 			this.FieldDefaultValue = new System.Windows.Forms.TextBox();
 			this.label12 = new System.Windows.Forms.Label();
 			this.FieldPropertyname = new System.Windows.Forms.ComboBox();
@@ -77,8 +82,12 @@
 			this.label3 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
-			this.TableIgnoreCheck = new System.Windows.Forms.CheckBox();
-			this.FieldIndexCheck = new System.Windows.Forms.CheckBox();
+			this.SwapButton = new System.Windows.Forms.Button();
+			groupBox1 = new System.Windows.Forms.GroupBox();
+			groupBox2 = new System.Windows.Forms.GroupBox();
+			label15 = new System.Windows.Forms.Label();
+			groupBox1.SuspendLayout();
+			groupBox2.SuspendLayout();
 			this.panel1.SuspendLayout();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
@@ -91,12 +100,146 @@
 			((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
 			this.SuspendLayout();
 			// 
+			// groupBox1
+			// 
+			groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			groupBox1.Controls.Add(this.ReferenceColumnname);
+			groupBox1.Controls.Add(this.ReferencePropertyname);
+			groupBox1.Controls.Add(this.label8);
+			groupBox1.Controls.Add(this.label6);
+			groupBox1.Location = new System.Drawing.Point(8, 16);
+			groupBox1.Name = "groupBox1";
+			groupBox1.Size = new System.Drawing.Size(320, 72);
+			groupBox1.TabIndex = 29;
+			groupBox1.TabStop = false;
+			groupBox1.Text = "Child";
+			// 
+			// ReferenceColumnname
+			// 
+			this.ReferenceColumnname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.ReferenceColumnname.FormattingEnabled = true;
+			this.ReferenceColumnname.Location = new System.Drawing.Point(96, 16);
+			this.ReferenceColumnname.Name = "ReferenceColumnname";
+			this.ReferenceColumnname.Size = new System.Drawing.Size(216, 21);
+			this.ReferenceColumnname.TabIndex = 18;
+			this.ReferenceColumnname.TextChanged += new System.EventHandler(this.ReferenceColumnname_TextChanged);
+			// 
+			// ReferencePropertyname
+			// 
+			this.ReferencePropertyname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.ReferencePropertyname.Location = new System.Drawing.Point(96, 40);
+			this.ReferencePropertyname.Name = "ReferencePropertyname";
+			this.ReferencePropertyname.Size = new System.Drawing.Size(216, 20);
+			this.ReferencePropertyname.TabIndex = 17;
+			this.ReferencePropertyname.TextChanged += new System.EventHandler(this.ReferencePropertyname_TextChanged);
+			// 
+			// label8
+			// 
+			this.label8.AutoSize = true;
+			this.label8.Location = new System.Drawing.Point(8, 16);
+			this.label8.Name = "label8";
+			this.label8.Size = new System.Drawing.Size(68, 13);
+			this.label8.TabIndex = 13;
+			this.label8.Text = "Columnname";
+			// 
+			// label6
+			// 
+			this.label6.AutoSize = true;
+			this.label6.Location = new System.Drawing.Point(8, 40);
+			this.label6.Name = "label6";
+			this.label6.Size = new System.Drawing.Size(72, 13);
+			this.label6.TabIndex = 15;
+			this.label6.Text = "Propertyname";
+			// 
+			// groupBox2
+			// 
+			groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			groupBox2.Controls.Add(label15);
+			groupBox2.Controls.Add(this.ReferenceReversePropertyname);
+			groupBox2.Controls.Add(this.label7);
+			groupBox2.Controls.Add(this.ReferenceReverseTablename);
+			groupBox2.Controls.Add(this.label9);
+			groupBox2.Controls.Add(this.ReferenceReverseColumnname);
+			groupBox2.Controls.Add(this.label10);
+			groupBox2.Location = new System.Drawing.Point(8, 144);
+			groupBox2.Name = "groupBox2";
+			groupBox2.Size = new System.Drawing.Size(320, 112);
+			groupBox2.TabIndex = 30;
+			groupBox2.TabStop = false;
+			groupBox2.Text = "Parent";
+			// 
+			// ReferenceReversePropertyname
+			// 
+			this.ReferenceReversePropertyname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.ReferenceReversePropertyname.Location = new System.Drawing.Point(96, 64);
+			this.ReferenceReversePropertyname.Name = "ReferenceReversePropertyname";
+			this.ReferenceReversePropertyname.Size = new System.Drawing.Size(216, 20);
+			this.ReferenceReversePropertyname.TabIndex = 22;
+			this.ReferenceReversePropertyname.TextChanged += new System.EventHandler(this.ReferencePropertyname_TextChanged);
+			// 
+			// label7
+			// 
+			this.label7.AutoSize = true;
+			this.label7.Location = new System.Drawing.Point(8, 16);
+			this.label7.Name = "label7";
+			this.label7.Size = new System.Drawing.Size(34, 13);
+			this.label7.TabIndex = 14;
+			this.label7.Text = "Table";
+			// 
+			// ReferenceReverseTablename
+			// 
+			this.ReferenceReverseTablename.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.ReferenceReverseTablename.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.ReferenceReverseTablename.FormattingEnabled = true;
+			this.ReferenceReverseTablename.Location = new System.Drawing.Point(96, 16);
+			this.ReferenceReverseTablename.Name = "ReferenceReverseTablename";
+			this.ReferenceReverseTablename.Size = new System.Drawing.Size(216, 21);
+			this.ReferenceReverseTablename.TabIndex = 17;
+			this.ReferenceReverseTablename.SelectedIndexChanged += new System.EventHandler(this.ReferenceReverseTablename_SelectedIndexChanged);
+			this.ReferenceReverseTablename.TextChanged += new System.EventHandler(this.ReferenceReverseTablename_TextChanged);
+			// 
+			// label9
+			// 
+			this.label9.AutoSize = true;
+			this.label9.Location = new System.Drawing.Point(8, 40);
+			this.label9.Name = "label9";
+			this.label9.Size = new System.Drawing.Size(68, 13);
+			this.label9.TabIndex = 19;
+			this.label9.Text = "Columnname";
+			// 
+			// ReferenceReverseColumnname
+			// 
+			this.ReferenceReverseColumnname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
+			this.ReferenceReverseColumnname.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this.ReferenceReverseColumnname.FormattingEnabled = true;
+			this.ReferenceReverseColumnname.Location = new System.Drawing.Point(96, 40);
+			this.ReferenceReverseColumnname.Name = "ReferenceReverseColumnname";
+			this.ReferenceReverseColumnname.Size = new System.Drawing.Size(216, 21);
+			this.ReferenceReverseColumnname.TabIndex = 20;
+			this.ReferenceReverseColumnname.TextChanged += new System.EventHandler(this.ReferenceReverseColumnname_TextChanged);
+			// 
+			// label10
+			// 
+			this.label10.AutoSize = true;
+			this.label10.Location = new System.Drawing.Point(8, 64);
+			this.label10.Name = "label10";
+			this.label10.Size = new System.Drawing.Size(72, 13);
+			this.label10.TabIndex = 21;
+			this.label10.Text = "Propertyname";
+			// 
 			// panel1
 			// 
 			this.panel1.Controls.Add(this.CancelBtn);
 			this.panel1.Controls.Add(this.OKBtn);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.panel1.Location = new System.Drawing.Point(0, 563);
+			this.panel1.Location = new System.Drawing.Point(0, 634);
 			this.panel1.Name = "panel1";
 			this.panel1.Size = new System.Drawing.Size(553, 41);
 			this.panel1.TabIndex = 0;
@@ -140,7 +283,7 @@
 			this.splitContainer1.Panel2.Controls.Add(this.ReferenceProperties);
 			this.splitContainer1.Panel2.Controls.Add(this.TableProperties);
 			this.splitContainer1.Panel2.Controls.Add(this.FieldProperties);
-			this.splitContainer1.Size = new System.Drawing.Size(553, 563);
+			this.splitContainer1.Size = new System.Drawing.Size(553, 634);
 			this.splitContainer1.SplitterDistance = 200;
 			this.splitContainer1.TabIndex = 1;
 			// 
@@ -197,7 +340,7 @@
 			this.treeView.Location = new System.Drawing.Point(8, 32);
 			this.treeView.Name = "treeView";
 			this.treeView.SelectedImageIndex = 0;
-			this.treeView.Size = new System.Drawing.Size(184, 522);
+			this.treeView.Size = new System.Drawing.Size(184, 593);
 			this.treeView.TabIndex = 0;
 			this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
 			// 
@@ -218,7 +361,7 @@
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.IgnoredFieldProperties.Controls.Add(this.IgnoredFieldName);
 			this.IgnoredFieldProperties.Controls.Add(this.label11);
-			this.IgnoredFieldProperties.Location = new System.Drawing.Point(8, 504);
+			this.IgnoredFieldProperties.Location = new System.Drawing.Point(8, 576);
 			this.IgnoredFieldProperties.Name = "IgnoredFieldProperties";
 			this.IgnoredFieldProperties.Size = new System.Drawing.Size(335, 48);
 			this.IgnoredFieldProperties.TabIndex = 2;
@@ -248,24 +391,17 @@
 			// 
 			this.ReferenceProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
+			this.ReferenceProperties.Controls.Add(this.SwapButton);
+			this.ReferenceProperties.Controls.Add(groupBox2);
+			this.ReferenceProperties.Controls.Add(groupBox1);
 			this.ReferenceProperties.Controls.Add(this.ReferenceType);
 			this.ReferenceProperties.Controls.Add(this.label14);
 			this.ReferenceProperties.Controls.Add(this.GenerateRelationKey);
 			this.ReferenceProperties.Controls.Add(this.ReferenceRelationKey);
 			this.ReferenceProperties.Controls.Add(this.label13);
-			this.ReferenceProperties.Controls.Add(this.ReferenceReversePropertyname);
-			this.ReferenceProperties.Controls.Add(this.label10);
-			this.ReferenceProperties.Controls.Add(this.ReferenceReverseColumnname);
-			this.ReferenceProperties.Controls.Add(this.label9);
-			this.ReferenceProperties.Controls.Add(this.ReferencePropertyname);
-			this.ReferenceProperties.Controls.Add(this.ReferenceReverseTablename);
-			this.ReferenceProperties.Controls.Add(this.ReferenceColumnname);
-			this.ReferenceProperties.Controls.Add(this.label6);
-			this.ReferenceProperties.Controls.Add(this.label7);
-			this.ReferenceProperties.Controls.Add(this.label8);
 			this.ReferenceProperties.Location = new System.Drawing.Point(8, 224);
 			this.ReferenceProperties.Name = "ReferenceProperties";
-			this.ReferenceProperties.Size = new System.Drawing.Size(335, 192);
+			this.ReferenceProperties.Size = new System.Drawing.Size(335, 264);
 			this.ReferenceProperties.TabIndex = 0;
 			this.ReferenceProperties.TabStop = false;
 			this.ReferenceProperties.Text = "Reference properties";
@@ -281,7 +417,7 @@
             "OneToOne",
             "ManyToOne",
             "OneToMany"});
-			this.ReferenceType.Location = new System.Drawing.Point(104, 88);
+			this.ReferenceType.Location = new System.Drawing.Point(104, 120);
 			this.ReferenceType.Name = "ReferenceType";
 			this.ReferenceType.Size = new System.Drawing.Size(104, 21);
 			this.ReferenceType.TabIndex = 28;
@@ -290,7 +426,7 @@
 			// label14
 			// 
 			this.label14.AutoSize = true;
-			this.label14.Location = new System.Drawing.Point(16, 88);
+			this.label14.Location = new System.Drawing.Point(16, 120);
 			this.label14.Name = "label14";
 			this.label14.Size = new System.Drawing.Size(31, 13);
 			this.label14.TabIndex = 27;
@@ -299,7 +435,7 @@
 			// GenerateRelationKey
 			// 
 			this.GenerateRelationKey.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.GenerateRelationKey.Location = new System.Drawing.Point(256, 64);
+			this.GenerateRelationKey.Location = new System.Drawing.Point(256, 96);
 			this.GenerateRelationKey.Name = "GenerateRelationKey";
 			this.GenerateRelationKey.Size = new System.Drawing.Size(72, 20);
 			this.GenerateRelationKey.TabIndex = 26;
@@ -311,7 +447,7 @@
 			// 
 			this.ReferenceRelationKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ReferenceRelationKey.Location = new System.Drawing.Point(104, 64);
+			this.ReferenceRelationKey.Location = new System.Drawing.Point(104, 96);
 			this.ReferenceRelationKey.Name = "ReferenceRelationKey";
 			this.ReferenceRelationKey.Size = new System.Drawing.Size(144, 20);
 			this.ReferenceRelationKey.TabIndex = 25;
@@ -320,114 +456,11 @@
 			// label13
 			// 
 			this.label13.AutoSize = true;
-			this.label13.Location = new System.Drawing.Point(16, 64);
+			this.label13.Location = new System.Drawing.Point(16, 96);
 			this.label13.Name = "label13";
 			this.label13.Size = new System.Drawing.Size(64, 13);
 			this.label13.TabIndex = 24;
 			this.label13.Text = "RelationKey";
-			// 
-			// ReferenceReversePropertyname
-			// 
-			this.ReferenceReversePropertyname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ReferenceReversePropertyname.FormattingEnabled = true;
-			this.ReferenceReversePropertyname.Location = new System.Drawing.Point(104, 168);
-			this.ReferenceReversePropertyname.Name = "ReferenceReversePropertyname";
-			this.ReferenceReversePropertyname.Size = new System.Drawing.Size(223, 21);
-			this.ReferenceReversePropertyname.TabIndex = 22;
-			this.ReferenceReversePropertyname.TextChanged += new System.EventHandler(this.ReferenceReversePropertyname_TextChanged);
-			// 
-			// label10
-			// 
-			this.label10.AutoSize = true;
-			this.label10.Location = new System.Drawing.Point(16, 168);
-			this.label10.Name = "label10";
-			this.label10.Size = new System.Drawing.Size(72, 13);
-			this.label10.TabIndex = 21;
-			this.label10.Text = "Propertyname";
-			// 
-			// ReferenceReverseColumnname
-			// 
-			this.ReferenceReverseColumnname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ReferenceReverseColumnname.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.ReferenceReverseColumnname.FormattingEnabled = true;
-			this.ReferenceReverseColumnname.Location = new System.Drawing.Point(104, 144);
-			this.ReferenceReverseColumnname.Name = "ReferenceReverseColumnname";
-			this.ReferenceReverseColumnname.Size = new System.Drawing.Size(223, 21);
-			this.ReferenceReverseColumnname.TabIndex = 20;
-			this.ReferenceReverseColumnname.TextChanged += new System.EventHandler(this.ReferenceReverseColumnname_TextChanged);
-			// 
-			// label9
-			// 
-			this.label9.AutoSize = true;
-			this.label9.Location = new System.Drawing.Point(16, 144);
-			this.label9.Name = "label9";
-			this.label9.Size = new System.Drawing.Size(84, 13);
-			this.label9.TabIndex = 19;
-			this.label9.Text = "Reverse column";
-			// 
-			// ReferencePropertyname
-			// 
-			this.ReferencePropertyname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ReferencePropertyname.FormattingEnabled = true;
-			this.ReferencePropertyname.Location = new System.Drawing.Point(104, 40);
-			this.ReferencePropertyname.Name = "ReferencePropertyname";
-			this.ReferencePropertyname.Size = new System.Drawing.Size(223, 21);
-			this.ReferencePropertyname.TabIndex = 18;
-			this.ReferencePropertyname.SelectedIndexChanged += new System.EventHandler(this.ReferencePropertyname_SelectedIndexChanged);
-			this.ReferencePropertyname.TextChanged += new System.EventHandler(this.ReferencePropertyname_TextChanged);
-			// 
-			// ReferenceReverseTablename
-			// 
-			this.ReferenceReverseTablename.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ReferenceReverseTablename.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.ReferenceReverseTablename.FormattingEnabled = true;
-			this.ReferenceReverseTablename.Location = new System.Drawing.Point(104, 120);
-			this.ReferenceReverseTablename.Name = "ReferenceReverseTablename";
-			this.ReferenceReverseTablename.Size = new System.Drawing.Size(223, 21);
-			this.ReferenceReverseTablename.TabIndex = 17;
-			this.ReferenceReverseTablename.SelectedIndexChanged += new System.EventHandler(this.ReferenceReverseTablename_SelectedIndexChanged);
-			this.ReferenceReverseTablename.TextChanged += new System.EventHandler(this.ReferenceReverseTablename_TextChanged);
-			// 
-			// ReferenceColumnname
-			// 
-			this.ReferenceColumnname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.ReferenceColumnname.Location = new System.Drawing.Point(104, 16);
-			this.ReferenceColumnname.Name = "ReferenceColumnname";
-			this.ReferenceColumnname.Size = new System.Drawing.Size(223, 20);
-			this.ReferenceColumnname.TabIndex = 16;
-			this.ReferenceColumnname.TextChanged += new System.EventHandler(this.ReferenceColumnname_TextChanged);
-			// 
-			// label6
-			// 
-			this.label6.AutoSize = true;
-			this.label6.Location = new System.Drawing.Point(16, 40);
-			this.label6.Name = "label6";
-			this.label6.Size = new System.Drawing.Size(72, 13);
-			this.label6.TabIndex = 15;
-			this.label6.Text = "Propertyname";
-			// 
-			// label7
-			// 
-			this.label7.AutoSize = true;
-			this.label7.Location = new System.Drawing.Point(16, 120);
-			this.label7.Name = "label7";
-			this.label7.Size = new System.Drawing.Size(73, 13);
-			this.label7.TabIndex = 14;
-			this.label7.Text = "Reverse table";
-			// 
-			// label8
-			// 
-			this.label8.AutoSize = true;
-			this.label8.Location = new System.Drawing.Point(16, 16);
-			this.label8.Name = "label8";
-			this.label8.Size = new System.Drawing.Size(68, 13);
-			this.label8.TabIndex = 13;
-			this.label8.Text = "Columnname";
 			// 
 			// TableProperties
 			// 
@@ -436,12 +469,23 @@
 			this.TableProperties.Controls.Add(this.TableIgnoreCheck);
 			this.TableProperties.Controls.Add(this.TableTablename);
 			this.TableProperties.Controls.Add(this.label1);
-			this.TableProperties.Location = new System.Drawing.Point(8, 424);
+			this.TableProperties.Location = new System.Drawing.Point(8, 496);
 			this.TableProperties.Name = "TableProperties";
 			this.TableProperties.Size = new System.Drawing.Size(335, 72);
 			this.TableProperties.TabIndex = 1;
 			this.TableProperties.TabStop = false;
 			this.TableProperties.Text = "Table properties";
+			// 
+			// TableIgnoreCheck
+			// 
+			this.TableIgnoreCheck.AutoSize = true;
+			this.TableIgnoreCheck.Location = new System.Drawing.Point(16, 40);
+			this.TableIgnoreCheck.Name = "TableIgnoreCheck";
+			this.TableIgnoreCheck.Size = new System.Drawing.Size(56, 17);
+			this.TableIgnoreCheck.TabIndex = 6;
+			this.TableIgnoreCheck.Text = "Ignore";
+			this.TableIgnoreCheck.UseVisualStyleBackColor = true;
+			this.TableIgnoreCheck.CheckedChanged += new System.EventHandler(this.TableIgnoreCheck_CheckedChanged);
 			// 
 			// TableTablename
 			// 
@@ -486,6 +530,17 @@
 			this.FieldProperties.TabIndex = 1;
 			this.FieldProperties.TabStop = false;
 			this.FieldProperties.Text = "Field properties";
+			// 
+			// FieldIndexCheck
+			// 
+			this.FieldIndexCheck.AutoSize = true;
+			this.FieldIndexCheck.Location = new System.Drawing.Point(16, 184);
+			this.FieldIndexCheck.Name = "FieldIndexCheck";
+			this.FieldIndexCheck.Size = new System.Drawing.Size(52, 17);
+			this.FieldIndexCheck.TabIndex = 15;
+			this.FieldIndexCheck.Text = "Index";
+			this.FieldIndexCheck.UseVisualStyleBackColor = true;
+			this.FieldIndexCheck.CheckedChanged += new System.EventHandler(this.FieldIndexCheck_CheckedChanged);
 			// 
 			// FieldDefaultValue
 			// 
@@ -622,38 +677,41 @@
 			// 
 			this.errorProvider1.ContainerControl = this;
 			// 
-			// TableIgnoreCheck
+			// label15
 			// 
-			this.TableIgnoreCheck.AutoSize = true;
-			this.TableIgnoreCheck.Location = new System.Drawing.Point(16, 40);
-			this.TableIgnoreCheck.Name = "TableIgnoreCheck";
-			this.TableIgnoreCheck.Size = new System.Drawing.Size(56, 17);
-			this.TableIgnoreCheck.TabIndex = 6;
-			this.TableIgnoreCheck.Text = "Ignore";
-			this.TableIgnoreCheck.UseVisualStyleBackColor = true;
-			this.TableIgnoreCheck.CheckedChanged += new System.EventHandler(this.TableIgnoreCheck_CheckedChanged);
+			label15.AutoSize = true;
+			label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			label15.Location = new System.Drawing.Point(8, 88);
+			label15.Name = "label15";
+			label15.Size = new System.Drawing.Size(284, 12);
+			label15.TabIndex = 23;
+			label15.Text = "The parent column value will be transfered to the child before commit";
 			// 
-			// FieldIndexCheck
+			// SwapButton
 			// 
-			this.FieldIndexCheck.AutoSize = true;
-			this.FieldIndexCheck.Location = new System.Drawing.Point(16, 184);
-			this.FieldIndexCheck.Name = "FieldIndexCheck";
-			this.FieldIndexCheck.Size = new System.Drawing.Size(52, 17);
-			this.FieldIndexCheck.TabIndex = 15;
-			this.FieldIndexCheck.Text = "Index";
-			this.FieldIndexCheck.UseVisualStyleBackColor = true;
-			this.FieldIndexCheck.CheckedChanged += new System.EventHandler(this.FieldIndexCheck_CheckedChanged);
+			this.SwapButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.SwapButton.Enabled = false;
+			this.SwapButton.Location = new System.Drawing.Point(216, 120);
+			this.SwapButton.Name = "SwapButton";
+			this.SwapButton.Size = new System.Drawing.Size(112, 20);
+			this.SwapButton.TabIndex = 31;
+			this.SwapButton.Text = "Swap parent - child";
+			this.SwapButton.UseVisualStyleBackColor = true;
 			// 
 			// DataClassCustomizer
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.CancelBtn;
-			this.ClientSize = new System.Drawing.Size(553, 604);
+			this.ClientSize = new System.Drawing.Size(553, 675);
 			this.Controls.Add(this.splitContainer1);
 			this.Controls.Add(this.panel1);
 			this.Name = "DataClassCustomizer";
 			this.Text = "DataClassCustomizer";
+			groupBox1.ResumeLayout(false);
+			groupBox1.PerformLayout();
+			groupBox2.ResumeLayout(false);
+			groupBox2.PerformLayout();
 			this.panel1.ResumeLayout(false);
 			this.splitContainer1.Panel1.ResumeLayout(false);
 			this.splitContainer1.Panel1.PerformLayout();
@@ -695,10 +753,8 @@
         private System.Windows.Forms.CheckBox FieldAutogenerate;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ComboBox ReferencePropertyname;
-        private System.Windows.Forms.ComboBox ReferenceReverseTablename;
-        private System.Windows.Forms.TextBox ReferenceColumnname;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.ComboBox ReferenceReverseTablename;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
@@ -706,7 +762,6 @@
         private System.Windows.Forms.ComboBox FieldFieldname;
         private System.Windows.Forms.ComboBox FieldDatatype;
 		private System.Windows.Forms.TextBox FieldColumnname;
-        private System.Windows.Forms.ComboBox ReferenceReversePropertyname;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.ComboBox ReferenceReverseColumnname;
         private System.Windows.Forms.Label label9;
@@ -725,6 +780,10 @@
 		private System.Windows.Forms.Label label14;
 		private System.Windows.Forms.CheckBox TableIgnoreCheck;
 		private System.Windows.Forms.CheckBox FieldIndexCheck;
+		private System.Windows.Forms.TextBox ReferenceReversePropertyname;
+		private System.Windows.Forms.TextBox ReferencePropertyname;
+		private System.Windows.Forms.ComboBox ReferenceColumnname;
+		private System.Windows.Forms.Button SwapButton;
 
     }
 }

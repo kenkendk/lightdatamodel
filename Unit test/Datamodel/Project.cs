@@ -21,9 +21,9 @@ namespace Datamodel.UnitTest
 
 		[AutoIncrement, PrimaryKey, DatabaseField("ID")]
 		private System.Int64 m_ID = rnd.Next(int.MinValue, -1);
-		[Relation("c3a06cc7-9649-4cb9-beca-db6ad822cf94", typeof(Note), "ID", "CurrentTaskNote", "TaskNotes"), DatabaseField("CurrentTaskNoteID")]
+		[Relation("ProjectCurrentTaskNote", typeof(Note), "ID"), DatabaseField("CurrentTaskNoteID")]
 		private System.Int64 m_CurrentTaskNoteID = long.MinValue;
-		[Relation("227fe561-039d-4337-b2b7-67ed95f32637", typeof(Note), "ID", "ProjectNote", "ProjectNotes"), DatabaseField("ProjectNoteID")]
+		[Relation("ProjectProjectNote", typeof(Note), "ID"), DatabaseField("ProjectNoteID")]
 		private System.Int64 m_ProjectNoteID = long.MinValue;
 		[DatabaseField("Title")]
 		private System.String m_Title = "";
@@ -62,15 +62,15 @@ namespace Datamodel.UnitTest
 		[Affects(typeof(Note))]
 		public Note CurrentTaskNote
 		{
-			get{ return ((DataFetcherWithRelations)m_dataparent).GetReferenceObject<Note>("c3a06cc7-9649-4cb9-beca-db6ad822cf94", this); }
-			set{ ((DataFetcherWithRelations)m_dataparent).SetReferenceObject("c3a06cc7-9649-4cb9-beca-db6ad822cf94", this, value); }
+			get{ return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<Note>("ProjectCurrentTaskNote", this); }
+			set{ ((DataFetcherWithRelations)m_dataparent).SetRelatedObject("ProjectCurrentTaskNote", this, value); }
 		}
 
 		[Affects(typeof(Note))]
 		public Note ProjectNote
 		{
-			get{ return ((DataFetcherWithRelations)m_dataparent).GetReferenceObject<Note>("227fe561-039d-4337-b2b7-67ed95f32637", this); }
-			set{ ((DataFetcherWithRelations)m_dataparent).SetReferenceObject("227fe561-039d-4337-b2b7-67ed95f32637", this, value); }
+			get { return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<Note>("ProjectProjectNote", this); }
+			set { ((DataFetcherWithRelations)m_dataparent).SetRelatedObject("ProjectProjectNote", this, value); }
 		}
 
 #endregion

@@ -82,6 +82,16 @@ namespace System.Data.LightDatamodel
 			}
         }
 
+		public IEnumerator<TypeConfiguration.MappedClass> GetEnumerator()
+		{
+			return m_knownTypes.Values.GetEnumerator();
+		}
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
         /// <summary>
         /// This class contains the type info for a single class/table
         /// </summary>
@@ -151,13 +161,23 @@ namespace System.Data.LightDatamodel
 						if(list != null)
 						foreach(Relation rel in list)
 						{
-							MappedClass local = this;
-							MappedClass reverse = m_parent[rel.TargetClass];
-							MappedField localfield = fi;
-							MappedField reversefield = reverse[rel.TargetDatabasefield];
-							PropertyInfo localproperty = this.m_type.GetProperty( rel.ThisProperty);
-							PropertyInfo reverseproperty = reverse.m_type.GetProperty(rel.TargetProperty);
-							ReferenceField newref = new ReferenceField(rel.Name, localfield, localproperty, reversefield, reverseproperty);
+							MappedClass child = this;
+							MappedClass parent = m_parent[rel.TargetClass];
+							MappedField childfield = fi;
+							MappedField parentfield = parent[rel.TargetDatabasefield];
+
+							//swap?
+							if (!rel.TargetIsParent)
+							{
+								MappedClass tmp = child;
+								child = parent;
+								parent = tmp;
+								MappedField tmp2 = childfield;
+								childfield = parentfield;
+								parentfield = tmp2;
+							}
+
+							ReferenceField newref = new ReferenceField(rel.Name, childfield, parentfield, child, parent);
 							m_referenceFields.Add(rel.Name, newref);
 						}
 					}
@@ -167,20 +187,12 @@ namespace System.Data.LightDatamodel
             /// <summary>
             /// Returns the name of the table this class is mapped to
             /// </summary>
-            public string Tablename
-            {
-                get { return m_tablename; }
-                set { m_tablename = value; }
-            }
+            public string Tablename{get { return m_tablename; }}
 
             /// <summary>
             /// Returns the view sql for view based mappings
             /// </summary>
-            public string ViewSQL
-            {
-                get { return m_viewSql; }
-                set { m_viewSql = value; }
-            }
+            public string ViewSQL{get { return m_viewSql; }}
 
             /// <summary>
             /// Gets the mapped type
@@ -190,49 +202,29 @@ namespace System.Data.LightDatamodel
             /// <summary>
             /// Gets or sets the tables primary key
             /// </summary>
-            public MappedField PrimaryKey
-            {
-                get { return m_primaryKey; }
-                set { m_primaryKey = value; }
-            }
-
-            /// <summary>
-            /// Gets a reference field by name
-            /// </summary>
-            /// <param name="name">The name of the field</param>
-            /// <returns>The matching reference field</returns>
-            public ReferenceField GetReferenceField(string name)
-            {
-                if (!m_referenceFields.ContainsKey(name)) throw new Exception(string.Format("Failed to locate a reference property name {0} in class {1}", name, this.m_type.FullName));
-                return m_referenceFields[name];
-            }
+            public MappedField PrimaryKey{get { return m_primaryKey; }}
 
             /// <summary>
             /// Gets or sets the mapping information
             /// </summary>
             /// <param name="columnName">The name of the column</param>
             /// <returns>The mapping information</returns>
-            public MappedField this[string columnName]
-            {
-                get { return m_fields[columnName]; }
-                set { m_fields[columnName] = value; }
-            }
+            public MappedField this[string columnName]{get { return m_fields[columnName]; }}
 
             /// <summary>
-            /// Gets the lisf of mapped fields
+            /// Gets the list of mapped fields
             /// </summary>
             public Dictionary<string, MappedField> MappedFields { get { return m_fields; } }
 
+			/// <summary>
+			/// Get the list of indexed fields
+			/// </summary>
 			public LinkedList<MappedField> IndexFields { get { return m_indexes; } }
 
             /// <summary>
             /// Gets the list of reference fields
             /// </summary>
-            public Dictionary<string, ReferenceField> ReferenceFields 
-            { 
-                get { return m_referenceFields; }
-                //set { m_referenceFields = value; }
-            }
+            public Dictionary<string, ReferenceField> ReferenceFields { get { return m_referenceFields; }}
         
         }
 
@@ -279,11 +271,7 @@ namespace System.Data.LightDatamodel
 				}
             }
 
-            public object DefaultValue
-            {
-                get { return m_defaultValue; }
-                set { m_defaultValue = value; }
-            }
+            public object DefaultValue{get { return m_defaultValue; }}
 
             public object GetDefaultValue(IDataProvider provider)
             {
@@ -296,47 +284,27 @@ namespace System.Data.LightDatamodel
             /// <summary>
             /// Gets or sets the name of the column that this field is mapped to
             /// </summary>
-            public string Databasefield 
-            { 
-                get { return m_databasefield; }
-                //set { m_databasefield = value; }
-            }
+            public string Databasefield { get { return m_databasefield; }}
 
             /// <summary>
             /// Gets or sets the field assigned to this mapping information
             /// </summary>
-            public FieldInfo Field
-            {
-                get { return m_field; }
-                //set { m_field = value; }
-            }
+            public FieldInfo Field{get { return m_field; }}
 
             /// <summary>
             /// Gets or sets the property accessor for this field
             /// </summary>
-            public PropertyInfo Property
-            {
-                get { return m_property; }
-                //set { m_property = value; }
-            }
+            public PropertyInfo Property { get { return m_property; } }
 
             /// <summary>
             /// Gets a value indicating if the field/column value is assigned by the data source
             /// </summary>
-            public bool IsAutoGenerated
-            {
-                get { return m_isAutoGenerated; }
-                //set { m_isAutoGenerated = value; }
-            }
+            public bool IsAutoGenerated{ get { return m_isAutoGenerated; } }
 
             /// <summary>
             /// Gets a boolean value indicating if this field/column is the primary key
             /// </summary>
-            public bool IsPrimaryKey
-            {
-                get { return m_isPrimaryKey; }
-                //set { m_isPrimaryKey = value; }
-            }
+            public bool IsPrimaryKey {get { return m_isPrimaryKey; } }
 
 			public bool Index
 			{
@@ -347,29 +315,19 @@ namespace System.Data.LightDatamodel
             /// <summary>
             /// Gets a value indicating if this field should be omitted when creating a new row in the data source
             /// </summary>
-            public bool IgnoreWithInsert
-            {
-                get { return m_ignoreWithInsert || m_isAutoGenerated; }
-                //set { m_ignoreWithInsert = value; }
-            }
+            public bool IgnoreWithInsert { get { return m_ignoreWithInsert || m_isAutoGenerated; } }
 
             /// <summary>
             /// Gets a value indicating if this field should be omitted when updating a row in the data source
             /// </summary>
-            public bool IgnoreWithUpdate
-            {
-                get { return m_ignoreWithUpdate; }
-                //set { m_ignoreWithUpdate = value; }
-            }
+            public bool IgnoreWithUpdate { get { return m_ignoreWithUpdate; } }
 
             /// <summary>
             /// Gets a value indicating if this field should be omitted when reading a row from the data source
             /// </summary>
-            public bool IgnoreWithSelect
-            {
-                get { return m_ignoreWithSelect; }
-                //set { m_ignoreWithSelect = value; }
-            }
+            public bool IgnoreWithSelect { get { return m_ignoreWithSelect; } }
+
+			public MappedClass Parent { get { return m_parent; } }
 
         }
 
@@ -378,77 +336,27 @@ namespace System.Data.LightDatamodel
         /// </summary>
         public class ReferenceField
         {
-			private MappedField m_localField;
-			private PropertyInfo m_localProperty;
-			private MappedField m_reverseField;
-			private PropertyInfo m_reverseProperty;
+			private MappedField m_childField;
+			private MappedField m_parentField;
             private string m_name;
+			private MappedClass m_parent;
+			private MappedClass m_child;
 
-			public ReferenceField(string name, MappedField localField, PropertyInfo localProperty, MappedField reverseField, PropertyInfo reverseProperty)
+			public ReferenceField(string name, MappedField childField, MappedField parentField, MappedClass child, MappedClass parent)
 			{
 				m_name = name;
-				m_localField = localField;
-				m_localProperty = localProperty;
-				m_reverseField = reverseField;
-				m_reverseProperty = reverseProperty;
+				m_childField = childField;
+				m_parentField = parentField;
+				m_parent = parent;
+				m_child = child;
 			}
 
-			public MappedField LocalField
-			{
-				get { return m_localField; }
-			}
-
-			public PropertyInfo LocalProperty
-			{
-				get { return m_localProperty; }
-			}
-
-			public MappedField ReverseField
-			{
-				get { return m_reverseField; }
-			}
-
-			public PropertyInfo ReverseProperty
-			{
-				get { return m_reverseProperty; }
-			}
-
-            public string Name
-            {
-                get { return m_name; }
-                //set { m_name = value; }
-            }
-
-			public bool LocalIsCollection
-			{
-				get
-				{
-					return m_localProperty.PropertyType.IsArray;
-				}
-			}
-
-			public bool ReverseIsCollection
-			{
-				get
-				{
-					return m_reverseProperty.PropertyType.IsArray;
-				}
-			}
+			public MappedField ChildField{get { return m_childField; }}
+			public MappedClass Child { get { return m_child; } }
+			public MappedClass Parent { get { return m_parent; } }
+			public MappedField ParentField{	get { return m_parentField; }}
+			public string Name {get { return m_name; }}
         }
-
-		#region IEnumerable<MappedClass> Members
-
-		public IEnumerator<TypeConfiguration.MappedClass> GetEnumerator()
-		{
-			return m_knownTypes.Values.GetEnumerator();
-		}
-
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		#endregion
 	}
 
 }
@@ -462,7 +370,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for fields
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
-	public class IgnoreWithInsert : Attribute
+	public sealed class IgnoreWithInsert : Attribute
 	{
 	}
 
@@ -470,7 +378,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for fields
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
-	public class IgnoreWithUpdate : Attribute
+	public sealed class IgnoreWithUpdate : Attribute
 	{
 	}
 
@@ -478,7 +386,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for fields
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
-	public class IgnoreWithSelect : Attribute
+	public sealed class IgnoreWithSelect : Attribute
 	{
 	}
 
@@ -486,7 +394,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for fields
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
-	public class AutoIncrement : Attribute
+	public sealed class AutoIncrement : Attribute
 	{
 	}
 
@@ -494,7 +402,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for fields
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
-	public class PrimaryKey : Attribute
+	public sealed class PrimaryKey : Attribute
 	{
 	}
 
@@ -502,7 +410,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for fields
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
-	public class Index : Attribute
+	public sealed class Index : Attribute
 	{
 	}
 
@@ -510,7 +418,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for classes
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class)]
-	public class DatabaseView : Attribute
+	public sealed class DatabaseView : Attribute
 	{
 		string m_viewsql = "";
 		public DatabaseView(string sql)
@@ -524,7 +432,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for fields
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
-	public class Default : Attribute
+	public sealed class Default : Attribute
 	{
 		object m_value = null;
 		public Default(object value)
@@ -538,7 +446,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for classes
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class)]
-	public class DatabaseTable : Attribute
+	public sealed class DatabaseTable : Attribute
 	{
 		string m_tablename = "";
 		public DatabaseTable(string tablename)
@@ -552,7 +460,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for fields
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field)]
-	public class DatabaseField : Attribute
+	public sealed class DatabaseField : Attribute
 	{
 		string m_fieldname = "";
 		public DatabaseField(string fieldname)
@@ -566,26 +474,24 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// Used for fields
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-	public class Relation : Attribute
+	public sealed class Relation : Attribute
 	{
 		string m_name = "";
 		string m_targetdatabasefield = "";
 		Type m_targetclass = null;
-		string m_targetproperty = "";
-		string m_thisproperty = "";
-		public Relation(string name, Type targetclass, string targetdatabasefield, string thisproperty, string targetproperty)
+		bool m_targetisparent;
+		public Relation(string name, Type targetclass, string targetdatabasefield) : this(name, targetclass, targetdatabasefield, true){}
+		public Relation(string name, Type targetclass, string targetdatabasefield, bool targetisparent)
 		{
 			m_name = name;
 			m_targetclass = targetclass;
-			m_targetproperty = targetproperty;
 			m_targetdatabasefield = targetdatabasefield;
-			m_thisproperty = thisproperty;
+			m_targetisparent = targetisparent;
 		}
 		public string Name { get { return m_name; } }
 		public Type TargetClass { get { return m_targetclass; } }
-		public string TargetProperty { get { return m_targetproperty; } }
-		public string ThisProperty { get { return m_thisproperty; } }
 		public string TargetDatabasefield { get { return m_targetdatabasefield; } }
+		public bool TargetIsParent { get { return m_targetisparent; } }
 	}
 
 	/// <summary>
@@ -593,7 +499,7 @@ namespace System.Data.LightDatamodel.DataClassAttributes
 	/// This will give the user a chance to prefetch eventual objects
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-	public class Affects : Attribute
+	public sealed class Affects : Attribute
 	{
 		Type m_targettype = null;
 		public Affects(Type targettype)

@@ -129,7 +129,7 @@ namespace System.Data.LightDatamodel
 
         #endregion
 
- 		protected DataClassLevels GetDataClassLevel(Type type)
+ 		protected static DataClassLevels GetDataClassLevel(Type type)
 		{
 			do
 			{
@@ -200,24 +200,9 @@ namespace System.Data.LightDatamodel
 		/// <typeparam name="DATACLASS"></typeparam>
 		/// <param name="operation"></param>
 		/// <returns></returns>
-		public virtual DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass
+		public DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass
 		{
-			Type type = typeof(DATACLASS);
-			//string tablename = type.Name;
-
-			OnBeforeDataConnection(null, DataActions.Fetch);
-
-			object[] items = LoadObjects(type, operation);
-			DATACLASS[] res = new DATACLASS[items.Length];
-			for (int i = 0; i < items.Length; i++)
-			{
-				Add((IDataClass)items[i]);
-				(items[i] as DataClassBase).m_state = ObjectStates.Default;
-				OnAfterDataConnection(items[i], DataActions.Fetch);
-				res[i] = (DATACLASS)items[i];
-			}
-
-			return res;
+			return (DATACLASS[])(Array)GetObjects(typeof(DATACLASS), operation);
 		}
 
 		/// <summary>
@@ -256,8 +241,6 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public virtual object[] GetObjects(Type type, QueryModel.Operation operation)
 		{
-			string tablename = type.Name;
-
 			OnBeforeDataConnection(null, DataActions.Fetch);
 
 			object[] items = LoadObjects(type, operation);
@@ -364,9 +347,9 @@ namespace System.Data.LightDatamodel
 		/// <param name="obj">The object to insert</param>
 		protected virtual void HookObject(IDataClass obj)		//TODO: This should be merged with Add
 		{
-			(obj as DataClassBase).BeforeDataChange += new DataChangeEventHandler(OnBeforeDataChange);
-			(obj as DataClassBase).AfterDataChange += new DataChangeEventHandler(OnAfterDataChange);
-			(obj as DataClassBase).m_dataparent = this;
+			((DataClassBase)obj).BeforeDataChange += new DataChangeEventHandler(OnBeforeDataChange);
+			((DataClassBase)obj).AfterDataChange += new DataChangeEventHandler(OnAfterDataChange);
+			((DataClassBase)obj).m_dataparent = this;
 		}
 
 		/// <summary>
@@ -407,63 +390,58 @@ namespace System.Data.LightDatamodel
 			if (items == null || items.Length == 0) throw new NoSuchObjectException("Row (" + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj) + ") from table \"" + tablename + "\" can't be fetched", obj);
 			if (items.Length != 1) throw new Exception("Row (" + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj) + ") from table \"" + tablename + "\" gave " + items.Length.ToString() + " rows");
             ObjectTransformer.CopyObject(items[0], obj);
-			(obj as DataClassBase).m_state = ObjectStates.Default;
-			(obj as DataClassBase).m_isdirty = false;
-			(obj as DataClassBase).m_originalvalues = null;
+			((DataClassBase)obj).m_state = ObjectStates.Default;
+			((DataClassBase)obj).m_isdirty = false;
+			((DataClassBase)obj).m_originalvalues = null;
 			OnAfterDataConnection(obj, DataActions.Fetch);
-		}
-
-		/// <summary>
-		/// Commits an object into the data source and refreshes it
-		/// </summary>
-		/// <param name="obj"></param>
-		public void Commit(IDataClass obj)
-		{
-			Commit(obj, true);
 		}
 
         /// <summary>
         /// Commits an object into the data source
         /// </summary>
         /// <param name="obj"></param>
-		public virtual void Commit(IDataClass obj, bool refreshobject)
+		public virtual void Commit(IDataClass obj)
 		{
 			//new object?
-			if ((obj as DataClassBase).m_dataparent == null) Add(obj);
+			if (((DataClassBase)obj).m_dataparent == null) Add(obj);
 
 			//save
 			if (obj.ObjectState == ObjectStates.Default)
 			{
+				if (!obj.IsDirty) return;
 				OnBeforeDataConnection(obj, DataActions.Update);
-				(obj as DataClassBase).OnBeforeDataCommit(obj, DataActions.Update);
+				((DataClassBase)obj).OnBeforeDataCommit(obj, DataActions.Update);
                 UpdateObject(obj);
 				OnAfterDataConnection(obj, DataActions.Update);
-				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Update);
-				if (refreshobject) RefreshObject(obj);
+				((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Update);
+				RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.New)
 			{
 				OnBeforeDataConnection(obj, DataActions.Insert);
-				(obj as DataClassBase).OnBeforeDataCommit(obj, DataActions.Insert);
+				((DataClassBase)obj).OnBeforeDataCommit(obj, DataActions.Insert);
                 InsertObject(obj);
 				OnAfterDataConnection(obj, DataActions.Insert);
-				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Insert);
-				if (refreshobject) RefreshObject(obj);
+				((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Insert);
+				RefreshObject(obj);
             }
 			else if (obj.ObjectState == ObjectStates.Deleted)
 			{
 				OnBeforeDataConnection(obj, DataActions.Delete);
-				(obj as DataClassBase).OnBeforeDataCommit(obj, DataActions.Delete);
+				((DataClassBase)obj).OnBeforeDataCommit(obj, DataActions.Delete);
                 RemoveObject(obj);
 				OnAfterDataConnection(obj, DataActions.Delete);
-				(obj as DataClassBase).OnAfterDataCommit(obj, DataActions.Delete);
+				((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Delete);
 			}
 
 		}
 
         public virtual void Dispose()
         {
+			m_mappings = null;
+			m_insertlock = null;
             m_provider = null;
+			GC.SuppressFinalize(this);
         }
 
 		protected virtual void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)

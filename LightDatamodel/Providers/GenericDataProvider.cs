@@ -29,7 +29,6 @@ namespace System.Data.LightDatamodel
 	public abstract class GenericDataProvider : IDataProvider
 	{
 		protected IDbConnection m_connection;
-        //protected IObjectTransformer m_transformer;
 		protected IDataFetcher m_parent;
 
 		public IDbConnection Connection
@@ -37,12 +36,6 @@ namespace System.Data.LightDatamodel
 			get { return m_connection;}
 			set { m_connection = value; }
 		}
-
-		//public IObjectTransformer Transformer
-		//{
-		//    get { return m_transformer; }
-		//    set { m_transformer = value; }
-		//}
 
 		public IDataFetcher Parent
 		{
@@ -67,17 +60,17 @@ namespace System.Data.LightDatamodel
             private QueryModel.Operation m_operation;
             private int m_colid = 4;
 
-            public IDbCommand Command
-            {
-                get { return m_cmd; }
-                set { m_cmd = value; }
-            }
+			//public IDbCommand Command
+			//{
+			//    get { return m_cmd; }
+			//    set { m_cmd = value; }
+			//}
 
-            public GenericDataProvider Provider
-            {
-                get { return m_provider; }
-                set { m_provider = value; }
-            }
+			//public GenericDataProvider Provider
+			//{
+			//    get { return m_provider; }
+			//    set { m_provider = value; }
+			//}
 
             protected override string TranslateOperator(System.Data.LightDatamodel.QueryModel.Operators opr)
             {
@@ -348,7 +341,7 @@ namespace System.Data.LightDatamodel
 		{
 			OpenConnection();
 			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "SELECT " + expression + " FROM " + QuoteTablename(tablename) + ( filter != null && filter != "" ? " WHERE " + filter : "");
+			cmd.CommandText = "SELECT " + expression + " FROM " + QuoteTablename(tablename) + ( !String.IsNullOrEmpty(filter) ? " WHERE " + filter : "");
 
 			try
 			{
@@ -417,7 +410,7 @@ namespace System.Data.LightDatamodel
 			IDataParameter p = cmd.CreateParameter();
 			if (value == null)
 				p.Value = DBNull.Value;
-			else if (value.GetType() == typeof(string) && (string)value == "")
+			else if (value.GetType() == typeof(string) && String.IsNullOrEmpty((string)value))
 				p.Value = DBNull.Value;
 			else if (value.GetType() == typeof(DateTime))
 			{
@@ -468,7 +461,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="cmd"></param>
 		/// <returns></returns>
-		private string FullCommandText(IDbCommand cmd)
+		private static string FullCommandText(IDbCommand cmd)
 		{
 			try
 			{
@@ -485,7 +478,6 @@ namespace System.Data.LightDatamodel
 			{
 				return cmd.CommandText;
 			}
-
 		}
 
 		/// <summary>
@@ -510,7 +502,7 @@ namespace System.Data.LightDatamodel
 			    {
 				    using(IDataReader dr = cmd.ExecuteReader())
                     {
-						object[] results = ObjectTransformer.TransformToObjects(type, dr, this);
+						object[] results = (object[])ObjectTransformer.TransformToObjects(type, dr, this);
 						dr.Close();
                         if (results.Length == 0)
                             return null;
@@ -594,13 +586,13 @@ namespace System.Data.LightDatamodel
                 string filter = new SQLFilterBuilder(this, cmd, operation).ToString();
                 cmd.CommandText = GetSelectString(typeinfo);
 
-                if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
+                if (!String.IsNullOrEmpty(filter)) cmd.CommandText += " WHERE " + filter;
 
                 try
                 {
 					using (IDataReader dr = cmd.ExecuteReader())
 					{
-						object[] ret = ObjectTransformer.TransformToObjects(type, dr, this);
+						object[] ret = (object[])ObjectTransformer.TransformToObjects(type, dr, this);
 						dr.Close();
 						return ret;
 					}
@@ -698,8 +690,6 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public virtual object[] SelectRows(Type type, string filter)
 		{
-			//return SelectRows(type, filter, null);
-
 			OpenConnection();
 		    using (IDbCommand cmd = m_connection.CreateCommand())
 		    {
@@ -708,13 +698,13 @@ namespace System.Data.LightDatamodel
 		        cmd.CommandText = GetSelectString(typeinfo);
 		        cmd.Parameters.Clear();
 
-		        if (filter != null && filter != "") cmd.CommandText += " WHERE " + filter;
+		        if (!String.IsNullOrEmpty(filter)) cmd.CommandText += " WHERE " + filter;
 
 		        try
 		        {
 		            using (IDataReader dr = cmd.ExecuteReader())
 		            {
-						object[] ret = ObjectTransformer.TransformToObjects(type, dr, this);
+						object[] ret = (object[])ObjectTransformer.TransformToObjects(type, dr, this);
 		                dr.Close();
 		                return ret;
 		            }

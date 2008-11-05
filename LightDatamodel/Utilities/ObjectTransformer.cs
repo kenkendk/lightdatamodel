@@ -31,6 +31,20 @@ namespace System.Data.LightDatamodel
 	public class ObjectTransformer
 	{
 
+		/// <summary>
+		/// This will create a copy of the array
+		/// </summary>
+		/// <typeparam name="DATACLASS"></typeparam>
+		/// <param name="arrary"></param>
+		/// <returns></returns>
+		public static IEnumerable<DATACLASS> CreateArrayCopy<DATACLASS>(IEnumerable<DATACLASS> array)
+		{
+			LinkedList<DATACLASS> list = new LinkedList<DATACLASS>();
+			foreach (DATACLASS obj in array)
+				list.AddLast(CreateCopy<DATACLASS>(obj));
+			return list;
+		}
+
         /// <summary>
         /// Creates a new copy of the given item
         /// </summary>
@@ -39,7 +53,7 @@ namespace System.Data.LightDatamodel
         /// <returns>A fresh copy</returns>
         public static DATACLASS CreateCopy<DATACLASS>(DATACLASS source)
         {
-            return (DATACLASS)CreateCopy(source);
+            return (DATACLASS)CreateCopy(source as object);
         }
 
         /// <summary>
@@ -49,10 +63,52 @@ namespace System.Data.LightDatamodel
         /// <returns>A fresh copy</returns>
         public static object CreateCopy(object source)
         {
+			if (source == null) return null;
             object target = Activator.CreateInstance(source.GetType());
             CopyObject(source, target);
             return target;
         }
+
+		/// <summary>
+		/// This will copy one array onto another. Make sure that the size is right
+		/// </summary>
+		/// <typeparam name="DATACLASS"></typeparam>
+		/// <param name="sourcearray"></param>
+		/// <param name="targetarray"></param>
+		public static void CopyArray<DATACLASS>(IEnumerable<DATACLASS> sourcearray, IEnumerable<DATACLASS> targetarray)
+		{
+			if (sourcearray == null) return;
+			if (targetarray == null) throw new Exception("The target array is null. Don't be foolish!");
+
+			IEnumerator<DATACLASS> s = sourcearray.GetEnumerator();
+			IEnumerator<DATACLASS> t = targetarray.GetEnumerator();
+
+			while (s.MoveNext())
+			{
+				if(!t.MoveNext()) throw new Exception("Target array are not as long as source");
+				CopyObject(s.Current, t.Current);
+			}
+		}
+
+		/// <summary>
+		/// This will copy one array onto another. Make sure that the size is right
+		/// </summary>
+		/// <param name="sourcearray"></param>
+		/// <param name="targetarray"></param>
+		public static void CopyArray(IEnumerable sourcearray, IEnumerable targetarray)
+		{
+			if (sourcearray == null) return;
+			if (targetarray == null) throw new Exception("The target array is null. Don't be foolish!");
+
+			IEnumerator s = sourcearray.GetEnumerator();
+			IEnumerator t = targetarray.GetEnumerator();
+
+			while (s.MoveNext())
+			{
+				if (!t.MoveNext()) throw new Exception("Target array are not as long as source");
+				CopyObject(s.Current, t.Current);
+			}
+		}
 
         /// <summary>
         /// Copies all data variables from one object into another
@@ -95,21 +151,6 @@ namespace System.Data.LightDatamodel
 				foreach (FieldInfo fi in fields)
 					fi.SetValue(target, fi.GetValue(source));
 			}
-
-			DataFetcherWithRelations sourceManager = null;
-			DataFetcherWithRelations targetManager = null;
-
-            //take care of relations
-			if (source as IDataClass != null) sourceManager = (((IDataClass)source).DataParent as DataFetcherWithRelations) != null ? (((IDataClass)source).DataParent as DataFetcherWithRelations) : null;
-			if (target as IDataClass != null) targetManager = (((IDataClass)source).DataParent as DataFetcherWithRelations) != null ? (((IDataClass)target).DataParent as DataFetcherWithRelations) : null; 
-            if (sourceManager != null && targetManager != null)
-            {
-                if (targetManager.IsRegistered(target as IDataClass)) targetManager.ReassignGuid(targetManager.GetGuidForObject(target as IDataClass), sourceManager.GetGuidForObject(source as IDataClass));
-                else targetManager.RegisterObject(sourceManager.GetGuidForObject(source as IDataClass), target as IDataClass);
-
-                targetManager.SetExistsInDb(target as IDataClass, sourceManager.ExistsInDb(source as IDataClass));
-                targetManager.SetReferenceObjects(target.GetType(), targetManager.GetGuidForObject(target as IDataClass), sourceManager.GetReferenceObjects(source.GetType(), sourceManager.GetGuidForObject(source as IDataClass)));
-            }
         }
 
         /// <summary>
@@ -149,17 +190,20 @@ namespace System.Data.LightDatamodel
 		/// <param name="reader"></param>
 		/// <param name="provider"></param>
 		/// <returns></returns>
-        public static object[] TransformToObjects(Type type, IDataReader reader, IDataProvider provider)
+        public static Array TransformToObjects(Type type, IDataReader reader, IDataProvider provider)
         {
-            List<object> items = new List<object>();
+			LinkedList<object> items = new LinkedList<object>();
             while (reader.Read())
             {
                 object newobj = Activator.CreateInstance(type);
 				ObjectTransformer.PopulateDataClass(newobj, reader, provider);
-                items.Add(newobj);
+                items.AddLast(newobj);
             }
 
-            return items.ToArray();
+			//conver to array
+			Array ret = Array.CreateInstance(type, items.Count);
+			items.CopyTo((object[])ret, 0);
+            return ret;
         }
 
 		/// <summary>

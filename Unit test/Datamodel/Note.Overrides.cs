@@ -26,9 +26,6 @@ namespace Datamodel.UnitTest
 {
     partial class Note
     {
-		public System.Guid Guid { get { return ((DataFetcherWithRelations)this.DataParent).GetGuidForObject(this); } }
-		public bool ExistsInDB { get { return ((DataFetcherWithRelations)this.DataParent).ExistsInDb(this); } }
-
 		public override string ToString()
 		{
 			return "Note " + m_ID.ToString();

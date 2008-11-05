@@ -19,6 +19,8 @@
 #endregion
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Resources;
 
 //
 // General Information about an assembly is controlled through the following 
@@ -78,3 +80,5 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyKeyFile("..\\..\\LightDatamodel.snk")]
 [assembly: AssemblyKeyName("LightDatamodel")]
 #pragma warning restore 1699
+[assembly: ComVisibleAttribute(false)]
+[assembly: NeutralResourcesLanguageAttribute("en")]

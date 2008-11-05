@@ -19,7 +19,7 @@ namespace Datamodel.UnitTest
 
 #region " private members "
 
-		[AutoIncrement, PrimaryKey, Relation("c3a06cc7-9649-4cb9-beca-db6ad822cf94", typeof(Project), "CurrentTaskNoteID", "TaskNotes", "CurrentTaskNote"), Relation("227fe561-039d-4337-b2b7-67ed95f32637", typeof(Project), "ProjectNoteID", "ProjectNotes", "ProjectNote"), DatabaseField("ID")]
+		[AutoIncrement, PrimaryKey, Relation("ProjectCurrentTaskNote", typeof(Project), "CurrentTaskNoteID", false), Relation("ProjectProjectNote", typeof(Project), "ProjectNoteID", false), DatabaseField("ID")]
 		private System.Int64 m_ID = rnd.Next(int.MinValue, -1);
 		[DatabaseField("NoteText")]
 		private System.String m_NoteText = "";
@@ -43,27 +43,21 @@ namespace Datamodel.UnitTest
 
 #region " referenced properties "
 
-		private System.Collections.Generic.IList<Project> m_TaskNotes;
 		[Affects(typeof(Project))]
 		public System.Collections.Generic.IList<Project> TaskNotes
 		{
 			get
 			{
-				if (m_TaskNotes == null)
-					m_TaskNotes = ((DataFetcherWithRelations)m_dataparent).GetReferenceCollection<Project>("c3a06cc7-9649-4cb9-beca-db6ad822cf94", this);
-				return m_TaskNotes;
+				return ((DataFetcherWithRelations)m_dataparent).GetRelatedObjects<Project>("ProjectCurrentTaskNote", this);
 			}
 		}
 
-		private System.Collections.Generic.IList<Project> m_ProjectNotes;
 		[Affects(typeof(Project))]
 		public System.Collections.Generic.IList<Project> ProjectNotes
 		{
 			get
 			{
-				if (m_ProjectNotes == null)
-					m_ProjectNotes = ((DataFetcherWithRelations)m_dataparent).GetReferenceCollection<Project>("227fe561-039d-4337-b2b7-67ed95f32637", this);
-				return m_ProjectNotes;
+				return ((DataFetcherWithRelations)m_dataparent).GetRelatedObjects<Project>("ProjectProjectNote", this);
 			}
 		}
 
