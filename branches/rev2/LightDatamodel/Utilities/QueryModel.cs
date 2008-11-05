@@ -578,6 +578,7 @@ namespace System.Data.LightDatamodel.QueryModel
 
 		/// <summary>
 		/// Evaluates a list of objects against the query
+		/// BEWARE. Will return object[]{} if result is null ... not 'thetype'[]
 		/// </summary>
 		/// <param name="items">The items to filter</param>
 		/// <returns>A filtered list with only the matching items</returns>
@@ -588,7 +589,9 @@ namespace System.Data.LightDatamodel.QueryModel
 			foreach(object o in items)
 				if (ResAsBool(this.Evaluate(o, parameters)))
 					lst.Add(o);
-			return (object[])lst.ToArray(typeof(object));
+			if (lst.Count > 0)
+				return (object[])lst.ToArray(lst[0].GetType());
+			return new object[] { };
 		}
 
 		/// <summary>
@@ -613,7 +616,7 @@ namespace System.Data.LightDatamodel.QueryModel
 		/// </summary>
 		/// <param name="item">The item to convert to a boolean</param>
 		/// <returns>The most appropriate boolean return value</returns>
-		protected bool ResAsBool(object item)
+		protected static bool ResAsBool(object item)
 		{
 			if (item == null)
 				return false;

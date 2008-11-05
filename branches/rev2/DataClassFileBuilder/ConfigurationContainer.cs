@@ -72,6 +72,9 @@ namespace DataClassFileBuilder
 			public string ReversePropertyname;
 			public string Tablename;
 
+			private bool m_targetisparent = true;
+			public bool TargetIsParent { get { return m_targetisparent; } }
+
 			public Relation GetOppositDirection()
 			{
 				Relation tmp = new Relation();
@@ -94,6 +97,7 @@ namespace DataClassFileBuilder
 				tmp.ReverseDatabasefield = Databasefield;
 				tmp.ReversePropertyname = Propertyname;
 				tmp.ReverseTablename = Tablename;
+				tmp.m_targetisparent = false;
 				return tmp;
 			}
 		}

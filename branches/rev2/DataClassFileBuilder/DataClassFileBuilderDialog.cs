@@ -1009,7 +1009,7 @@ namespace DataClassFileBuilder
 
 						ConfigurationContainer.Relation[] relations = GetRelationsToField(mapping.Name, mf.Name, tableLookup);
 						foreach (ConfigurationContainer.Relation rel in relations)
-							attributes += "Relation(\"" + rel.Name + "\", typeof(" + tableLookup[rel.ReverseTablename].Classname + "), \"" + rel.ReverseDatabasefield + "\", \"" + rel.Propertyname + "\", \"" + rel.ReversePropertyname + "\"), ";
+							attributes += "Relation(\"" + rel.Name + "\", typeof(" + tableLookup[rel.ReverseTablename].Classname + "), \"" + rel.ReverseDatabasefield + "\"" + (rel.TargetIsParent ? "" : ", false") + "), ";
 
 						attributes += "DatabaseField(\"" + mf.Name + "\")]\n";
 						sw.Write(attributes);
@@ -1061,8 +1061,8 @@ namespace DataClassFileBuilder
                     {
 						sw.Write("\t\t[Affects(typeof(" + tableLookup[rf.ReverseTablename].Classname + "))]\n");
 						sw.Write("\t\tpublic " + tableLookup[rf.ReverseTablename].Classname + " " + rf.Propertyname + "\n\t\t{\n");
-						sw.Write("\t\t\tget{ return ((DataFetcherWithRelations)m_dataparent).GetReferenceObject<" + tableLookup[rf.ReverseTablename].Classname + ">(\"" + rf.Name + "\", this); }\n");
-						sw.Write("\t\t\tset{ ((DataFetcherWithRelations)m_dataparent).SetReferenceObject(\"" + rf.Name + "\", this, value); }\n");
+						sw.Write("\t\t\tget{ return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<" + tableLookup[rf.ReverseTablename].Classname + ">(\"" + rf.Name + "\", this); }\n");
+						sw.Write("\t\t\tset{ ((DataFetcherWithRelations)m_dataparent).SetRelatedObject(\"" + rf.Name + "\", this, value); }\n");
                         sw.Write("\t\t}\n\n");
                     }
 
@@ -1075,13 +1075,10 @@ namespace DataClassFileBuilder
                                 {
                                     if (rf.Type == ConfigurationContainer.Relation.RelationType.ManyToOne)
                                     {
-										sw.Write("\t\tprivate System.Collections.Generic.IList<" + mc.Classname + "> m_" + rf.ReversePropertyname + ";\n");
 										sw.Write("\t\t[Affects(typeof(" + mc.Classname + "))]\n");
 										sw.Write("\t\tpublic System.Collections.Generic.IList<" + mc.Classname + "> " + rf.ReversePropertyname + "\n\t\t{\n");
                                         sw.Write("\t\t\tget\n\t\t\t{\n");
-                                        sw.Write("\t\t\t\tif (m_" + rf.ReversePropertyname + " == null)\n");
-										sw.Write("\t\t\t\t\tm_" + rf.ReversePropertyname + " = ((DataFetcherWithRelations)m_dataparent).GetReferenceCollection<" + mc.Classname + ">(\"" + rf.Name + "\", this);\n");
-                                        sw.Write("\t\t\t\treturn m_" + rf.ReversePropertyname + ";\n");
+										sw.Write("\t\t\t\treturn ((DataFetcherWithRelations)m_dataparent).GetRelatedObjects<" + mc.Classname + ">(\"" + rf.Name + "\", this);\n");
                                         sw.Write("\t\t\t}\n");
                                         sw.Write("\t\t}\n\n");
                                     }
@@ -1089,8 +1086,8 @@ namespace DataClassFileBuilder
                                     {
 										sw.Write("\t\t[Affects(typeof(" + mc.Classname + "))]\n");
 										sw.Write("\t\tpublic " + mc.Classname + " " + rf.ReversePropertyname + "\n\t\t{\n");
-										sw.Write("\t\t\tget{ return ((DataFetcherWithRelations)m_dataparent).GetReferenceObject<" + mc.Classname + ">(\"" + rf.Name + "\", this); }\n");
-										sw.Write("\t\t\tset{ ((DataFetcherWithRelations)m_dataparent).SetReferenceObject(\"" + rf.Name + "\", this, value); }\n");
+										sw.Write("\t\t\tget{ return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<" + mc.Classname + ">(\"" + rf.Name + "\", this); }\n");
+										sw.Write("\t\t\tset{ ((DataFetcherWithRelations)m_dataparent).SetRelatedObject(\"" + rf.Name + "\", this, value); }\n");
                                         sw.Write("\t\t}\n\n");
                                     }
                                 }

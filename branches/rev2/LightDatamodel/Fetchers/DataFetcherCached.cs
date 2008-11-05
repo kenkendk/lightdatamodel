@@ -50,8 +50,9 @@ namespace System.Data.LightDatamodel
 			//Type, Indexname, (Indexvalue & IDataClass)
 			private Dictionary<Type, Dictionary<string, MultiDictionary<object, IDataClass>>> m_list = new Dictionary<Type, Dictionary<string, MultiDictionary<object, IDataClass>>>();
 			protected List<IDataClass> m_deletedobjects = new List<IDataClass>();
-			public List<IDataClass> DeletedObjects { get { return m_deletedobjects; } }
 			public System.Threading.ReaderWriterLock Lock = new System.Threading.ReaderWriterLock();
+
+			public List<IDataClass> DeletedObjects { get { return m_deletedobjects; } }
 
 			public IDataClass this[Type type, string indexname, object indexvalue]
 			{
@@ -142,7 +143,7 @@ namespace System.Data.LightDatamodel
 				if (!Lock.IsReaderLockHeld && !Lock.IsWriterLockHeld) throw new Exception("This will need lock");
 #endif
 				ICollection<IDataClass> list = m_list[type][indexname].Items[indexvalue];
-				IDataClass[] ret = new IDataClass[list == null ? 0 : list.Count];
+				IDataClass[] ret = (IDataClass[])Array.CreateInstance(type, list == null ? 0 : list.Count);
 				int c = 0;
 				foreach (IDataClass itm in list)
 					ret[c++] = itm;
@@ -177,11 +178,11 @@ namespace System.Data.LightDatamodel
 
 				public IEnumerator<IDataClass> GetEnumerator()
 				{
-					if (!m_parent.m_list.ContainsKey(m_type)) return new MultiDictionary<object, IDataClass>.ValueCollection<object, IDataClass>.Enumerator<IDataClass>(null);
+					if (!m_parent.m_list.ContainsKey(m_type)) return new MultiDictionary<object, IDataClass>.ValueCollection.Enumerator(null);
 					Dictionary<string, MultiDictionary<object, IDataClass>>.Enumerator e = m_parent.m_list[m_type].GetEnumerator();
 					e.MoveNext();
 					if (e.Current.Value != null) return e.Current.Value.Values.GetEnumerator();
-					return new MultiDictionary<object, IDataClass>.ValueCollection<object, IDataClass>.Enumerator<IDataClass>(null);
+					return new MultiDictionary<object, IDataClass>.ValueCollection.Enumerator(null);
 				}
 
 				IEnumerator IEnumerable.GetEnumerator()
@@ -206,6 +207,44 @@ namespace System.Data.LightDatamodel
 			}
 
 			/// <summary>
+			/// This will return all unchanged objects (for use in own clear objects function perhaps)
+			/// </summary>
+			/// <returns></returns>
+			public IDataClass[] GetAllUnchanged()
+			{
+#if DEBUG
+				if (!Lock.IsWriterLockHeld && !Lock.IsReaderLockHeld) throw new Exception("This will need lock");
+#endif
+				List<IDataClass> ret = new List<IDataClass>();
+				foreach (KeyValuePair<Type, Dictionary<string, MultiDictionary<object, IDataClass>>> type in m_list)
+					foreach (KeyValuePair<string, MultiDictionary<object, IDataClass>> index in type.Value)
+					{
+						foreach (KeyValuePair<object, IDataClass> obj in index.Value)
+							if (!obj.Value.IsDirty) ret.Add(obj.Value);
+					}
+				return ret.ToArray();
+			}
+
+			/// <summary>
+			/// This will return all unchanged objects (for use in own clear objects function perhaps)
+			/// </summary>
+			/// <returns></returns>
+			public IDataClass[] GetAllChanged()
+			{
+#if DEBUG
+				if (!Lock.IsWriterLockHeld && !Lock.IsReaderLockHeld) throw new Exception("This will need lock");
+#endif
+				List<IDataClass> ret = new List<IDataClass>();
+				foreach (KeyValuePair<Type, Dictionary<string, MultiDictionary<object, IDataClass>>> type in m_list)
+					foreach (KeyValuePair<string, MultiDictionary<object, IDataClass>> index in type.Value)
+					{
+						foreach (KeyValuePair<object, IDataClass> obj in index.Value)
+							if (obj.Value.IsDirty) ret.Add(obj.Value);
+					}
+				return ret.ToArray();
+			}
+
+			/// <summary>
 			/// This will remove all non deity objects
 			/// </summary>
 			public void ClearAllUnchanged()
@@ -216,8 +255,11 @@ namespace System.Data.LightDatamodel
 				foreach (KeyValuePair<Type, Dictionary<string, MultiDictionary<object, IDataClass>>> type in m_list)
 					foreach (KeyValuePair<string, MultiDictionary<object, IDataClass>> index in type.Value)
 					{
+						LinkedList<KeyValuePair<object, IDataClass>> tobedeleted = new LinkedList<KeyValuePair<object, IDataClass>>();
 						foreach (KeyValuePair<object, IDataClass> obj in index.Value)
-							if (!obj.Value.IsDirty) index.Value.Remove(obj.Key, obj.Value);
+							if (!obj.Value.IsDirty) tobedeleted.AddLast(obj);
+						foreach (KeyValuePair<object, IDataClass> obj in tobedeleted)
+							index.Value.Remove(obj.Key, obj.Value);
 					}
 			}
 
@@ -269,10 +311,10 @@ namespace System.Data.LightDatamodel
 			/// </summary>
 			/// <param name="item"></param>
 			/// <returns></returns>
-			public bool RemoveObject(IDataClass item)
-			{
-				throw new Exception("This is prolly too costly");
-			}
+			//public bool RemoveObject(IDataClass item)
+			//{
+			//    throw new Exception("This is prolly too costly");
+			//}
 
 			/// <summary>
 			/// This is used for removing an object. Will not remove from Deleted
@@ -325,6 +367,7 @@ namespace System.Data.LightDatamodel
 					m_typeenumerator.Dispose();
 					if (m_objectenumerator != null) m_objectenumerator.Dispose();
 					m_objectenumerator = null;
+					GC.SuppressFinalize(this);
 				}
 
 				object IEnumerator.Current
@@ -362,6 +405,8 @@ namespace System.Data.LightDatamodel
 			{
 				m_deletedobjects = null;
 				m_list = null;
+				Lock = null;
+				GC.SuppressFinalize(this);
 			}
 		}
 
@@ -405,12 +450,19 @@ namespace System.Data.LightDatamodel
 
 		private void m_mappings_TypesInitialized(object sender, EventArgs e)
 		{
-			//only 1 thread will enter this
+			try
+			{
+			m_cache.Lock.AcquireWriterLock(-1);
 
-			//pre-add indexes (gives a slight startup performance boost)
-			foreach (TypeConfiguration.MappedClass type in m_mappings)
-				foreach (TypeConfiguration.MappedField index in type.IndexFields)
-					m_cache.AddIndex(type.Type, index.Databasefield);
+				//pre-add indexes (gives a slight startup performance boost)
+				foreach (TypeConfiguration.MappedClass type in m_mappings)
+					foreach (TypeConfiguration.MappedField index in type.IndexFields)
+						m_cache.AddIndex(type.Type, index.Databasefield);
+			}
+			finally
+			{
+				m_cache.Lock.ReleaseWriterLock();
+			}
 		}
 
 		/// <summary>
@@ -424,6 +476,35 @@ namespace System.Data.LightDatamodel
 			LinkedList<IDataClass> deletedobjects = null;
 			LinkedList<IDataClass> newobjects = null;
 			LinkedList<IDataClass> updatedobjects = null;
+
+			//get objects
+			try
+			{
+				m_cache.Lock.AcquireReaderLock(-1);			//different lock
+				deletedobjects = new LinkedList<IDataClass>(m_cache.DeletedObjects);
+				newobjects = new LinkedList<IDataClass>();
+				updatedobjects = new LinkedList<IDataClass>();
+				foreach (IDataClass obj in m_cache)
+					if (obj.IsDirty)
+					{
+						if (obj.ObjectState == ObjectStates.New)
+							newobjects.AddLast(obj);
+						else
+							updatedobjects.AddLast(obj);
+					}
+			}
+			finally
+			{
+				m_cache.Lock.ReleaseReaderLock();
+			}
+
+			if (deletedobjects.Count == 0 && newobjects.Count == 0 && updatedobjects.Count == 0) return;
+
+			//create copies for rollback
+			LinkedList<IDataClass> copydeletedobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(deletedobjects) ;
+			LinkedList<IDataClass> copynewobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(newobjects);
+			LinkedList<IDataClass> copyupdatedobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(updatedobjects);
+
 			try
 			{
 				m_transactionlock.AcquireWriterLock(-1);		//only 1 of this function (CommitAll) may run
@@ -431,29 +512,6 @@ namespace System.Data.LightDatamodel
 				if (m_isintransaction) throw new Exception("Already in transaction!");
 				m_isintransaction = true;
 #endif
-
-				//get objects
-				try
-				{
-					m_cache.Lock.AcquireReaderLock(-1);			//different lock
-					deletedobjects = new LinkedList<IDataClass>(m_cache.DeletedObjects);
-					newobjects = new LinkedList<IDataClass>();
-					updatedobjects = new LinkedList<IDataClass>();
-					foreach (IDataClass obj in m_cache)
-						if (obj.IsDirty)
-						{
-							if (obj.ObjectState == ObjectStates.New)
-								newobjects.AddLast(obj);
-							else
-								updatedobjects.AddLast(obj);
-						}
-				}
-				finally
-				{
-					m_cache.Lock.ReleaseReaderLock();
-				}
-
-				if (deletedobjects.Count == 0 && newobjects.Count == 0 && updatedobjects.Count == 0) return;		//don't get me started
 
 				//start commiting
 				try
@@ -463,42 +521,29 @@ namespace System.Data.LightDatamodel
 
 					//delete (First we delete. In case we've delete a primary key, that also will be inserted)
 					foreach (IDataClass c in deletedobjects)
-						base.Commit(c, false); //no lock
+						Commit(c); //no lock
 
 					//update (second we update. In case we changed some primary keys, that also will be inserted)
 					foreach (IDataClass c in updatedobjects)
-						base.Commit(c, false); //no lock
+						Commit(c); //no lock
 
 					//create
 					foreach (IDataClass c in newobjects)
-						base.Commit(c, false); //no lock ... //will also rebalance objects in cache (means lock)
+						Commit(c); //no lock ... //will also rebalance objects in cache (means lock)
 
 					m_provider.CommitTransaction(transactionID);
 					inTransaction = false;
 				}
 				finally
 				{
-					if (inTransaction) m_provider.RollbackTransaction(transactionID);
-				}
-
-				//refresh objects ... only do this if the transaction is a success ... kind of "commit objects"
-				foreach (IDataClass c in newobjects)
-					RefreshObject(c);
-				foreach (IDataClass c in updatedobjects)
-					RefreshObject(c);
-
-				//commit objects to cache
-				if (deletedobjects.Count > 0)
-				{
-					try
+					if (inTransaction)
 					{
-						m_cache.Lock.AcquireWriterLock(-1);
-						foreach (IDataClass c in deletedobjects)
-							m_cache.DeletedObjects.Remove(c);
-					}
-					finally
-					{
-						m_cache.Lock.ReleaseWriterLock();
+						m_provider.RollbackTransaction(transactionID);
+
+						//copy back objects
+						ObjectTransformer.CopyArray<IDataClass>(copydeletedobjects, deletedobjects);
+						ObjectTransformer.CopyArray<IDataClass>(copynewobjects, newobjects);
+						ObjectTransformer.CopyArray<IDataClass>(copyupdatedobjects, updatedobjects);
 					}
 				}
 
@@ -512,33 +557,7 @@ namespace System.Data.LightDatamodel
 			}
 
 			//recursive commit
-			if (deletedobjects.Count > 0 || newobjects.Count > 0 || updatedobjects.Count > 0) CommitAll();
-
-		}
-
-		/// <summary>
-		/// This will load a list of arbitary objects
-		/// If the given object is a DataClassBase it will be hook into the DataFetcher
-		/// DataCustomClassBase will also have it's values filled
-		/// All others will just be filled with the data
-		/// </summary>
-		/// <param name="type">The type of objects to load</param>
-		/// <param name="operation">The filter used to select objects</param>
-		/// <returns>All matching objects</returns>
-		public override DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation)
-		{
-			if (!HasLoaded(typeof(DATACLASS), operation))
-				InsertObjectsInCache(LoadObjects(typeof(DATACLASS), operation));		//this is locked
-
-			try
-			{
-				m_cache.Lock.AcquireReaderLock(-1);
-				return operation.EvaluateList<DATACLASS>(m_cache.GetObjects(typeof(DATACLASS)));
-			}
-			finally
-			{
-				m_cache.Lock.ReleaseReaderLock();
-			}
+			CommitAll();
 		}
 
 		/// <summary>
@@ -558,7 +577,8 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_cache.Lock.AcquireReaderLock(-1);
-				return operation.EvaluateList(m_cache.GetObjects(type));
+				object[] ret = operation.EvaluateList(m_cache.GetObjects(type));
+				return ret.Length == 0 ? (object[])Array.CreateInstance(type, 0) : ret;		//return correct type
 			}
 			finally
 			{
@@ -604,11 +624,10 @@ namespace System.Data.LightDatamodel
 		/// <param name="obj">The object to discard</param>
 		public virtual void DiscardObject(IDataClass obj)
 		{
-			//lock (m_loadreducer)
+			lock (m_loadreducer)
 			{
 				m_loadreducer.Clear();
 			}
-			//}
 
 			try
 			{
@@ -672,15 +691,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass
 		{
-			try
-			{
-				m_cache.Lock.AcquireReaderLock(-1);
-				return query.EvaluateList<DATACLASS>(m_cache.GetObjects(typeof(DATACLASS)));
-			}
-			finally
-			{
-				m_cache.Lock.ReleaseReaderLock();
-			}
+			return (DATACLASS[])GetObjectFromCache(typeof(DATACLASS), query);
 		}
 
 		/// <summary>
@@ -707,7 +718,8 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_cache.Lock.AcquireReaderLock(-1);
-				return query.EvaluateList(m_cache.GetObjects(type));
+				object[] ret = query.EvaluateList(m_cache.GetObjects(type));
+				return ret.Length == 0 ? (object[])Array.CreateInstance(type, 0) : ret;	//return correct type
 			}
 			finally
 			{
@@ -746,7 +758,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		protected virtual IDataClass[] InsertObjectsInCache(object[] data)
+		protected virtual IDataClass[] InsertObjectsInCache(params object[] data)
 		{
 			List<IDataClass> res = new List<IDataClass>();
 
@@ -759,7 +771,7 @@ namespace System.Data.LightDatamodel
 					IDataClass toAdd = item;
 					if (item as DataClassBase != null)
 					{
-						DataClassBase dbitem = item as DataClassBase;
+						DataClassBase dbitem = (DataClassBase)item;
 						if (m_cache[item.GetType(), m_mappings[dbitem.GetType()].PrimaryKey.Databasefield, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] == null)
 						{
 							QueryModel.Operation opdeleted = QueryModel.Parser.ParseQuery("GetType.FullName = ? AND " + m_mappings[dbitem.GetType()].PrimaryKey.Property.Name + " = ?", item.GetType().FullName, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem));
@@ -895,17 +907,17 @@ namespace System.Data.LightDatamodel
 			GetObjects(type, m_mappings[type][indexname].Databasefield + "=?", indexvalue);
 
 			//search cache
-			IDataClass[] objs = null;
+			Array objs = null;
 			try
 			{
 				m_cache.Lock.AcquireReaderLock(-1);
-				objs = m_cache.GetObjects(type, indexname, indexvalue);
+				objs = (Array)m_cache.GetObjects(type, indexname, indexvalue);
 			}
 			finally
 			{
 				m_cache.Lock.ReleaseReaderLock();
 			}
-			return objs;
+			return (object[])objs;
 		}
 
 		/// <summary>
@@ -916,23 +928,9 @@ namespace System.Data.LightDatamodel
 		/// <param name="indexname"></param>
 		/// <param name="indexvalue"></param>
 		/// <returns></returns>
-		public virtual DATACLASS[] GetObjectsByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass
+		public DATACLASS[] GetObjectsByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass
 		{
-			//First search DB ... the loadreducer will prevent multiple searches
-			GetObjects<DATACLASS>(m_mappings[typeof(DATACLASS)][indexname].Databasefield + "=?", indexvalue);
-
-			//search cache
-			DATACLASS[] objs = null;
-			try
-			{
-				m_cache.Lock.AcquireReaderLock(-1);
-				objs = m_cache.GetObjects<DATACLASS>(indexname, indexvalue);
-			}
-			finally
-			{
-				m_cache.Lock.ReleaseReaderLock();
-			}
-			return objs;
+			return (DATACLASS[])(Array)GetObjectsByIndex(typeof(DATACLASS), indexname, indexvalue);
 		}
 
 		/// <summary>
@@ -1034,7 +1032,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="obj"></param>
 		/// <param name="refreshobject"></param>
-		public override void Commit(IDataClass obj, bool refreshobject)
+		public override void Commit(IDataClass obj)
 		{
 			//new object?
 			if ((obj as DataClassBase).m_dataparent == null) Add(obj);
@@ -1046,15 +1044,15 @@ namespace System.Data.LightDatamodel
 				//sql
 				if (obj.ObjectState == ObjectStates.Default)
 				{
-					base.Commit(obj, refreshobject);
+					base.Commit(obj);
 				}
 				else if (obj.ObjectState == ObjectStates.New)
 				{
-					base.Commit(obj, refreshobject);		//TODO: Beware of the events
+					base.Commit(obj);		//TODO: Beware of the events
 				}
 				else if (obj.ObjectState == ObjectStates.Deleted)
 				{
-					base.Commit(obj, refreshobject); //TODO: Beware of the events
+					base.Commit(obj); //TODO: Beware of the events
 					try
 					{
 						m_cache.Lock.AcquireWriterLock(-1);
@@ -1077,7 +1075,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		public virtual void ClearCache()
 		{
-			//lock (m_loadreducer)
+			lock (m_loadreducer)
 			{
 				m_loadreducer.Clear();
 			}
@@ -1125,6 +1123,7 @@ namespace System.Data.LightDatamodel
 			m_cache.Dispose();
 			m_cache = null;
 			m_loadreducer = null;
+			GC.SuppressFinalize(this);
 		}
 
 	}

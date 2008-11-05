@@ -75,7 +75,7 @@ namespace System.Data.LightDatamodel
 		/// <summary>
 		/// To create a provider, using just a connectionstring, the SQLite provider must know what Connection class to create. SQLite is not part of the standard distribution, so we check that it was loaded by the caller.
 		/// </summary>
-		public static Type SQLiteConnectionType = null;
+		private static Type SQLiteConnectionType = null;
 
 		public SQLiteDataProvider() : this("")
 		{

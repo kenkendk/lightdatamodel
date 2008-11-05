@@ -30,7 +30,6 @@ namespace System.Data.LightDatamodel
         void DeleteRow(object item);
         object SelectRow(Type type, object primarykey);
         object[] SelectRows(Type type, string filter);
-        //object[] SelectRows(Type type, string filter, object[] values);
         object[] SelectRows(Type type, QueryModel.Operation operation);
 		void UpdateRow(object item);
 		void InsertRow(object item);
@@ -60,11 +59,13 @@ namespace System.Data.LightDatamodel
 	/// <summary>
 	/// This should be thrown when an update/delete/create cen't fetch/find a given object
 	/// </summary>
+	[Serializable]
 	public class NoSuchObjectException : Exception
 	{
 		private object m_object;
 		public object Object { get{ return m_object;}}
 
+		public NoSuchObjectException() { }
 		public NoSuchObjectException(string message, object obj) : base(message)
 		{
 			m_object = obj;
@@ -115,8 +116,11 @@ namespace System.Data.LightDatamodel
 	/// </summary>
 	public class ConfigureProperties
 	{
-		public string Connectionstring;
-		public string DestinationDir;
-		public string Namespace;
+		private string m_Connectionstring;
+		private string m_DestinationDir;
+		private string m_Namespace;
+		public string Connectionstring { get { return m_Connectionstring; } set { m_Connectionstring = value; } }
+		public string DestinationDir { get { return m_DestinationDir; } set { m_DestinationDir = value; } }
+		public string Namespace { get { return m_Namespace; } set { m_Namespace = value; } }
 	}
 }

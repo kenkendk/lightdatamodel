@@ -102,7 +102,7 @@ namespace System.Data.LightDatamodel
 				return "NULL";
 
 			IDataParameter p = cmd.CreateParameter();
-			if (value == null || (value.GetType() == typeof(string) && (string)value == ""))
+			if (value == null || (value.GetType() == typeof(string) && string.IsNullOrEmpty((string)value)))
 				p.Value = DBNull.Value;
 			else if (value.GetType() == typeof(DateTime))
 			{

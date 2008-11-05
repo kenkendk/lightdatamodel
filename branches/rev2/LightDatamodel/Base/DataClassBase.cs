@@ -23,6 +23,7 @@ using System.Collections;
 using System.Reflection;
 using System.Collections.Generic;
 
+[assembly: CLSCompliant(true)]
 namespace System.Data.LightDatamodel
 {
 
@@ -108,23 +109,13 @@ namespace System.Data.LightDatamodel
 		}
 
 		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
-		//public RelationManager RelationManager { get { return (m_dataparent as IDataFetcherCached == null) ? null : (m_dataparent as IDataFetcherCached).RelationManager; } }
 		public bool IsDirty { get { return false; } }
 
-		public void SetDirty()
-		{
-		}
-
-		public System.Data.LightDatamodel.ObjectStates ObjectState
+		public ObjectStates ObjectState
 		{
 			get { return ObjectStates.Default; }
-			set
-			{
-				//meh
-			}
+			set{ /*meh*/}
 		}
-		//public string UniqueColumn { get { return null; } }
-		//public object UniqueValue { get { return null; } }
 
 		#endregion
 
