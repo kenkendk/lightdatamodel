@@ -769,7 +769,13 @@ namespace System.Data.LightDatamodel
 				foreach (IDataClass item in data)
 				{
 					IDataClass toAdd = item;
-					if (item as DataClassBase != null)
+					if (item is DataClassView)
+					{
+						(item as DataClassView).m_dataparent = this;
+						m_cache[item.GetType(), "GetHashCode", item.GetHashCode()] = (IDataClass)item;
+						toAdd = (IDataClass)item;
+					}
+					else if (item is DataClassBase)
 					{
 						DataClassBase dbitem = (DataClassBase)item;
 						if (m_cache[item.GetType(), m_mappings[dbitem.GetType()].PrimaryKey.Databasefield, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] == null)
@@ -786,12 +792,6 @@ namespace System.Data.LightDatamodel
 						}
 						else
 							toAdd = item;
-					}
-					else if (item as DataClassView != null)
-					{
-						(item as DataClassView).m_dataparent = this;
-						m_cache[item.GetType(), "GetHashCode", item.GetHashCode()] = (IDataClass)item;
-						toAdd = (IDataClass)item;
 					}
 
 					if (toAdd != null) res.Add(toAdd);
