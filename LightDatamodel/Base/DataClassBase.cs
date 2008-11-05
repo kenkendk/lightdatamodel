@@ -44,8 +44,8 @@ namespace System.Data.LightDatamodel
 		public event DataConnectionEventHandler AfterDataCommit;
 
 		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
-		public bool IsDirty{get{return m_isdirty;}}
-		public ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
+		public virtual bool IsDirty{get{return m_isdirty;}}
+		public virtual ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
 
 		protected virtual internal void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
@@ -76,48 +76,14 @@ namespace System.Data.LightDatamodel
 	/// <summary>
 	/// Base class for non updateable data classes (views)
 	/// </summary>
-	public abstract class DataClassView : IDataClass
+	public abstract class DataClassView : DataClassBase
 	{
-		internal protected IDataFetcher m_dataparent;
-		public event DataChangeEventHandler BeforeDataChange;
-		public event DataChangeEventHandler AfterDataChange;
-		public event DataConnectionEventHandler BeforeDataCommit;
-		public event DataConnectionEventHandler AfterDataCommit;
+		public override bool IsDirty { get { return false; } }
 
-		#region IDataClass Members
-
-		protected void OnAfterDataConnection(object obj, DataActions action)
-		{
-			if (AfterDataCommit != null) AfterDataCommit(obj, action);
-		}
-
-		protected void OnBeforeDataCommit(object obj, DataActions action)
-		{
-			if (BeforeDataCommit != null) BeforeDataCommit(obj, action);
-		}
-
-		protected void OnBeforeDataCommit(object sender, string propertyname, object oldvalue, object newvalue)
-		{
-			if(object.Equals(oldvalue, newvalue)) return;
-			if (BeforeDataChange != null) BeforeDataChange(sender, propertyname, oldvalue, newvalue);
-		}
-
-		protected void OnAfterDataWrite(object sender, string propertyname, object oldvalue, object newvalue)
-		{
-			if(object.Equals(oldvalue, newvalue)) return;
-			if (AfterDataChange != null) AfterDataChange(sender, propertyname, oldvalue, newvalue);
-		}
-
-		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
-		public bool IsDirty { get { return false; } }
-
-		public ObjectStates ObjectState
+		public override ObjectStates ObjectState
 		{
 			get { return ObjectStates.Default; }
 			set{ /*meh*/}
 		}
-
-		#endregion
-
 	}
 }

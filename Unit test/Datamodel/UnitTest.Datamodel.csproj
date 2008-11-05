@@ -112,6 +112,7 @@
     <Compile Include="SpecificEvent.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TestView.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\LightDatamodel\LightDatamodel.csproj">

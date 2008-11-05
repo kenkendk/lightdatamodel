@@ -222,6 +222,15 @@ namespace Datamodel.UnitTest
 				fetcher.DeleteObject(n);
 			tmp = fetcher.GetObjects<Note>("NoteText = ? OR NoteText Is ?", "", DBNull.Value);
 			if (tmp.Length != 0) throw new Exception("Bah!");
+
+			//test view
+			Project p1 = fetcher.Add<Project>();
+			Project p2 = fetcher.Add<Project>();
+			fetcher.Commit(p1);
+			fetcher.Commit(p2);
+			int np = fetcher.GetObjects<Project>().Length;
+			int nv = fetcher.GetObjects<TestView>().Length;
+			if (np != nv) throw new Exception("Bah");
 		}
 
 		public static void TestCache()
