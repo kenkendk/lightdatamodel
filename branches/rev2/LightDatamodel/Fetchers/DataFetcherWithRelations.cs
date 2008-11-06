@@ -177,7 +177,7 @@ namespace System.Data.LightDatamodel
 
 				//change value from child
 				if (owner.GetType() == m_relations[relationkey].Child.Type)
-					m_relations[relationkey].ChildField.Field.SetValue(owner, m_relations[relationkey].ChildField.GetDefaultValue(m_provider));
+					m_relations[relationkey].ChildField.SetValueWithEvents(owner as DataClassBase, m_relations[relationkey].ChildField.GetDefaultValue(m_provider));
 			}
 			else
 			{
@@ -190,11 +190,14 @@ namespace System.Data.LightDatamodel
 				List<IDataClass> p = new List<IDataClass>();
 				p.Add(owner);
 				m_objectrelationcache[target][relationkey].SubObjects = p;
+
+				//set child deity
+
 			}
 
 			//change value from child
 			if (oldtarget != null && oldtarget.GetType() == m_relations[relationkey].Child.Type)
-				m_relations[relationkey].ChildField.Field.SetValue(oldtarget, m_relations[relationkey].ChildField.GetDefaultValue(m_provider));
+				m_relations[relationkey].ChildField.SetValueWithEvents(oldtarget as DataClassBase, m_relations[relationkey].ChildField.GetDefaultValue(m_provider));
 		}
 
 		public void AddRelatedObject(string relationkey, IDataClass owner, IDataClass target)
@@ -277,7 +280,7 @@ namespace System.Data.LightDatamodel
 				{
 					//reset column values
 					if (obj.GetType() == m_fetcher.m_relations[m_relationkey].Child.Type)
-						m_fetcher.m_relations[m_relationkey].ChildField.Field.SetValue(obj, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
+						m_fetcher.m_relations[m_relationkey].ChildField.SetValueWithEvents(obj as DataClassBase, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
 
 					//remove
 					m_fetcher.m_objectrelationcache[obj][m_relationkey].SubObjects.Remove(m_owner);
@@ -286,7 +289,7 @@ namespace System.Data.LightDatamodel
 				//reset column values
 				foreach(IDataClass obj in m_fetcher.m_objectrelationcache[m_owner][m_relationkey].SubObjects)
 					if (obj.GetType() == m_fetcher.m_relations[m_relationkey].Child.Type)
-						m_fetcher.m_relations[m_relationkey].ChildField.Field.SetValue(obj, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
+						m_fetcher.m_relations[m_relationkey].ChildField.SetValueWithEvents(obj as DataClassBase, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
 
 				//remove current
 				m_fetcher.m_objectrelationcache[m_owner][m_relationkey].SubObjects.Clear();
@@ -322,14 +325,14 @@ namespace System.Data.LightDatamodel
 
 					//reset column values
 					if (item.GetType() == m_fetcher.m_relations[m_relationkey].Child.Type)
-						m_fetcher.m_relations[m_relationkey].ChildField.Field.SetValue(item, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
+						m_fetcher.m_relations[m_relationkey].ChildField.SetValueWithEvents(item as DataClassBase, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
 
 					//remove from reverse
 					m_fetcher.m_objectrelationcache[item][m_relationkey].SubObjects.Remove(m_owner);
 
 					//reset column values
 					if (m_owner.GetType() == m_fetcher.m_relations[m_relationkey].Child.Type)
-						m_fetcher.m_relations[m_relationkey].ChildField.Field.SetValue(m_owner, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
+						m_fetcher.m_relations[m_relationkey].ChildField.SetValueWithEvents(m_owner as DataClassBase, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
 
 					return true;
 				}
@@ -392,13 +395,7 @@ namespace System.Data.LightDatamodel
 					if (parent != null)
 					{
 						object value = rel.Relation.ParentField.Field.GetValue(parent);
-						object oldvalue = rel.Relation.ChildField.Field.GetValue(obj);
-						if (!object.Equals(oldvalue, value))
-						{
-							((DataClassBase)obj).OnBeforeDataChange(obj, rel.Relation.ChildField.Databasefield, oldvalue, value);
-							rel.Relation.ChildField.Field.SetValue(obj, value);
-							((DataClassBase)obj).OnAfterDataChange(obj, rel.Relation.ChildField.Databasefield, oldvalue, value);
-						}
+						rel.Relation.ChildField.SetValueWithEvents(obj as DataClassBase, value);
 					}
 				}
 				else
@@ -408,13 +405,7 @@ namespace System.Data.LightDatamodel
 					IList<IDataClass> childs = GetRelatedObjects(rel.Relation.Name, obj);
 					foreach (IDataClass child in childs)
 					{
-						object oldvalue = rel.Relation.ChildField.Field.GetValue(child);
-						if (!object.Equals(oldvalue, value))
-						{
-							((DataClassBase)child).OnBeforeDataChange(child, rel.Relation.ChildField.Databasefield, oldvalue, value);
-							rel.Relation.ChildField.Field.SetValue(child, value);
-							((DataClassBase)child).OnAfterDataChange(child, rel.Relation.ChildField.Databasefield, oldvalue, value);
-						}
+						rel.Relation.ChildField.SetValueWithEvents(child as DataClassBase, value);
 					}
 				}
 			}

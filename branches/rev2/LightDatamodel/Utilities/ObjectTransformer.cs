@@ -171,8 +171,8 @@ namespace System.Data.LightDatamodel
                     if (mf != null && !mf.IgnoreWithSelect)
                     {
                         object value = reader.GetValue(i);
-                        if (value != DBNull.Value) mf.Field.SetValue(obj, value);
-                        else mf.Field.SetValue(obj, provider.GetNullValue(mf.Field.FieldType));
+                        if (value != DBNull.Value) mf.Field.SetValue(obj, value);		//no events
+                        else mf.Field.SetValue(obj, provider.GetNullValue(mf.Field.FieldType));		//no events
                     }
                 }
                 catch (Exception ex)

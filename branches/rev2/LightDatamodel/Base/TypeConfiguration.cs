@@ -281,6 +281,21 @@ namespace System.Data.LightDatamodel
                     return m_defaultValue;
             }
 
+			/// <summary>
+			/// This will set the value and fire events
+			/// </summary>
+			/// <param name="obj"></param>
+			/// <param name="value"></param>
+			public void SetValueWithEvents(DataClassBase obj, object value)
+			{
+				if (obj == null) return;
+				object oldvalue = m_field.GetValue(obj);
+				if (object.Equals(oldvalue, value)) return;
+				obj.OnBeforeDataChange(obj, m_databasefield, oldvalue, value);
+				m_field.SetValue(obj, value);
+				obj.OnAfterDataChange(obj, m_databasefield, oldvalue, value);
+			}
+
             /// <summary>
             /// Gets or sets the name of the column that this field is mapped to
             /// </summary>
