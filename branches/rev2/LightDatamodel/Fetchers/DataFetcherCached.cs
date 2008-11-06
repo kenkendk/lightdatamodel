@@ -27,7 +27,7 @@ namespace System.Data.LightDatamodel
 	/// <summary>
 	/// Will fetch and commit objects directly to source
 	/// </summary>
-	public class DataFetcherCached : DataFetcher, IDataFetcherCached
+	public class DataFetcherCached : DataFetcher
 	{
 		protected Cache m_cache = new Cache();
 		protected Dictionary<Type, Dictionary<string, string>> m_loadreducer = new Dictionary<Type, Dictionary<string, string>>();
@@ -43,7 +43,7 @@ namespace System.Data.LightDatamodel
 		/// <summary>
 		/// This is not thread safe. The fetcher is though
 		/// </summary>
-		[System.Diagnostics.DebuggerDisplay("Count = {Count}")]
+		[System.Diagnostics.DebuggerDisplay("Count = {CountWithLock}")]
 		public class Cache : IEnumerable<IDataClass>, IDisposable
 		{
 			//this is the actual cache
@@ -75,6 +75,16 @@ namespace System.Data.LightDatamodel
 						m_list[type][indexname][indexvalue] = value;
 					}
 				}
+			}
+
+			public bool Contains(object obj)
+			{
+				if (obj == null) return false;
+				Type t = obj.GetType();
+				if (!m_list.ContainsKey(t)) return false;
+				IEnumerator e = m_list[t].Keys.GetEnumerator();
+				if (e == null || !e.MoveNext()) return false; ;
+				return m_list[t][(string)e.Current].ContainsKey(obj);
 			}
 
 			/// <summary>
@@ -127,6 +137,22 @@ namespace System.Data.LightDatamodel
 						}
 					}
 					return count;
+				}
+			}
+
+			public int CountWithLock
+			{
+				get
+				{
+					try
+					{
+						Lock.AcquireReaderLock(-1);
+						return Count;
+					}
+					finally
+					{
+						Lock.ReleaseReaderLock();
+					}
 				}
 			}
 
@@ -645,6 +671,31 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
+		/// This will load an object from cache
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="id"></param>
+		/// <returns></returns>
+		public object GetObjectFromCacheById(Type type, object id)
+		{
+			if (m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id] != null)		//will these need locks?
+				return m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id];	//will these need locks?
+			else
+				return null;
+		}
+
+		/// <summary>
+		/// This will load an object from cache
+		/// </summary>
+		/// <typeparam name="DATACLASS"></typeparam>
+		/// <param name="id"></param>
+		/// <returns></returns>
+		public DATACLASS GetObjectFromCacheById<DATACLASS>(object id)
+		{
+			return (DATACLASS)GetObjectFromCacheById(typeof(DATACLASS), id);
+		}
+
+		/// <summary>
 		/// Reads objects from the cache, will not communicate with the database
 		/// </summary>
 		/// <typeparam name="DATACLASS"></typeparam>
@@ -669,6 +720,7 @@ namespace System.Data.LightDatamodel
 		{
 			return GetObjectsFromCache<DATACLASS>(QueryModel.Parser.ParseQuery(filter, parameters)); //this has lock
 		}
+
 
 		/// <summary>
 		/// Reads objects from the cache, will not communicate with the database
@@ -1115,6 +1167,16 @@ namespace System.Data.LightDatamodel
 
 			//send event
 			base.OnAfterDataChange(sender, propertyname, oldvalue, newvalue);
+		}
+
+		/// <summary>
+		/// Refreshes all values with those read from the datasource and makes sure that the object is still in cache
+		/// </summary>
+		/// <param name="obj"></param>
+		public override void RefreshObject(IDataClass obj)
+		{
+			base.RefreshObject(obj);
+			if (!m_cache.Contains(obj)) InsertObjectsInCache(obj);	//this can accour after a ClearCache
 		}
 
 		public override void Dispose()

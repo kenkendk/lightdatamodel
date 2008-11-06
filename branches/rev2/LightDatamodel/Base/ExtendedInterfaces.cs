@@ -23,37 +23,37 @@ using System.Collections.Generic;
 namespace System.Data.LightDatamodel
 {
 
-	public interface IDataFetcherCached : IDataFetcher
-	{
-		event ObjectStateChangeHandler ObjectAddRemove;
+	//public interface IDataFetcherCached : IDataFetcher
+	//{
+	//    event ObjectStateChangeHandler ObjectAddRemove;
 		
-		object[] GetObjectsFromCache(Type type, QueryModel.Operation query);
-		object[] GetObjectsFromCache(Type type, string filter, params object[] parameters);
-		DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass;
-		DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
-		object GetObjectFromCache(Type type, QueryModel.Operation query);
-		object GetObjectFromCache(Type type, string filter, params object[] parameters);
-		DATACLASS GetObjectFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass;
-		DATACLASS GetObjectFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
+	//    object[] GetObjectsFromCache(Type type, QueryModel.Operation query);
+	//    object[] GetObjectsFromCache(Type type, string filter, params object[] parameters);
+	//    DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass;
+	//    DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
+	//    object GetObjectFromCache(Type type, QueryModel.Operation query);
+	//    object GetObjectFromCache(Type type, string filter, params object[] parameters);
+	//    DATACLASS GetObjectFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass;
+	//    DATACLASS GetObjectFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 
-		object GetObjectByIndex(Type type, string indexname, object indexvalue);
-		DATACLASS GetObjectByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
-		object[] GetObjectsByIndex(Type type, string indexname, object indexvalue);
-		DATACLASS[] GetObjectsByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
+	//    object GetObjectByIndex(Type type, string indexname, object indexvalue);
+	//    DATACLASS GetObjectByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
+	//    object[] GetObjectsByIndex(Type type, string indexname, object indexvalue);
+	//    DATACLASS[] GetObjectsByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
 
-		void AddIndex(Type type, string indexname);
-		void RemoveIndex(Type type, string indexname);
+	//    void AddIndex(Type type, string indexname);
+	//    void RemoveIndex(Type type, string indexname);
 
-		bool IsDirty { get; }
-		void ClearCache();
+	//    bool IsDirty { get; }
+	//    void ClearCache();
 
-		/// <summary>
-		/// Will commit all cached objects to the DB
-		/// </summary>
-		/// <exception cref="">NoSuchObjectException</exception>
-		void CommitAll();
-		void DiscardObject(IDataClass obj);
-	}
+	//    /// <summary>
+	//    /// Will commit all cached objects to the DB
+	//    /// </summary>
+	//    /// <exception cref="">NoSuchObjectException</exception>
+	//    void CommitAll();
+	//    void DiscardObject(IDataClass obj);
+	//}
 
 	/// <summary>
 	/// Will fire when creating or removing an object
