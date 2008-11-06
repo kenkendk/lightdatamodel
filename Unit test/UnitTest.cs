@@ -567,6 +567,8 @@ namespace Datamodel.UnitTest
 
 			nd.CommitAll();
 
+			TestRelationCache(hub);
+
 			hub.LocalCache.Lock.AcquireReaderLock(-1);
 			if (hub.LocalCache.GetAllChanged().Length != 2) throw new Exception("We've just created two new objects");
 			hub.LocalCache.Lock.ReleaseReaderLock();
@@ -594,6 +596,8 @@ namespace Datamodel.UnitTest
 				throw new Exception("Bad dataparent");
 
 			hub.CommitAll();
+
+			TestRelationCache(hub);
 
 			//if (!p.ExistsInDB)
 			//    throw new Exception("Project has wrong flag");
@@ -697,6 +701,8 @@ namespace Datamodel.UnitTest
 
 			hub.CommitAll();
 
+			TestRelationCache(hub);
+
 			//if (!p.ExistsInDB)
 			//    throw new Exception("Project has wrong flag");
 			//if (!n.ExistsInDB)
@@ -708,19 +714,18 @@ namespace Datamodel.UnitTest
 			nid = p.CurrentTaskNoteID;
 
 			nd = new DataFetcherNested(hub);
-
 			n = (Note)nd.GetObjectById(typeof(Note), nid);
 			p = (Project)nd.Add(new Project());
 			p.Title = "A new project";
 			p.ProjectNote = n;
-
-			if (n.ProjectNotes == null || n.ProjectNotes.Count == 0)
-				throw new Exception("Reverse property failed on create");
-
-			//pg = p.Guid;
-			//ng = n.Guid;
-
+			n = nd.Add<Note>();
+			p = (Project)nd.Add(new Project());
+			p.Title = "A new project2";
+			p.ProjectNote = n;
+			if (n.ProjectNotes == null || n.ProjectNotes.Count == 0) throw new Exception("Reverse property failed on create");
 			nd.CommitAll();
+
+			TestRelationCache(hub);
 
 			//p = (Project)hub.GetObjectByGuid(pg);
 			p = hub.GetObjectById<Project>(p.ID);
@@ -738,6 +743,8 @@ namespace Datamodel.UnitTest
 			//    throw new Exception("Note has wrong flag");
 
 			hub.CommitAll();
+
+			TestRelationCache(hub);
 
 			//if (!p.ExistsInDB)
 			//    throw new Exception("Project has wrong flag");
@@ -769,7 +776,11 @@ namespace Datamodel.UnitTest
 
 			nd.CommitAll();
 
+			TestRelationCache(hub);
+
 			hub.CommitAll();
+
+			TestRelationCache(hub);
 
 			//p = (Project)hub.GetObjectByGuid(pg);
 			//n = (Note)hub.GetObjectByGuid(ng);
@@ -783,6 +794,8 @@ namespace Datamodel.UnitTest
 
 			if (p.ProjectNoteID != n.ID)
 				throw new Exception("Failed to update reverse ID");
+
+			TestRelationCache(hub);
 
 			hub.ClearCache();
 
@@ -878,6 +891,22 @@ namespace Datamodel.UnitTest
 			if (p.ProjectNote != null)
 				throw new Exception("Failed to set relation through ID update");
 
+		}
+
+		private static void TestRelationCache(DataFetcherWithRelations hub)
+		{
+			hub.LocalCache.Lock.AcquireReaderLock(-1);
+			foreach (IDataClass obj in hub.LocalCache)
+			{
+				if (!hub.ObjectRelationCache.ContainsKey(obj)) throw new Exception("Bah!");
+
+				foreach (DataFetcherWithRelations.ObjectConnection rel in hub.ObjectRelationCache[obj].Values)
+				{
+					foreach (IDataClass child in rel.SubObjects)
+						if (!hub.ObjectRelationCache[child][rel.Relation.Name].SubObjects.Contains(obj)) throw new Exception("Bah");
+				}
+			}
+			hub.LocalCache.Lock.ReleaseReaderLock();
 		}
 
 		public static void TestRelationsExtended(IDbConnection con)

@@ -147,12 +147,12 @@ namespace System.Data.LightDatamodel
 					List<IDataClass> sourcerelations = sourceManager.ObjectRelationCache[source][rel.Relation.Name].SubObjects;
 					List<IDataClass> targetrelations = targetManager.ObjectRelationCache[target][rel.Relation.Name].SubObjects;
 
-					//Now, MERGE!!! ..... wrrrrrnnnnn cruncy cruncy ... actually let's just overwrite it
+					//Now, MERGE!!! ..... wrrrrrnnnnn cruncy cruncy ... actually, let's just overwrite it
 					targetrelations.Clear();
 					foreach (IDataClass obj in sourcerelations)
 					{
 						if (!m_tempobjects.ContainsKey(obj)) Commit(obj);
-						targetrelations.Add(m_tempobjects[obj]);
+						targetManager.AddRelatedObject(rel.Relation.Name, target, m_tempobjects[obj]);
 					}
 				}
 			}
