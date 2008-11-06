@@ -924,8 +924,8 @@ namespace Datamodel.UnitTest
 			nd.CommitAll();
 			hub.CommitAll();
 
-			foreach (Note nx in hub.GetObjects<Note>())
-				n = nx;
+			long maxid = hub.Compute<long, Note>("MAX(ID)", "");
+			n = hub.GetObjectById<Note>(maxid);
 
 			if (n.ProjectNotes.Count != 1)
 				throw new Exception("Failed to set item");
