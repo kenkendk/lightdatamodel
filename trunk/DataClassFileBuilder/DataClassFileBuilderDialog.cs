@@ -392,22 +392,22 @@ namespace DataClassFileBuilder
 			//check for params
 			if(args.Length > 0 && File.Exists(args[0]) && dlg.ProviderList.SelectedIndex < 0)
 			{
-				if(Path.GetExtension(args[0]).ToLower() == ".cs")
+				if (Path.GetExtension(args[0]).ToLower() == ".cs")
 				{
 					try
 					{
 						XmlDocument meta = GetHiddenXml(args[0], "metadata");
-						if(meta != null)
+						if (meta != null)
 						{
 							XmlNode provider = meta.SelectSingleNode("/metadata/provider");
 							XmlNode namesp = meta.SelectSingleNode("/metadata/namespace");
 							XmlNode name = meta.SelectSingleNode("/metadata/name");
 							XmlNode sql = meta.SelectSingleNode("/metadata/sql");
-							if(provider != null && provider.Attributes["connectionstring"] != null) dlg.ConnectionStringText.Text = provider.Attributes["connectionstring"].Value;
+							if (provider != null && provider.Attributes["connectionstring"] != null) dlg.ConnectionStringText.Text = provider.Attributes["connectionstring"].Value;
 							if (provider != null && provider.Attributes["name"] != null) dlg.ProviderList.SelectedItem = ParseProvider((string)provider.Attributes["name"].Value, dlg.Providers);
-							if(namesp != null) dlg.NamespaceStringText.Text = namesp.InnerText;
-							if(name != null) dlg.ViewNameText.Text = name.InnerText;
-							if(sql != null) dlg.SQLText.Text = sql.InnerText;
+							if (namesp != null) dlg.NamespaceStringText.Text = namesp.InnerText;
+							if (name != null) dlg.ViewNameText.Text = name.InnerText;
+							if (sql != null) dlg.SQLText.Text = sql.InnerText;
 							dlg.DestinationDirText.Text = Path.GetDirectoryName(args[0]);
 							string mappingFile = System.IO.Path.Combine(dlg.DestinationDirText.Text, "LightDataModel.Mapping.xml");
 							if (System.IO.File.Exists(mappingFile))
@@ -416,12 +416,14 @@ namespace DataClassFileBuilder
 								dlg.UseConfigCheckBox.Checked = false;
 						}
 					}
-					catch(Exception ex)
+					catch (Exception ex)
 					{
 						MessageBox.Show("Error during file meta search\nError: " + ex.Message, "DataClassFileBuilderDialog.Main", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					}
 				}
 			}
+			else if (args.Length > 0 && !File.Exists(args[0]))
+				MessageBox.Show(dlg, "The supplied file \"" + args[0] + "\" does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
 			System.Windows.Forms.Application.Run(dlg);
 		}
@@ -473,71 +475,77 @@ namespace DataClassFileBuilder
 
 			try
 			{
-				//validate
-				if(!DestinationDirText.Text.EndsWith("\\")) DestinationDirText.Text += "\\";
-				if(NamespaceStringText.Text == "") throw new Exception("Namespace mustn't be empty");
-				string assemblyname = NamespaceStringText.Text;
-				int p = assemblyname.LastIndexOf('.');
-				if(p >= 0) assemblyname = assemblyname.Substring(p+1);
-				if (!System.IO.Directory.Exists(DestinationDirText.Text))
-				{
-					if (MessageBox.Show("Directory \"" + DestinationDirText.Text + "\" doesn't exists. Create it now?", "Create dir?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-						System.IO.Directory.CreateDirectory(DestinationDirText.Text);
-					else
-						return;
-				}
+			    //validate
+			    if(!DestinationDirText.Text.EndsWith("\\")) DestinationDirText.Text += "\\";
+			    if(NamespaceStringText.Text == "") throw new Exception("Namespace mustn't be empty");
+			    string assemblyname = NamespaceStringText.Text;
+			    int p = assemblyname.LastIndexOf('.');
+			    if(p >= 0) assemblyname = assemblyname.Substring(p+1);
+			    if (!System.IO.Directory.Exists(DestinationDirText.Text))
+			    {
+			        if (MessageBox.Show("Directory \"" + DestinationDirText.Text + "\" doesn't exists. Create it now?", "Create dir?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+			            System.IO.Directory.CreateDirectory(DestinationDirText.Text);
+			        else
+			            return;
+			    }
 
-                List<TypeConfiguration.MappedClass> tables = TypeConfiguration.DescribeDataSource(provider);
-                string mappingFile = System.IO.Path.Combine(DestinationDirText.Text, "LightDataModel.Mapping.xml");
-                if (UseConfigCheckBox.Checked)
-                {
-                    List<TypeConfiguration.IgnoredClass> ignored = new List<TypeConfiguration.IgnoredClass>();
-                    if (System.IO.File.Exists(mappingFile))
-                    {
-                        ignored = TypeConfiguration.GetIgnoredTables(mappingFile);
-                        TypeConfiguration.MergeSetups(TypeConfiguration.LoadXml(mappingFile), tables);
-                        foreach(TypeConfiguration.IgnoredClass ic in ignored)
-                            foreach(TypeConfiguration.MappedClass mc in tables)
-                                if (mc.TableName == ic.Tablename)
-                                {
-                                    tables.Remove(mc);
-                                    break;
-                                }
-                    }
+				ConfigurationContainer.Table[] tables = ConfigurationContainer.DescribeDataSource(provider);
+			    string mappingFile = null;
+			    if (UseConfigCheckBox.Checked)
+			    {
+					mappingFile = System.IO.Path.Combine(DestinationDirText.Text, "LightDataModel.Mapping.xml");
+					//List<TypeConfiguration.IgnoredClass> ignored = new List<TypeConfiguration.IgnoredClass>();
+					if (System.IO.File.Exists(mappingFile))
+					{
+						//ignored = TypeConfiguration.GetIgnoredTables(mappingFile);
+						ConfigurationContainer.Table[] userdefinedtables = ConfigurationContainer.Load(mappingFile);
+						tables = ConfigurationContainer.MergeSetups(userdefinedtables, tables);
+						//foreach (TypeConfiguration.IgnoredClass ic in ignored)
+						//    foreach (TypeConfiguration.MappedClass mc in tables)
+						//        if (mc.Tablename == ic.Tablename)
+						//        {
+						//            tables.Remove(mc);
+						//            break;
+						//        }
+					}
 
-                    TypeConfiguration.SaveXml(tables, ignored, mappingFile);
-                }
+			        //TypeConfiguration.SaveXml(tables, ignored, mappingFile);
+					ConfigurationContainer.Save(tables, mappingFile);
+			    }
 
-				//tables
-                Dictionary<string, TypeConfiguration.MappedClass> tableLookup = new Dictionary<string, TypeConfiguration.MappedClass>();
-                foreach (TypeConfiguration.MappedClass mc in tables)
-                    tableLookup.Add(mc.TableName, mc);
+			    //tables
+				Dictionary<string, ConfigurationContainer.Table> tableLookup = new Dictionary<string, ConfigurationContainer.Table>();
+				foreach (ConfigurationContainer.Table mc in tables)
+			        tableLookup.Add(mc.Name, mc);
 
-				//build files
-                List<string> paths = new List<string>();
-                for (int i = 0; i < tables.Count; i++)
-				{
-                    paths.Add(System.IO.Path.Combine(DestinationDirText.Text,  tables[i].TableName + ".cs"));
-					BuildClassFile(tables[i], paths[paths.Count - 1], NamespaceStringText.Text, provider, typeof(DataClassBase), tableLookup);
-				}
+			    //build files
+			    List<string> paths = new List<string>();
+			    for (int i = 0; i < tables.Length; i++)
+			    {
+					if (!tables[i].Ignore)
+					{
+						paths.Add(System.IO.Path.Combine(DestinationDirText.Text, tables[i].Name + ".cs"));
+						BuildClassFile(tables[i], paths[paths.Count - 1], NamespaceStringText.Text, provider, typeof(DataClassBase), tableLookup);
+					}
+			    }
 
-				//datahub
-				//BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, tablenames, null, null);
-				//string[] includes = new string[paths.Length + 1];
-				//includes[includes.Length -1] = DestinationDirText.Text + "DataHub.cs";
-                if (!UseConfigCheckBox.Checked)
-                    mappingFile = null;
+			//    //datahub
+			//    //BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, tablenames, null, null);
+			//    //string[] includes = new string[paths.Length + 1];
+			//    //includes[includes.Length -1] = DestinationDirText.Text + "DataHub.cs";
+			//    if (!UseConfigCheckBox.Checked)
+			//        mappingFile = null;
 
 				//Build project
-				BuildProjectFile(assemblyname, NamespaceStringText.Text, System.IO.Path.Combine(DestinationDirText.Text, assemblyname + ".csproj"), mappingFile, paths.ToArray());
-				if(!File.Exists(DestinationDirText.Text + "AssemblyInfo.cs")) BuildAssemblyInfoFile(DestinationDirText.Text + "AssemblyInfo.cs", assemblyname);
+				BuildProjectFile(assemblyname, NamespaceStringText.Text, System.IO.Path.Combine(DestinationDirText.Text, assemblyname + ".csproj"), paths.ToArray());
+				if (!File.Exists(DestinationDirText.Text + "AssemblyInfo.cs")) BuildAssemblyInfoFile(DestinationDirText.Text + "AssemblyInfo.cs", assemblyname);
 
 				//copy LightDatamodel
 				try
 				{
 					File.Copy(Path.Combine(Application.StartupPath, "LightDatamodel.dll"), Path.Combine(DestinationDirText.Text, "LightDatamodel.dll"), true);
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					throw new Exception("Couldn't copy LightDatamodel.dll\nError: " + ex.Message);
 				}
@@ -547,18 +555,18 @@ namespace DataClassFileBuilder
 				{
 					File.Copy(Path.Combine(Application.StartupPath, "LightDataModel.snk"), Path.Combine(DestinationDirText.Text, "LightDataModel.snk"), true);
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					throw new Exception("Couldn't copy LightDataModel.snk\nError: " + ex.Message);
 				}
 			}
 			catch(Exception ex)
 			{
-				MessageBox.Show("Couldn't build files\nError: " + ex.Message);
+			    MessageBox.Show("Couldn't build files\nError: " + ex.Message);
 			}
 			finally
 			{
-				provider.Close();
+			    provider.Close();
 			}
 		}
 
@@ -594,7 +602,7 @@ namespace DataClassFileBuilder
 			}
 		}
 
-		private void BuildProjectFile(string assemblyname, string namespacestring, string path, string mappingfile, params string[] includefiles)
+		private void BuildProjectFile(string assemblyname, string namespacestring, string path, params string[] includefiles)
 		{
 			try
 			{
@@ -769,16 +777,16 @@ namespace DataClassFileBuilder
 						}
 					}
 
-                    if (mappingfile != null)
-                    {
-						XmlNode n = files.SelectSingleNode("xs:EmbeddedResource[@Include='" + mappingfile + "']", nm);
-                        if (n == null)
-                        {
-							XmlElement file = doc.CreateElement("EmbeddedResource", nm.DefaultNamespace);
-                            file.SetAttribute("Include", mappingfile);
-                            files.AppendChild(file);
-                        }
-                    }
+					//if (mappingfile != null)
+					//{
+					//    XmlNode n = files.SelectSingleNode("xs:EmbeddedResource[@Include='" + mappingfile + "']", nm);
+					//    if (n == null)
+					//    {
+					//        XmlElement file = doc.CreateElement("EmbeddedResource", nm.DefaultNamespace);
+					//        file.SetAttribute("Include", mappingfile);
+					//        files.AppendChild(file);
+					//    }
+					//}
 
 				}
 
@@ -943,13 +951,10 @@ namespace DataClassFileBuilder
 			}
 		}
 
-        private void BuildClassFile(TypeConfiguration.MappedClass mapping, string path, string namespacestring, IDataProvider provider, Type inheritclass, Dictionary<string, TypeConfiguration.MappedClass> tableLookup)
+		private void BuildClassFile(ConfigurationContainer.Table mapping, string path, string namespacestring, IDataProvider provider, Type inheritclass, Dictionary<string, ConfigurationContainer.Table> tableLookup)
 		{
-			//get columns
-            Dictionary<string, TypeConfiguration.MappedField> cols = mapping.Columns;
-
 			//get primary key col
-			string primarykeycol = mapping.PrimaryKey == null ? "" : mapping.UniqueColumn;
+			string primarykeycol = mapping.PrimaryKey == null ? "" : mapping.PrimaryKey;
 
 			try
 			{
@@ -964,122 +969,127 @@ namespace DataClassFileBuilder
                     sw.Write("/// <provider name=\"" + provider.ToString() + "\" connectionstring=\"" + provider.ConnectionString + "\" />\n");
                     sw.Write("/// <type>" + (mapping.ViewSQL == null ? "Table" : "View") + "</type>\n");
                     sw.Write("/// <namespace>" + namespacestring + "</namespace>\n");
-                    sw.Write("/// <name>" + mapping.TableName + "</name>\n");
+                    sw.Write("/// <name>" + mapping.Name + "</name>\n");
                     sw.Write("/// <sql>" + (mapping.ViewSQL == null ? "" : mapping.ViewSQL)  + "</sql>\n");
                     sw.Write("/// </metadata>\n\n");
 
-                    string classname = mapping.ClassName;
+					//using 
+					sw.Write("using System.Data.LightDatamodel;\n");
+					sw.Write("using System.Data.LightDatamodel.DataClassAttributes;\n\n");
+
+					string classname = mapping.Classname;
                     //namespace
                     if (classname.IndexOf(".") > 0)
                     {
                         classname = classname.Substring(classname.LastIndexOf(".") + 1);
-                        sw.Write("namespace " + mapping.ClassName.Substring(0, mapping.ClassName.Length - classname.Length - 1) + "\n{\n\n");
+						sw.Write("namespace " + mapping.Classname.Substring(0, mapping.Classname.Length - classname.Length - 1) + "\n{\n\n");
                     }
                     else
                         sw.Write("namespace " + namespacestring + "\n{\n\n");
 
-					if (!String.IsNullOrEmpty(mapping.ViewSQL))
-						sw.Write("\t[System.Data.LightDatamodel.ViewSQL(\"" + mapping.ViewSQL + "\")]\n");
-
                     //class
-                    sw.Write("\tpublic partial class " + classname + " : System.Data.LightDatamodel." + inheritclass.Name + "\n\t{\n\n");
+					if(mapping.ViewSQL != null)
+						sw.Write("\t[DatabaseView(\"" + mapping.ViewSQL + "\")]\n");
+					else
+						sw.Write("\t[DatabaseTable(\"" + mapping.Name + "\")]\n");
+					sw.Write("\tpublic partial class " + classname + " : " + inheritclass.Name + "\n\t{\n\n");
 
                     //private members
                     sw.Write("#region \" private members \"\n\n");
-                    foreach(TypeConfiguration.MappedField mf in mapping.Columns.Values)
+                    foreach(ConfigurationContainer.Column mf in mapping.Columns)
                     {
-                        if (mf.IsAutoGenerated)
-							sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierAutoIncrement()]\n");
-                        else if (mf.IgnoreWithInsert)
-                            sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithInsert()]\n");
-                        if (mf.IgnoreWithUpdate)
-                            sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithUpdate()]\n");
-                        if (mf.IgnoreWithSelect)
-                            sw.Write("\t\t[System.Data.LightDatamodel.MemberModifierIgnoreWithSelect()]\n");
+						//attributes
+						string attributes = "\t\t[";
+
+                        if (mf.Autonumber) attributes += "AutoIncrement, ";
+                        if (mf.IgnoreWithInsert) attributes += "IgnoreWithInsert, ";
+                        if (mf.IgnoreWithUpdate) attributes += "IgnoreWithUpdate, ";
+                        if (mf.IgnoreWithSelect) attributes += "IgnoreWithSelect, ";
+						if (mf.PrimaryKey) attributes += "PrimaryKey, ";
+						if (mf.Index) attributes += "Index, ";
+						if (mf.Default != null) attributes += "Default(" + FormatObjectToCSharp(mf.Default, false) + "), ";
+
+						ConfigurationContainer.Relation[] relations = GetRelationsToField(mapping.Name, mf.Name, tableLookup);
+						foreach (ConfigurationContainer.Relation rel in relations)
+							attributes += "Relation(\"" + rel.Name + "\", typeof(" + tableLookup[rel.ReverseTablename].Classname + "), \"" + rel.ReverseDatabasefield + "\"" + (rel.TargetIsParent ? "" : ", false") + "), ";
+
+						attributes += "DatabaseField(\"" + mf.Name + "\")]\n";
+						sw.Write(attributes);
 
                         string defaultValue;
-                        if (mf.DefaultValue != null)
+                        if (mf.Default != null)
                         {
-                            if (mf.DefaultValue as string == null)
-                                defaultValue = mf.DefaultValue.ToString();
+                            if (mf.Default as string == null)
+                                defaultValue = mf.Default.ToString();
                             else
-                                defaultValue = "\"" + (mf.DefaultValue as string) + "\"";
+                                defaultValue = "\"" + (mf.Default as string) + "\"";
                         }
                         else
-                            defaultValue = FormatObjectToCSharp(provider.GetDefaultValue(mapping.TableName, mf.ColumnName, mapping.ViewSQL), provider.IsUnique(mapping.TableName, mf.ColumnName));
+                            defaultValue = FormatObjectToCSharp(provider.GetDefaultValue(mapping.Name, mf.Name, mapping.ViewSQL), provider.IsUnique(mapping.Name, mf.Name));
 
-						sw.Write("\t\tprivate " + mf.DataType.FullName + " " + mf.FieldName + " = " + defaultValue + ";\n");
+						sw.Write("\t\tprivate " + mf.Typename + " m_" + mf.Fieldname + " = " + defaultValue + ";\n");
                     }
                     sw.Write("#endregion\n\n");
 
-                    //overrides
-                    if (mapping.ViewSQL == null)
-                    {
-                        sw.Write("#region \" unique value \"\n\n");
-                        sw.Write("\t\tpublic override object UniqueValue {get{return " + (mapping.PrimaryKey  != null ? mapping.PrimaryKey.FieldName : "null") + ";}}\n");
-                        sw.Write("\t\tpublic override string UniqueColumn {get{return \"" + (mapping.PrimaryKey  != null ? mapping.UniqueColumn : "") + "\";}}\n");
-                        sw.Write("#endregion\n\n");
-                    }
-
                     //properties
                     sw.Write("#region \" properties \"\n\n");
-                    foreach(TypeConfiguration.MappedField mf in mapping.Columns.Values)
+                    foreach(ConfigurationContainer.Column mf in mapping.Columns)
                     {
-                        if (mf.PropertyName == null || mf.PropertyName.Length == 0)
+                        if (mf.Fieldname == null || mf.Fieldname.Length == 0)
                             continue;
 
-                        sw.Write("\t\tpublic " + mf.DataType.FullName + " " + mf.PropertyName + "\n\t\t{\n");
-                        sw.Write("\t\t\tget{return " + mf.FieldName + ";}\n");
+                        sw.Write("\t\tpublic " + mf.Typename + " " + mf.Fieldname + "\n\t\t{\n");
+						sw.Write("\t\t\tget{return m_" + mf.Fieldname + ";}\n");
 						if (mapping.ViewSQL == null)
 						{
-							string setcode = "\t\t\tset{object oldvalue = " + mf.FieldName + ";OnBeforeDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);" + mf.FieldName + " = value;OnAfterDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);}\n";
-							if (mf.DataType == typeof(string))
+							string setcode = "\t\t\tset{object oldvalue = m_" + mf.Fieldname + ";OnBeforeDataChange(this, \"" + mf.Name + "\", oldvalue, value);m_" + mf.Fieldname + " = value;OnAfterDataChange(this, \"" + mf.Name + "\", oldvalue, value);}\n";
+							if (mf.GetFieldType() == typeof(string))
 							{
-								int length = provider.GetColumnStringLength(mapping.TableName, mf.PropertyName);
+								int length = provider.GetColumnStringLength(mapping.Name, mf.Fieldname);
 								if (length < int.MaxValue && length > 0)
-									setcode = "\t\t\tset{value = value != null && ((string)value).Length > " + length.ToString() + " ? ((string)value).Substring(0, " + length.ToString() + ") : value;object oldvalue = " + mf.FieldName + ";OnBeforeDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);" + mf.FieldName + " = value;OnAfterDataChange(this, \"" + mf.ColumnName + "\", oldvalue, value);}\n";
+									setcode = "\t\t\tset{value = value != null && ((string)value).Length > " + length.ToString() + " ? ((string)value).Substring(0, " + length.ToString() + ") : value;object oldvalue = m_" + mf.Fieldname + ";OnBeforeDataChange(this, \"" + mf.Name + "\", oldvalue, value);m_" + mf.Fieldname + " = value;OnAfterDataChange(this, \"" + mf.Name + "\", oldvalue, value);}\n";
 							}
 							sw.Write(setcode);
 						}
 						else
-							sw.Write("\t\t\tset{" + mf.FieldName + " = value;}\n");
+							sw.Write("\t\t\tset{m_" + mf.Fieldname + " = value;}\n");
                         sw.Write("\t\t}\n\n");
                     }
                     sw.Write("#endregion\n\n");
 
                     //references
                     sw.Write("#region \" referenced properties \"\n\n");
-                    foreach (TypeConfiguration.ReferenceField rf in mapping.ReferenceColumns.Values)
+					foreach (ConfigurationContainer.Relation rf in mapping.Relations)
                     {
-                        sw.Write("\t\tpublic " + tableLookup[rf.ReverseTablename].ClassName + " " + rf.PropertyName + "\n\t\t{\n");
-                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(\"" + rf.RelationKey + "\", this); }\n");
-                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + tableLookup[rf.ReverseTablename].ClassName + ">(\"" + rf.RelationKey + "\", this, value); }\n");
+						sw.Write("\t\t[Affects(typeof(" + tableLookup[rf.ReverseTablename].Classname + "))]\n");
+						sw.Write("\t\tpublic " + tableLookup[rf.ReverseTablename].Classname + " " + rf.Propertyname + "\n\t\t{\n");
+						sw.Write("\t\t\tget{ return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<" + tableLookup[rf.ReverseTablename].Classname + ">(\"" + rf.Name + "\", this); }\n");
+						sw.Write("\t\t\tset{ ((DataFetcherWithRelations)m_dataparent).SetRelatedObject(\"" + rf.Name + "\", this, value); }\n");
                         sw.Write("\t\t}\n\n");
                     }
 
-                    foreach(TypeConfiguration.MappedClass mc in tableLookup.Values)
+					foreach (ConfigurationContainer.Table mc in tableLookup.Values)
                         if (mc != mapping)
                         {
-                            foreach (TypeConfiguration.ReferenceField rf in mc.ReferenceColumns.Values)
+							foreach (ConfigurationContainer.Relation rf in mc.Relations)
                             {
-                                if (rf.ReverseTablename == mapping.TableName)
+                                if (rf.ReverseTablename == mapping.Name)
                                 {
-                                    if (rf.IsCollection)
+                                    if (rf.Type == ConfigurationContainer.Relation.RelationType.OneToMany)
                                     {
-                                        sw.Write("\t\tprivate System.Collections.Generic.IList<" + mc.ClassName + "> m_" + rf.ReversePropertyName + ";\n");
-                                        sw.Write("\t\tpublic System.Collections.Generic.IList<" + mc.ClassName + "> " + rf.ReversePropertyName + "\n\t\t{\n");
+										sw.Write("\t\t[Affects(typeof(" + mc.Classname + "))]\n");
+										sw.Write("\t\tpublic System.Collections.Generic.IList<" + mc.Classname + "> " + rf.ReversePropertyname + "\n\t\t{\n");
                                         sw.Write("\t\t\tget\n\t\t\t{\n");
-                                        sw.Write("\t\t\t\tif (m_" + rf.ReversePropertyName + " == null)\n");
-                                        sw.Write("\t\t\t\t\tm_" + rf.ReversePropertyName + " = base.RelationManager.GetReferenceCollection<" + mc.ClassName + ">(\"" + rf.RelationKey + "\", this);\n");
-                                        sw.Write("\t\t\t\treturn m_" + rf.ReversePropertyName + ";\n");
+										sw.Write("\t\t\t\treturn ((DataFetcherWithRelations)m_dataparent).GetRelatedObjects<" + mc.Classname + ">(\"" + rf.Name + "\", this);\n");
                                         sw.Write("\t\t\t}\n");
                                         sw.Write("\t\t}\n\n");
                                     }
                                     else
                                     {
-                                        sw.Write("\t\tpublic " + mc.ClassName + " " + rf.ReversePropertyName + "\n\t\t{\n");
-                                        sw.Write("\t\t\tget{ return base.RelationManager.GetReferenceObject<" + mc.ClassName + ">(\"" + rf.RelationKey + "\", this); }\n");
-                                        sw.Write("\t\t\tset{ base.RelationManager.SetReferenceObject<" + mc.ClassName + ">(\"" + rf.RelationKey + "\", this, value); }\n");
+										sw.Write("\t\t[Affects(typeof(" + mc.Classname + "))]\n");
+										sw.Write("\t\tpublic " + mc.Classname + " " + rf.ReversePropertyname + "\n\t\t{\n");
+										sw.Write("\t\t\tget{ return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<" + mc.Classname + ">(\"" + rf.Name + "\", this); }\n");
+										sw.Write("\t\t\tset{ ((DataFetcherWithRelations)m_dataparent).SetRelatedObject(\"" + rf.Name + "\", this, value); }\n");
                                         sw.Write("\t\t}\n\n");
                                     }
                                 }
@@ -1097,6 +1107,29 @@ namespace DataClassFileBuilder
 			{
 				throw new Exception("Couldn't write file \"" + path + "\"\nError: " + ex.Message);
 			}
+		}
+
+		private ConfigurationContainer.Relation[] GetRelationsToField(string databasetable, string databasefield, Dictionary<string, ConfigurationContainer.Table> tables)
+		{
+			Dictionary<string, ConfigurationContainer.Relation> ret = new Dictionary<string, ConfigurationContainer.Relation>();
+
+			foreach (ConfigurationContainer.Table table in tables.Values)
+			{
+				foreach (ConfigurationContainer.Relation rel in table.Relations)
+				{
+					if (table.Name == databasetable && rel.Databasefield == databasefield)
+						ret.Add(rel.Name, rel);
+					else if (rel.ReverseTablename == databasetable && rel.ReverseDatabasefield == databasefield && !ret.ContainsKey(rel.Name))
+					{
+						//turn around the relation
+						ret.Add(rel.Name, rel.GetOppositDirection());
+					}
+				}
+			}
+
+			ConfigurationContainer.Relation[] r = new ConfigurationContainer.Relation[ret.Count];
+			ret.Values.CopyTo(r, 0);
+			return r;
 		}
 
 		private string FormatObjectToCSharp(object obj, bool columnisunique)
@@ -1125,7 +1158,7 @@ namespace DataClassFileBuilder
 				if (d == Decimal.MinValue)
 					return "System.Decimal.MinValue";
 				else
-					return d.ToString(System.Globalization.CultureInfo.InvariantCulture)+ "m";
+					return d.ToString(System.Globalization.CultureInfo.InvariantCulture) + "m";
 			}
 			else if (obj.GetType() == typeof(DateTime))
 			{
@@ -1138,6 +1171,10 @@ namespace DataClassFileBuilder
 				return (bool)obj ? "true" : "false";
 			else if ((obj.GetType() == typeof(int) || obj.GetType() == typeof(long)) && columnisunique)
 				return "rnd.Next(int.MinValue, -1)";
+			else if (obj.GetType() == typeof(long) && (long)obj == long.MinValue)
+				return "long.MinValue";
+			else if (obj.GetType() == typeof(int) && (int)obj == int.MinValue)
+				return "int.MinValue";
 			else
 				return obj.ToString();
 		}
@@ -1162,23 +1199,23 @@ namespace DataClassFileBuilder
 			try
 			{
 				//validate
-				if(!DestinationDirText.Text.EndsWith("\\")) DestinationDirText.Text += "\\";
-				if(NamespaceStringText.Text == "") throw new Exception("Namespace mustn't be empty");
+				if (!DestinationDirText.Text.EndsWith("\\")) DestinationDirText.Text += "\\";
+				if (NamespaceStringText.Text == "") throw new Exception("Namespace mustn't be empty");
 				string assemblyname = NamespaceStringText.Text;
 				int p = assemblyname.LastIndexOf('.');
-				if(p >= 0) assemblyname = assemblyname.Substring(p+1);
+				if (p >= 0) assemblyname = assemblyname.Substring(p + 1);
 
-                TypeConfiguration.MappedClass config = TypeConfiguration.DescribeDataSource(provider, ViewNameText.Text, SQLText.Text);
+				ConfigurationContainer.Table config = ConfigurationContainer.DescribeDataSource(provider, ViewNameText.Text, SQLText.Text);
 
 				//Build view
-				BuildClassFile(config, System.IO.Path.Combine(DestinationDirText.Text, ViewNameText.Text + ".cs"), NamespaceStringText.Text, provider, typeof(DataClassView), new Dictionary<string,TypeConfiguration.MappedClass>());
+				BuildClassFile(config, System.IO.Path.Combine(DestinationDirText.Text, ViewNameText.Text + ".cs"), NamespaceStringText.Text, provider, typeof(DataClassView), new Dictionary<string, ConfigurationContainer.Table>());
 
 				//Build datahub
 				//BuildDataHubFile(DestinationDirText.Text + "DataHub.cs", NamespaceStringText.Text, provider, null, new string[]{ViewNameText.Text}, new string[]{SQLText.Text});
 
 				//Build project
 				BuildProjectFile(assemblyname, NamespaceStringText.Text, System.IO.Path.Combine(DestinationDirText.Text, assemblyname + ".csproj"), null, System.IO.Path.Combine(DestinationDirText.Text, ViewNameText.Text + ".cs"));
-				if(!File.Exists(DestinationDirText.Text + "AssemblyInfo.cs")) BuildAssemblyInfoFile(DestinationDirText.Text + "AssemblyInfo.cs", assemblyname);
+				if (!File.Exists(DestinationDirText.Text + "AssemblyInfo.cs")) BuildAssemblyInfoFile(DestinationDirText.Text + "AssemblyInfo.cs", assemblyname);
 
 				//copy LightDatamodel
 				try
@@ -1200,7 +1237,7 @@ namespace DataClassFileBuilder
 					throw new Exception("Couldn't copy LightDataModel.snk\nError: " + ex.Message);
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				MessageBox.Show("Couldn't build files\nError: " + ex.Message);
 			}
@@ -1269,42 +1306,47 @@ namespace DataClassFileBuilder
         private void EditConfigButton_Click(object sender, EventArgs e)
         {
 
-            try
-            {
-                IDataProvider provider = Providers[ProviderList.SelectedIndex].GetProvider(ConnectionStringText.Text);
-                if (!System.IO.Directory.Exists(DestinationDirText.Text))
-                {
-                    if (MessageBox.Show(this, "Directory \"" + DestinationDirText.Text + "\" doesn't exists. Create it now?", "Create dir?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                        System.IO.Directory.CreateDirectory(DestinationDirText.Text);
-                    else
-                        return;
-                }
+			try
+			{
+				IDataProvider provider = Providers[ProviderList.SelectedIndex].GetProvider(ConnectionStringText.Text);
+				if (!System.IO.Directory.Exists(DestinationDirText.Text))
+				{
+					if (MessageBox.Show(this, "Directory \"" + DestinationDirText.Text + "\" doesn't exists. Create it now?", "Create dir?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+						System.IO.Directory.CreateDirectory(DestinationDirText.Text);
+					else
+						return;
+				}
 
-                List<TypeConfiguration.MappedClass> tables = TypeConfiguration.DescribeDataSource(provider);
-                string mappingFile = System.IO.Path.Combine(DestinationDirText.Text, "LightDataModel.Mapping.xml");
+				ConfigurationContainer.Table[] tables = ConfigurationContainer.DescribeDataSource(provider);
+				string mappingFile = System.IO.Path.Combine(DestinationDirText.Text, "LightDataModel.Mapping.xml");
 
-                List<TypeConfiguration.IgnoredClass> ignored = new List<TypeConfiguration.IgnoredClass>();
-                if (System.IO.File.Exists(mappingFile))
-                {
-                    ignored = TypeConfiguration.GetIgnoredTables(mappingFile);
-                    TypeConfiguration.MergeSetups(TypeConfiguration.LoadXml(mappingFile), tables);
-                    foreach (TypeConfiguration.IgnoredClass ic in ignored)
-                        foreach (TypeConfiguration.MappedClass mc in tables)
-                            if (mc.TableName == ic.Tablename)
-                            {
-                                tables.Remove(mc);
-                                break;
-                            }
-                }
+				//List<TypeConfiguration.IgnoredClass> ignored = new List<TypeConfiguration.IgnoredClass>();
+				if (System.IO.File.Exists(mappingFile))
+				{
+					//ignored = TypeConfiguration.GetIgnoredTables(mappingFile);
+					//TypeConfiguration.MergeSetups(TypeConfiguration.LoadXml(mappingFile), tables);
+					ConfigurationContainer.Table[] userdefined = ConfigurationContainer.Load(mappingFile);
+					tables = ConfigurationContainer.MergeSetups(userdefined, tables);
+					//foreach (TypeConfiguration.IgnoredClass ic in ignored)
+					//    foreach (TypeConfiguration.MappedClass mc in tables)
+					//        if (mc.Tablename == ic.Tablename)
+					//        {
+					//            tables.Remove(mc);
+					//            break;
+					//        }
+				}
 
-                DataClassCustomizer dlg = new DataClassCustomizer(tables, ignored);
-                if (dlg.ShowDialog() == DialogResult.OK)
-                    TypeConfiguration.SaveXml(dlg.Tables, dlg.Ignored, mappingFile);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, string.Format("Error occured: {0}.\nChanges may not be correctly saved", ex.Message), Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+				DataClassCustomizer dlg = new DataClassCustomizer(tables);
+				if (dlg.ShowDialog() == DialogResult.OK)
+				{
+					//TypeConfiguration.SaveXml(dlg.Tables, dlg.Ignored, mappingFile);
+					ConfigurationContainer.Save(dlg.Tables, mappingFile);
+				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(this, string.Format("Error occured: {0}.\nChanges may not be correctly saved", ex.Message), Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
 
         }
 

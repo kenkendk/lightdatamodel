@@ -1,4 +1,4 @@
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
@@ -91,30 +91,15 @@
     <Compile Include="AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extended fetchers\DataFetcherCached.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extended fetchers\DataFetcherThreadSafe.cs" />
-    <Compile Include="Extended fetchers\ExtendedInterfaces.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extended fetchers\DataFetcherNested.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extended fetchers\QueryModel.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Object state\DataClassBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Object state\DataFetcher.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Object state\DataFetcherInterfaces.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ObjectTransformer\ObjectTransformer.cs" />
-    <Compile Include="ObjectTransformer\TypeConfiguration.cs" />
+    <Compile Include="Base\DataClassBase.cs" />
+    <Compile Include="Base\DataFetcherInterfaces.cs" />
+    <Compile Include="Base\ExtendedInterfaces.cs" />
+    <Compile Include="Base\ProviderInterfaces.cs" />
+    <Compile Include="Base\TypeConfiguration.cs" />
+    <Compile Include="Fetchers\DataFetcher.cs" />
+    <Compile Include="Fetchers\DataFetcherCached.cs" />
+    <Compile Include="Fetchers\DataFetcherNested.cs" />
+    <Compile Include="Fetchers\DataFetcherWithRelations.cs" />
     <Compile Include="Providers\AccessDataProvider.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -122,17 +107,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Providers\MSSQLDataProvider.cs" />
-    <Compile Include="Providers\ProviderInterfaces.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Providers\SQLiteDataProvider.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="RelationManager\GenericListWrapper.cs" />
-    <Compile Include="RelationManager\GuidProxyCollection.cs" />
-    <Compile Include="RelationManager\RelationManager.cs" />
-    <Compile Include="RelationManager\RelationManagerConfig.cs" />
-    <Compile Include="RelationManager\RelationManagerThreadSafe.cs" />
+    <Compile Include="Utilities\MultiDictionary.cs" />
+    <Compile Include="Utilities\ObjectTransformer.cs" />
+    <Compile Include="Utilities\QueryModel.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

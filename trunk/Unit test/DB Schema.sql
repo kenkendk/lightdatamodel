@@ -27,17 +27,22 @@ CREATE TABLE [Note] (
 );
 
 CREATE TABLE [LeftSide] (
-        [ID] INTEGER PRIMARY KEY ,
+      [ID] INTEGER PRIMARY KEY ,
 		[Text] varchar(255) NULL
 );
 
 CREATE TABLE [RightSide] (
-        [ID] INTEGER PRIMARY KEY ,
+      [ID] INTEGER PRIMARY KEY ,
 		[Text] varchar(255) NULL
 );
 
 CREATE TABLE [ManyToMany] (
-        [ID] INTEGER PRIMARY KEY ,
+      [ID] INTEGER PRIMARY KEY ,
 		[LeftID] INTEGER NULL,
 		[RightID] INTEGER NULL
+);
+
+CREATE TABLE [TableWithNoAutoincremetion] (
+      [ID] text PRIMARY KEY ,
+		[Meh] INTEGER NULL
 );
