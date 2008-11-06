@@ -71,14 +71,14 @@ namespace System.Data.LightDatamodel
 			IDataClass cacheobject = null;
 			if (owner.GetType() == m_relations[relationkey].Parent.Type)
 			{
-				if (m_mappings[m_relations[relationkey].Child.Type][m_relations[relationkey].ChildField.Databasefield].Index)
+				if (m_relations[relationkey].ChildField.Index)
 					cacheobject = (IDataClass)GetObjectByIndex(m_relations[relationkey].Child.Type, m_relations[relationkey].ChildField.Databasefield, m_relations[relationkey].ParentField.Field.GetValue(owner));
 				else
 					cacheobject = (IDataClass)GetObject(m_relations[relationkey].Child.Type, m_relations[relationkey].ChildField.Databasefield + " = ?", m_relations[relationkey].ParentField.Field.GetValue(owner));
 			}
 			else
 			{
-				if (m_mappings[m_relations[relationkey].Parent.Type][m_relations[relationkey].ParentField.Databasefield].Index)
+				if (m_relations[relationkey].ParentField.Index)
 					cacheobject = (IDataClass)GetObjectByIndex(m_relations[relationkey].Parent.Type, m_relations[relationkey].ParentField.Databasefield, m_relations[relationkey].ChildField.Field.GetValue(owner));
 				else
 					cacheobject = (IDataClass)GetObject(m_relations[relationkey].Parent.Type, m_relations[relationkey].ParentField.Databasefield + " = ?", m_relations[relationkey].ChildField.Field.GetValue(owner));
@@ -97,7 +97,7 @@ namespace System.Data.LightDatamodel
 			IDataClass[] cacheobjects = null;
 			if (owner.GetType() == m_relations[relationkey].Parent.Type)
 			{
-				if (m_mappings[m_relations[relationkey].Child.Type][m_relations[relationkey].ChildField.Databasefield].Index)
+				if (m_relations[relationkey].ChildField.Index)
 					cacheobjects = (IDataClass[])GetObjectsByIndex(m_relations[relationkey].Child.Type, m_relations[relationkey].ChildField.Databasefield, m_relations[relationkey].ParentField.Field.GetValue(owner));
 				else
 					cacheobjects = (IDataClass[])GetObjects(m_relations[relationkey].Child.Type, m_relations[relationkey].ChildField.Databasefield + " = ?", m_relations[relationkey].ParentField.Field.GetValue(owner));
@@ -117,7 +117,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="relationkey"></param>
 		/// <param name="owner"></param>
 		/// <returns></returns>
-		protected virtual IDataClass GetRelatedObjectFromCesspit(string relationkey, IDataClass owner)
+		protected virtual IDataClass GetRelatedObjectFromCesspool(string relationkey, IDataClass owner)
 		{
 			if (m_objectrelationcache[owner][relationkey].SubObjects.Count > 0) return m_objectrelationcache[owner][relationkey].SubObjects[0];
 			return null;
@@ -129,7 +129,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="relationkey"></param>
 		/// <param name="owner"></param>
 		/// <returns></returns>
-		protected virtual IDataClass[] GetRelatedObjectsFromCesspit(string relationkey, IDataClass owner)
+		protected virtual IDataClass[] GetRelatedObjectsFromCesspool(string relationkey, IDataClass owner)
 		{
 			IDataClass[] ret = null;
 			if (owner.GetType() == m_relations[relationkey].Parent.Type)
@@ -144,7 +144,7 @@ namespace System.Data.LightDatamodel
 		{
 			//fetch from cache
 			DATACLASS[] cacheobjects = (DATACLASS[])(Array)GetRelatedObjectsFromDatabase(relationkey, owner);
-			DATACLASS[] cesspitobjects = (DATACLASS[])(Array)GetRelatedObjectsFromCesspit(relationkey, owner);
+			DATACLASS[] cesspitobjects = (DATACLASS[])(Array)GetRelatedObjectsFromCesspool(relationkey, owner);
 			return (IList<DATACLASS>)new RelatedObjectCollection<DATACLASS>(owner, relationkey, cacheobjects, cesspitobjects, this);
 		}
 
@@ -155,7 +155,7 @@ namespace System.Data.LightDatamodel
 
 		public virtual IDataClass GetRelatedObject(string relationkey, IDataClass owner)
 		{
-			IDataClass ret = GetRelatedObjectFromCesspit(relationkey, owner);
+			IDataClass ret = GetRelatedObjectFromCesspool(relationkey, owner);
 			if (ret != null) return ret;
 			return GetRelatedObjectFromDatabase(relationkey, owner);
 		}
@@ -168,6 +168,7 @@ namespace System.Data.LightDatamodel
 		public void SetRelatedObject(string relationkey, IDataClass owner, IDataClass target)
 		{
 			IDataClass oldtarget = GetRelatedObject(relationkey, owner);
+			if (object.Equals(target, oldtarget)) return;
 
 			if (target == null)
 			{
@@ -190,8 +191,6 @@ namespace System.Data.LightDatamodel
 				List<IDataClass> p = new List<IDataClass>();
 				p.Add(owner);
 				m_objectrelationcache[target][relationkey].SubObjects = p;
-
-				//set child deity
 
 			}
 
@@ -380,7 +379,7 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
-		/// This will update the column values in the relations
+		/// This will update the column values in the relations. (Will only update registered 'loose' objects)
 		/// </summary>
 		/// <param name="obj"></param>
 		private void UpdateObjectKeys(IDataClass obj)
@@ -391,7 +390,7 @@ namespace System.Data.LightDatamodel
 				if (obj.GetType() == rel.Relation.Child.Type)
 				{
 					//take from parent
-					IDataClass parent = GetRelatedObject(rel.Relation.Name, obj);
+					IDataClass parent = GetRelatedObjectFromCesspool(rel.Relation.Name, obj);
 					if (parent != null)
 					{
 						object value = rel.Relation.ParentField.Field.GetValue(parent);
@@ -402,7 +401,7 @@ namespace System.Data.LightDatamodel
 				{
 					//give to childs
 					object value = rel.Relation.ParentField.Field.GetValue(obj);
-					IList<IDataClass> childs = GetRelatedObjects(rel.Relation.Name, obj);
+					IList<IDataClass> childs = GetRelatedObjectsFromCesspool(rel.Relation.Name, obj);
 					foreach (IDataClass child in childs)
 					{
 						rel.Relation.ChildField.SetValueWithEvents(child as DataClassBase, value);
@@ -475,6 +474,12 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_cache.Lock.AcquireWriterLock(-1);
+
+				//first update all IDs, so we won't clear 'updated' objects
+				foreach (IDataClass obj in m_cache.GetAllUnchanged())
+					UpdateObjectKeys(obj);
+
+				//clear
 				foreach (IDataClass obj in m_cache.GetAllUnchanged())
 					UnregisterObject(obj);
 				m_cache.ClearAllUnchanged();
