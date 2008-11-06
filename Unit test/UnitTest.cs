@@ -893,6 +893,10 @@ namespace Datamodel.UnitTest
 
 			hub.ClearCache();
 
+			n = hub.GetObjectById<Note>(j);
+			IList<Project> l = hub.GetRelatedObjects<Project>("ProjectProjectNote", n);
+			if (l.Count != 1) throw new Exception("Failed to load item");
+
 			DataFetcherNested nd = new DataFetcherNested(hub);
 			p = nd.GetObjectById<Project>(i);
 
