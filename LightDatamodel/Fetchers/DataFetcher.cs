@@ -384,11 +384,10 @@ namespace System.Data.LightDatamodel
 		{
 			if(obj.ObjectState == ObjectStates.Deleted) return;
 
-			string tablename = obj.GetType().Name;
 			OnBeforeDataConnection(obj, DataActions.Fetch);
 			object[] items = LoadObjects(obj.GetType(), QueryModel.Parser.ParseQuery(m_mappings[obj.GetType()].PrimaryKey.Databasefield + "=?", m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)));
-			if (items == null || items.Length == 0) throw new NoSuchObjectException("Row (" + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj) + ") from table \"" + tablename + "\" can't be fetched", obj);
-			if (items.Length != 1) throw new Exception("Row (" + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj) + ") from table \"" + tablename + "\" gave " + items.Length.ToString() + " rows");
+			if (items == null || items.Length == 0) throw new NoSuchObjectException("Row (" + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj) + ") from table \"" + obj.GetType().Name + "\" can't be fetched", obj);
+			if (items.Length != 1) throw new Exception("Row (" + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj) + ") from table \"" + obj.GetType().Name + "\" gave " + items.Length.ToString() + " rows");
             ObjectTransformer.CopyObject(items[0], obj);
 			((DataClassBase)obj).m_state = ObjectStates.Default;
 			((DataClassBase)obj).m_isdirty = false;

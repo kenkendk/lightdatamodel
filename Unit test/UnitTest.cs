@@ -439,6 +439,13 @@ namespace Datamodel.UnitTest
 			fetcher.CommitAll();
 			tableno = fetcher.GetObjectById<TableWithNoAutoincremetion>("YAKKATYKKY");
 			if (tableno != null) throw new Exception("Bah");
+
+			//test cache and refresh
+			p1 = fetcher.GetObjectById<Project>(p1.ID);
+			fetcher.ClearCache();
+			fetcher.RefreshObject(p1);		//refresing a non cached object should cache it
+			p1 = fetcher.GetObjectFromCacheById<Project>(p1.ID);
+			if (p1 == null) throw new Exception("Bah!");
 		}
 
 		public static void TestQueryModel(IDbConnection con)
@@ -1006,7 +1013,7 @@ namespace Datamodel.UnitTest
 		private class AssyncronWorker
 		{
 			private IDataFetcher m_conn;
-			private IDataFetcherCached m_cached;
+			private DataFetcherCached m_cached;
 			private System.Threading.Thread m_thread;
 			private const int m_count = 10;
 
@@ -1015,7 +1022,7 @@ namespace Datamodel.UnitTest
 			public AssyncronWorker(IDataFetcher connection)
 			{
 				m_conn = connection;
-				m_cached = connection as IDataFetcherCached;
+				m_cached = connection as DataFetcherCached;
 			}
 
 			private void PerformTest()
