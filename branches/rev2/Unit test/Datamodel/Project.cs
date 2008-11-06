@@ -1,6 +1,6 @@
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
-/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\workspace\Ny version2 LightDatamodel\Unit test\Datamodel\UnitTest.sqlite3;" />
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\workspace\LightDatamodel\Unit test\Datamodel\UnitTest.sqlite3;" />
 /// <type>Table</type>
 /// <namespace>Datamodel.UnitTest</namespace>
 /// <name>Project</name>
@@ -69,8 +69,8 @@ namespace Datamodel.UnitTest
 		[Affects(typeof(Note))]
 		public Note ProjectNote
 		{
-			get { return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<Note>("ProjectProjectNote", this); }
-			set { ((DataFetcherWithRelations)m_dataparent).SetRelatedObject("ProjectProjectNote", this, value); }
+			get{ return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<Note>("ProjectProjectNote", this); }
+			set{ ((DataFetcherWithRelations)m_dataparent).SetRelatedObject("ProjectProjectNote", this, value); }
 		}
 
 #endregion

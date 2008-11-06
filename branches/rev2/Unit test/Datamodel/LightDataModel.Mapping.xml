@@ -57,7 +57,7 @@
           <Name>ProjectCurrentTaskNote</Name>
           <Databasefield>CurrentTaskNoteID</Databasefield>
           <Propertyname>CurrentTaskNote</Propertyname>
-          <Type>ManyToOne</Type>
+          <Type>OneToMany</Type>
           <ReverseTablename>Note</ReverseTablename>
           <ReverseDatabasefield>ID</ReverseDatabasefield>
           <ReversePropertyname>TaskNotes</ReversePropertyname>
@@ -67,7 +67,7 @@
           <Name>ProjectProjectNote</Name>
           <Databasefield>ProjectNoteID</Databasefield>
           <Propertyname>ProjectNote</Propertyname>
-          <Type>ManyToOne</Type>
+          <Type>OneToMany</Type>
           <ReverseTablename>Note</ReverseTablename>
           <ReverseDatabasefield>ID</ReverseDatabasefield>
           <ReversePropertyname>ProjectNotes</ReversePropertyname>
@@ -259,7 +259,7 @@
           <IgnoreWithSelect>false</IgnoreWithSelect>
           <IgnoreWithUpdate>false</IgnoreWithUpdate>
           <IgnoreWithInsert>false</IgnoreWithInsert>
-          <Index>true</Index>
+          <Index>false</Index>
         </Column>
       </Columns>
       <Ignore>false</Ignore>
@@ -327,6 +327,37 @@
           <Typename>System.Int64</Typename>
           <Name>RightID</Name>
           <Fieldname>RightID</Fieldname>
+          <Autonumber>false</Autonumber>
+          <PrimaryKey>false</PrimaryKey>
+          <IgnoreWithSelect>false</IgnoreWithSelect>
+          <IgnoreWithUpdate>false</IgnoreWithUpdate>
+          <IgnoreWithInsert>false</IgnoreWithInsert>
+          <Index>false</Index>
+        </Column>
+      </Columns>
+      <Ignore>false</Ignore>
+      <Relations />
+    </Table>
+    <Table>
+      <Name>TableWithNoAutoincremetion</Name>
+      <Classname>TableWithNoAutoincremetion</Classname>
+      <PrimaryKey>ID</PrimaryKey>
+      <Columns>
+        <Column>
+          <Typename>System.String</Typename>
+          <Name>ID</Name>
+          <Fieldname>ID</Fieldname>
+          <Autonumber>false</Autonumber>
+          <PrimaryKey>true</PrimaryKey>
+          <IgnoreWithSelect>false</IgnoreWithSelect>
+          <IgnoreWithUpdate>false</IgnoreWithUpdate>
+          <IgnoreWithInsert>false</IgnoreWithInsert>
+          <Index>false</Index>
+        </Column>
+        <Column>
+          <Typename>System.Int64</Typename>
+          <Name>Meh</Name>
+          <Fieldname>Meh</Fieldname>
           <Autonumber>false</Autonumber>
           <PrimaryKey>false</PrimaryKey>
           <IgnoreWithSelect>false</IgnoreWithSelect>

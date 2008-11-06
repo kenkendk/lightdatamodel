@@ -3,7 +3,7 @@
 /// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\workspace\LightDatamodel\Unit test\Datamodel\UnitTest.sqlite3;" />
 /// <type>Table</type>
 /// <namespace>Datamodel.UnitTest</namespace>
-/// <name>LeftSide</name>
+/// <name>TableWithNoAutoincremetion</name>
 /// <sql></sql>
 /// </metadata>
 
@@ -13,30 +13,30 @@ using System.Data.LightDatamodel.DataClassAttributes;
 namespace Datamodel.UnitTest
 {
 
-	[DatabaseTable("LeftSide")]
-	public partial class LeftSide : DataClassBase
+	[DatabaseTable("TableWithNoAutoincremetion")]
+	public partial class TableWithNoAutoincremetion : DataClassBase
 	{
 
 #region " private members "
 
-		[AutoIncrement, PrimaryKey, DatabaseField("ID")]
-		private System.Int64 m_ID = rnd.Next(int.MinValue, -1);
-		[DatabaseField("Text")]
-		private System.String m_Text = "";
+		[PrimaryKey, DatabaseField("ID")]
+		private System.String m_ID = "";
+		[DatabaseField("Meh")]
+		private System.Int64 m_Meh = long.MinValue;
 #endregion
 
 #region " properties "
 
-		public System.Int64 ID
+		public System.String ID
 		{
 			get{return m_ID;}
 			set{object oldvalue = m_ID;OnBeforeDataChange(this, "ID", oldvalue, value);m_ID = value;OnAfterDataChange(this, "ID", oldvalue, value);}
 		}
 
-		public System.String Text
+		public System.Int64 Meh
 		{
-			get{return m_Text;}
-			set{value = value != null && ((string)value).Length > 255 ? ((string)value).Substring(0, 255) : value;object oldvalue = m_Text;OnBeforeDataChange(this, "Text", oldvalue, value);m_Text = value;OnAfterDataChange(this, "Text", oldvalue, value);}
+			get{return m_Meh;}
+			set{object oldvalue = m_Meh;OnBeforeDataChange(this, "Meh", oldvalue, value);m_Meh = value;OnAfterDataChange(this, "Meh", oldvalue, value);}
 		}
 
 #endregion

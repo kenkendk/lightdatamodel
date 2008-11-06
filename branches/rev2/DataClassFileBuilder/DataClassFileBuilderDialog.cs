@@ -392,22 +392,22 @@ namespace DataClassFileBuilder
 			//check for params
 			if(args.Length > 0 && File.Exists(args[0]) && dlg.ProviderList.SelectedIndex < 0)
 			{
-				if(Path.GetExtension(args[0]).ToLower() == ".cs")
+				if (Path.GetExtension(args[0]).ToLower() == ".cs")
 				{
 					try
 					{
 						XmlDocument meta = GetHiddenXml(args[0], "metadata");
-						if(meta != null)
+						if (meta != null)
 						{
 							XmlNode provider = meta.SelectSingleNode("/metadata/provider");
 							XmlNode namesp = meta.SelectSingleNode("/metadata/namespace");
 							XmlNode name = meta.SelectSingleNode("/metadata/name");
 							XmlNode sql = meta.SelectSingleNode("/metadata/sql");
-							if(provider != null && provider.Attributes["connectionstring"] != null) dlg.ConnectionStringText.Text = provider.Attributes["connectionstring"].Value;
+							if (provider != null && provider.Attributes["connectionstring"] != null) dlg.ConnectionStringText.Text = provider.Attributes["connectionstring"].Value;
 							if (provider != null && provider.Attributes["name"] != null) dlg.ProviderList.SelectedItem = ParseProvider((string)provider.Attributes["name"].Value, dlg.Providers);
-							if(namesp != null) dlg.NamespaceStringText.Text = namesp.InnerText;
-							if(name != null) dlg.ViewNameText.Text = name.InnerText;
-							if(sql != null) dlg.SQLText.Text = sql.InnerText;
+							if (namesp != null) dlg.NamespaceStringText.Text = namesp.InnerText;
+							if (name != null) dlg.ViewNameText.Text = name.InnerText;
+							if (sql != null) dlg.SQLText.Text = sql.InnerText;
 							dlg.DestinationDirText.Text = Path.GetDirectoryName(args[0]);
 							string mappingFile = System.IO.Path.Combine(dlg.DestinationDirText.Text, "LightDataModel.Mapping.xml");
 							if (System.IO.File.Exists(mappingFile))
@@ -416,12 +416,14 @@ namespace DataClassFileBuilder
 								dlg.UseConfigCheckBox.Checked = false;
 						}
 					}
-					catch(Exception ex)
+					catch (Exception ex)
 					{
 						MessageBox.Show("Error during file meta search\nError: " + ex.Message, "DataClassFileBuilderDialog.Main", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					}
 				}
 			}
+			else if (args.Length > 0 && !File.Exists(args[0]))
+				MessageBox.Show(dlg, "The supplied file \"" + args[0] + "\" does not exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
 			System.Windows.Forms.Application.Run(dlg);
 		}
@@ -1073,7 +1075,7 @@ namespace DataClassFileBuilder
                             {
                                 if (rf.ReverseTablename == mapping.Name)
                                 {
-                                    if (rf.Type == ConfigurationContainer.Relation.RelationType.ManyToOne)
+                                    if (rf.Type == ConfigurationContainer.Relation.RelationType.OneToMany)
                                     {
 										sw.Write("\t\t[Affects(typeof(" + mc.Classname + "))]\n");
 										sw.Write("\t\tpublic System.Collections.Generic.IList<" + mc.Classname + "> " + rf.ReversePropertyname + "\n\t\t{\n");
