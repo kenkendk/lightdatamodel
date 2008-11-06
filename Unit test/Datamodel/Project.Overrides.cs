@@ -20,13 +20,16 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Data.LightDatamodel;
 
 namespace Datamodel.UnitTest
 {
     partial class Project
     {
-        public System.Guid Guid { get { return this.RelationManager.GetGuidForObject(this); } }
-        public bool ExistsInDB { get { return this.RelationManager.ExistsInDb(this); } }
+		public override string ToString()
+		{
+			return "Proj " + m_ID.ToString();
+		}
 
     }
 }

@@ -1,32 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{D8FAE879-F4A2-4E81-9B36-AED0D824C265}</ProjectGuid>
+    <ProjectGuid>{40498004-BC1F-4DA4-885D-3E2D82F2179E}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ApplicationIcon>
-    </ApplicationIcon>
-    <AssemblyKeyContainerName>
-    </AssemblyKeyContainerName>
+    <ApplicationIcon />
+    <AssemblyKeyContainerName />
     <AssemblyName>UnitTest</AssemblyName>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>LightDatamodel.snk</AssemblyOriginatorKeyFile>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <DelaySign>false</DelaySign>
     <OutputType>Library</OutputType>
-    <RootNamespace>UnitTest</RootNamespace>
+    <RootNamespace>Datamodel.UnitTest</RootNamespace>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <StartupObject>
-    </StartupObject>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
-    <OldToolsVersion>2.0</OldToolsVersion>
+    <StartupObject />
+    <FileUpgradeFlags />
+    <UpgradeBackupLocation />
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>bin\Debug\</OutputPath>
@@ -81,52 +76,28 @@
     <Reference Include="System.Data">
       <Name>System.Data</Name>
     </Reference>
-    <Reference Include="System.Xml">
+    <Reference Include="System.XML">
       <Name>System.XML</Name>
+    </Reference>
+    <Reference Include="LightDatamodel">
+      <Name>LightDatamodel</Name>
+      <HintPath>.\LightDatamodel.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="LeftSide.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ManyToMany.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Note.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Note.Overrides.cs" />
-    <Compile Include="Project.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Project.Overrides.cs" />
-    <Compile Include="Registration.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="RightSide.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SpecificEvent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <EmbeddedResource Include="LightDataModel.Mapping.xml">
-      <SubType>Code</SubType>
-    </EmbeddedResource>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Project.cs" />
+    <Compile Include="Registration.cs" />
+    <Compile Include="SpecificEvent.cs" />
+    <Compile Include="Note.cs" />
+    <Compile Include="LeftSide.cs" />
+    <Compile Include="RightSide.cs" />
+    <Compile Include="ManyToMany.cs" />
+    <Compile Include="TableWithNoAutoincremetion.cs" />
+    <Compile Include="TestView.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\LightDatamodel\LightDatamodel.csproj">
-      <Project>{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}</Project>
-      <Name>LightDatamodel</Name>
-    </ProjectReference>
+    <None Include="LightDatamodel.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
 </Project>

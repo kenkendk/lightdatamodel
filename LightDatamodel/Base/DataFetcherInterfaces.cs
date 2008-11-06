@@ -40,50 +40,32 @@ namespace System.Data.LightDatamodel
 		object[] GetObjects(Type type, string filter, params object[] parameters);
 		object[] GetObjects(Type type, QueryModel.Operation operation);
 		DATACLASS GetObject<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
+		object GetObject(Type type, string filter, params object[] parameters);
 		DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass;
 		object GetObjectById(Type type, object id);
 		void Commit(IDataClass obj);
-        void CommitAll();
 		DATACLASS Add<DATACLASS>() where DATACLASS : IDataClass;
 		object Add(Type type);
 		IDataClass Add(IDataClass newobj);
 		IDataProvider Provider { get; }
-        IObjectTransformer ObjectTransformer { get; }
         RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter);
 		void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass;
         void DeleteObject(object item);
 		void RefreshObject(IDataClass obj);
-        void DiscardObject(IDataClass obj);
+		TypeConfiguration Mappings { get; }
 	}
 
 	public interface IDataClass
 	{
 		IDataFetcher DataParent { get; set;}
-        IRelationManager RelationManager { get; }
 		bool IsDirty{get;}
 		ObjectStates ObjectState{get;}
-		string UniqueColumn	{get;}
-		object UniqueValue{get;}
-        //void SetDirty();
 		event DataChangeEventHandler BeforeDataChange;
 		event DataChangeEventHandler AfterDataChange;
 		event DataConnectionEventHandler BeforeDataCommit;
 		event DataConnectionEventHandler AfterDataCommit;
 
 	}
-
-    public interface IObjectTransformer
-    {
-        void CopyObject(object source, object target);
-        object CreateCopy(object source);
-        DATACLASS CreateCopy<DATACLASS>(DATACLASS source);
-        
-        object PopulateDataClass(object obj, IDataReader reader, System.Data.LightDatamodel.IDataProvider provider);
-        object[] TransformToObjects(Type type, IDataReader reader, System.Data.LightDatamodel.IDataProvider provider);
-        DATACLASS[] TransformToObjects<DATACLASS>(IDataReader reader, System.Data.LightDatamodel.IDataProvider provider);
-
-        TypeConfiguration TypeConfiguration { get; }
-    }
 
 
 	public delegate void DataConnectionEventHandler(object sender, DataActions action);

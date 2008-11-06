@@ -38,8 +38,8 @@ namespace DataClassFileBuilder
         private const int IMAGE_REFERENCE = 4;
         private const int IMAGE_IGNOREDFIELD = 5;
 
-        private List<TypeConfiguration.MappedClass> m_classes;
-        private List<TypeConfiguration.IgnoredClass> m_ignoredclasses;
+		private List<ConfigurationContainer.Table> m_classes;
+        //private List<TypeConfiguration.IgnoredClass> m_ignoredclasses;
         private bool m_isUpdating = false;
 
         private DataClassCustomizer()
@@ -47,47 +47,48 @@ namespace DataClassFileBuilder
             InitializeComponent();
         }
 
-        public DataClassCustomizer(List<TypeConfiguration.MappedClass> classes, List<TypeConfiguration.IgnoredClass> ignoredclasses)
-            : this()
+        //public DataClassCustomizer(List<TypeConfiguration.MappedClass> classes, List<TypeConfiguration.IgnoredClass> ignoredclasses) : this()
+		public DataClassCustomizer(ConfigurationContainer.Table[] classes)
+			: this()
         {
-            m_classes = classes;
-            m_ignoredclasses = ignoredclasses;
+            m_classes = new List<ConfigurationContainer.Table>(classes);
+            //m_ignoredclasses = ignoredclasses;
 
-            foreach (TypeConfiguration.MappedClass mc in m_classes)
+			foreach (ConfigurationContainer.Table mc in m_classes)
             {
-                TreeNode table = new TreeNode(mc.TableName, IMAGE_TABLE, IMAGE_TABLE);
+                TreeNode table = new TreeNode(mc.Name, IMAGE_TABLE, IMAGE_TABLE);
                 table.Tag = mc;
 
-                foreach (TypeConfiguration.MappedField mf in mc.Columns.Values)
+				foreach (ConfigurationContainer.Column mf in mc.Columns)
                 {
-                    TreeNode field = new TreeNode(mf.ColumnName, IMAGE_FIELD, IMAGE_FIELD);
+                    TreeNode field = new TreeNode(mf.Name, IMAGE_FIELD, IMAGE_FIELD);
                     field.Tag = mf;
                     table.Nodes.Add(field);
                 }
 
-                foreach (TypeConfiguration.ReferenceField rf in mc.ReferenceColumns.Values)
+				foreach (ConfigurationContainer.Relation rf in mc.Relations)
                 {
-                    TreeNode field = new TreeNode(rf.PropertyName, IMAGE_REFERENCE, IMAGE_REFERENCE);
+                    TreeNode field = new TreeNode(rf.Propertyname, IMAGE_REFERENCE, IMAGE_REFERENCE);
                     field.Tag = rf;
                     table.Nodes.Add(field);
                 }
 
-                foreach (TypeConfiguration.IgnoredField i in mc.IgnoredFields.Values)
-                {
-                    TreeNode field = new TreeNode(i.Fieldname, IMAGE_IGNOREDFIELD, IMAGE_IGNOREDFIELD);
-                    field.Tag = i;
-                    table.Nodes.Add(field);
-                }
+				//foreach (TypeConfiguration.IgnoredField i in mc.IgnoredFields.Values)
+				//{
+				//    TreeNode field = new TreeNode(i.Fieldname, IMAGE_IGNOREDFIELD, IMAGE_IGNOREDFIELD);
+				//    field.Tag = i;
+				//    table.Nodes.Add(field);
+				//}
 
                 treeView.Nodes.Add(table);
             }
 
-            foreach (TypeConfiguration.IgnoredClass ic in m_ignoredclasses)
-            {
-                TreeNode table = new TreeNode(ic.Tablename, IMAGE_IGNOREDTABLE, IMAGE_IGNOREDTABLE);
-                table.Tag = ic;
-                treeView.Nodes.Add(table);
-            }
+			//foreach (TypeConfiguration.IgnoredClass ic in m_ignoredclasses)
+			//{
+			//    TreeNode table = new TreeNode(ic.Tablename, IMAGE_IGNOREDTABLE, IMAGE_IGNOREDTABLE);
+			//    table.Tag = ic;
+			//    treeView.Nodes.Add(table);
+			//}
 
 
             foreach (Control c in splitContainer1.Panel2.Controls)
@@ -107,18 +108,13 @@ namespace DataClassFileBuilder
                 FieldDatatype.Items.Add(typeof(long));
                 FieldDatatype.Items.Add(typeof(DateTime));
 
-                foreach (TypeConfiguration.MappedClass mc in m_classes)
-                    ReferenceReverseTablename.Items.Add(mc.TableName);
+				foreach (ConfigurationContainer.Table mc in m_classes)
+                    ReferenceReverseTablename.Items.Add(mc.Name);
             }
             finally
             {
                 m_isUpdating = false;
             }
-        }
-
-        private void toolStripButton1_Click(object sender, EventArgs e)
-        {
-
         }
 
         private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
@@ -132,49 +128,51 @@ namespace DataClassFileBuilder
             {
                 m_isUpdating = true;
                 Control m = null;
-                if (e.Node.Tag as TypeConfiguration.IgnoredClass != null)
+				if (e.Node.Tag as ConfigurationContainer.Table != null)
+				{
+					ConfigurationContainer.Table ic = e.Node.Tag as ConfigurationContainer.Table;
+					m = TableProperties;
+					TableTablename.Text = ic.Name;
+					TableIgnoreCheck.Checked = ic.Ignore;
+				}
+				//else if (e.Node.Tag as TypeConfiguration.IgnoredField != null)
+				//{
+				//    TypeConfiguration.IgnoredField i = e.Node.Tag as TypeConfiguration.IgnoredField;
+				//    m = IgnoredFieldProperties;
+				//    IgnoredFieldName.Text = i.Fieldname;
+				//}
+                //else if (e.Node.Tag as TypeConfiguration.MappedField != null)
+				if (e.Node.Tag as ConfigurationContainer.Column != null)
                 {
-                    TypeConfiguration.IgnoredClass ic = e.Node.Tag as TypeConfiguration.IgnoredClass;
-                    m = TableProperties;
-                    TableTablename.Text = ic.Tablename;
-                }
-                else if (e.Node.Tag as TypeConfiguration.IgnoredField != null)
-                {
-                    TypeConfiguration.IgnoredField i = e.Node.Tag as TypeConfiguration.IgnoredField;
-                    m = IgnoredFieldProperties;
-                    IgnoredFieldName.Text = i.Fieldname;
-                }
-                else if (e.Node.Tag as TypeConfiguration.MappedField != null)
-                {
-                    TypeConfiguration.MappedField mf = e.Node.Tag as TypeConfiguration.MappedField;
+					ConfigurationContainer.Column mf = e.Node.Tag as ConfigurationContainer.Column;
                     m = FieldProperties;
-                    FieldColumnname.Text = mf.ColumnName;
-                    FieldFieldname.Text = mf.FieldName;
-                    FieldPropertyname.Text = mf.PropertyName;
-                    FieldDatatype.Text = mf.DataTypeName;
-                    FieldAutogenerate.Checked = mf.IgnoreWithInsert || mf.IsAutoGenerated;
+                    FieldColumnname.Text = mf.Name;
+                    FieldFieldname.Text = mf.Fieldname;
+					FieldPropertyname.Text = mf.Fieldname;
+					FieldDatatype.Text = mf.Typename;
+                    FieldAutogenerate.Checked = mf.IgnoreWithInsert || mf.Autonumber;
                     FieldExcludeSelect.Checked = mf.IgnoreWithSelect;
                     FieldExcludeUpdate.Checked = mf.IgnoreWithUpdate;
                     try
                     {
-                        FieldDefaultValue.Text = mf.DefaultValue == null ? "" : mf.DefaultValue.ToString();
+                        FieldDefaultValue.Text = mf.Default == null ? "" : mf.Default.ToString();
                     }
                     catch
                     {
                         FieldDefaultValue.Text = "";
                     }
                 }
-                else if (e.Node.Tag as TypeConfiguration.ReferenceField != null)
+				else if (e.Node.Tag as ConfigurationContainer.Relation != null)
                 {
-                    TypeConfiguration.ReferenceField rf = e.Node.Tag as TypeConfiguration.ReferenceField;
+					ConfigurationContainer.Relation rf = e.Node.Tag as ConfigurationContainer.Relation;
                     m = ReferenceProperties;
-                    ReferenceColumnname.Text = rf.Column;
-                    ReferencePropertyname.Text = rf.PropertyName;
-                    ReferenceIsCollection.Checked = rf.IsCollection;
+                    ReferenceColumnname.Text = rf.Databasefield;
+                    ReferencePropertyname.Text = rf.Propertyname;
+					ReferenceType.Text = rf.Type.ToString();
                     ReferenceReverseTablename.Text = rf.ReverseTablename;
-                    ReferenceReverseColumnname.Text = rf.ReverseColumn;
-                    ReferenceReversePropertyname.Text = rf.ReversePropertyName;
-                    ReferenceRelationKey.Text = rf.RelationKey;
+                    ReferenceReverseColumnname.Text = rf.ReverseDatabasefield;
+                    ReferenceReversePropertyname.Text = rf.ReversePropertyname;
+                    ReferenceRelationKey.Text = rf.Name;
                 }
 
                 foreach (Control c in splitContainer1.Panel2.Controls)
@@ -188,122 +186,145 @@ namespace DataClassFileBuilder
 
         private void FieldColumnname_TextChanged(object sender, EventArgs e)
         {
-            FieldFieldname.Items.Clear();
-            FieldFieldname.Items.Add("m_" + FieldColumnname.Text);
-            FieldPropertyname.Items.Clear();
-            FieldPropertyname.Items.Add(FieldColumnname.Text);
+			FieldFieldname.Items.Clear();
+			FieldFieldname.Items.Add("m_" + FieldColumnname.Text);
+			FieldPropertyname.Items.Clear();
+			FieldPropertyname.Items.Add(FieldColumnname.Text);
 
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.MappedField == null)
-                return;
-            treeView.SelectedNode.Text = FieldColumnname.Text;
-            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).ColumnName = FieldColumnname.Text;
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
+				return;
+			treeView.SelectedNode.Text = FieldColumnname.Text;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Name = FieldColumnname.Text;
         }
 
         private void FieldFieldname_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.MappedField == null)
-                return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).FieldName = FieldFieldname.Text;
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Fieldname = FieldFieldname.Text;
         }
 
         private void FieldPropertyname_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.MappedField == null)
-                return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).PropertyName = FieldPropertyname.Text;
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Fieldname = FieldPropertyname.Text;
 
         }
 
         private void FieldDatatype_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.MappedField == null)
-                return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).DataTypeName = FieldDatatype.Text;
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Typename = FieldDatatype.Text;
         }
 
         private void FieldAutogenerate_CheckedChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.MappedField == null)
-                return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).IsAutoGenerated = FieldAutogenerate.Checked;
-            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).IgnoreWithInsert = FieldAutogenerate.Checked;
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Autonumber = FieldAutogenerate.Checked;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).IgnoreWithInsert = FieldAutogenerate.Checked;
         }
 
         private void FieldExcludeUpdate_CheckedChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.MappedField == null)
-                return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).IgnoreWithUpdate = FieldExcludeUpdate.Checked;
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).IgnoreWithUpdate = FieldExcludeUpdate.Checked;
         }
 
         private void FieldExcludeSelect_CheckedChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.MappedField == null)
-                return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).IgnoreWithSelect = FieldExcludeSelect.Checked;
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).IgnoreWithSelect = FieldExcludeSelect.Checked;
         }
+
+		private void FieldIndexCheck_CheckedChanged(object sender, EventArgs e)
+		{
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Index = FieldIndexCheck.Checked;
+		}
+
+		private void TableIgnoreCheck_CheckedChanged(object sender, EventArgs e)
+		{
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Table == null)
+				return;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Table).Ignore = TableIgnoreCheck.Checked;
+		}
 
         private void ReferenceColumnname_TextChanged(object sender, EventArgs e)
         {
-            ReferenceReversePropertyname.Items.Clear();
-            if (treeView.SelectedNode != null && treeView.SelectedNode.Parent != null && treeView.SelectedNode.Parent.Tag as TypeConfiguration.MappedClass != null)
-                ReferenceReversePropertyname.Items.Add((treeView.SelectedNode.Parent.Tag as TypeConfiguration.MappedClass).TableName);
+			//ReferenceReversePropertyname.Items.Clear();
+			//if (treeView.SelectedNode != null && treeView.SelectedNode.Parent != null && treeView.SelectedNode.Parent.Tag as ConfigurationContainer.Table != null)
+			//    ReferenceReversePropertyname.Items.Add((treeView.SelectedNode.Parent.Tag as ConfigurationContainer.Table).Name);
 
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField == null)
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
                 return;
             treeView.SelectedNode.Text = ReferenceColumnname.Text;
-            (treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField).Column = ReferenceColumnname.Text;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Relation).Databasefield = ReferenceColumnname.Text;
         }
 
         private void ReferencePropertyname_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField == null)
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
                 return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField).PropertyName = ReferencePropertyname.Text;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Relation).Propertyname = ReferencePropertyname.Text;
         }
 
-        private void ReferenceIsCollection_CheckedChanged(object sender, EventArgs e)
-        {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField == null)
-                return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField).IsCollection = ReferenceIsCollection.Checked;
-        }
+		private void ReferenceType_SelectedIndexChanged(object sender, EventArgs e)
+		{
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
+				return;
+			ConfigurationContainer.Relation.RelationType tmp = ConfigurationContainer.Relation.RelationType.OneToOne;
+			try
+			{
+				tmp = (ConfigurationContainer.Relation.RelationType)Enum.Parse(typeof(ConfigurationContainer.Relation.RelationType), ReferenceType.Text);
+			}
+			catch
+			{
+				return;
+			}
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Relation).Type = tmp;
+		}
 
         private void ReferenceReverseTablename_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField == null)
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
                 return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField).ReverseTablename = ReferenceReverseTablename.Text;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Relation).ReverseTablename = ReferenceReverseTablename.Text;
         }
 
         private void ReferenceReverseColumnname_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField == null)
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
                 return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField).ReverseColumn = ReferenceReverseColumnname.Text;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Relation).ReverseDatabasefield = ReferenceReverseColumnname.Text;
         }
 
         private void ReferenceReversePropertyname_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField == null)
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
                 return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField).ReversePropertyName = ReferenceReversePropertyname.Text;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Relation).ReversePropertyname = ReferenceReversePropertyname.Text;
         }
 
         private void TableTablename_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.IgnoredClass == null)
-                return;
-            treeView.SelectedNode.Text = TableTablename.Text;
-            (treeView.SelectedNode.Tag as TypeConfiguration.IgnoredClass).Tablename = TableTablename.Text;
+			if (m_isUpdating || treeView.SelectedNode == null)
+			    return;
+			treeView.SelectedNode.Text = TableTablename.Text;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Table).Name = TableTablename.Text;
         }
 
         private void IgnoredFieldName_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.IgnoredField == null)
-                return;
-            treeView.SelectedNode.Text = IgnoredFieldName.Text;
-            (treeView.SelectedNode.Tag as TypeConfiguration.IgnoredField).Fieldname = IgnoredFieldName.Text;
+			//if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.IgnoredField == null)
+			//    return;
+			//treeView.SelectedNode.Text = IgnoredFieldName.Text;
+			//(treeView.SelectedNode.Tag as TypeConfiguration.IgnoredField).Fieldname = IgnoredFieldName.Text;
 
         }
 
@@ -319,17 +340,21 @@ namespace DataClassFileBuilder
             if (table.Parent != null)
                 table = table.Parent;
 
-            if (table.Tag as TypeConfiguration.MappedClass == null)
+			if (table.Tag as ConfigurationContainer.Table == null)
             {
                 MessageBox.Show(this, "Please select a table where the reference will be inserted", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             else
             {
-                TypeConfiguration.ReferenceField rf = TypeConfiguration.CreateReferenceField();
-                rf.RelationKey = Guid.NewGuid().ToString();
-                (table.Tag as TypeConfiguration.MappedClass).ReferenceColumns.Add(Guid.NewGuid().ToString(), rf);
-                TreeNode field = new TreeNode(rf.PropertyName, IMAGE_REFERENCE, IMAGE_REFERENCE);
+				ConfigurationContainer.Relation rf = new ConfigurationContainer.Relation();
+
+				//create new relation name
+                rf.Name = "newrelation";
+
+				rf.Tablename = (table.Tag as ConfigurationContainer.Table).Name;
+				(table.Tag as ConfigurationContainer.Table).Relations.Add(rf);
+                TreeNode field = new TreeNode(rf.Propertyname, IMAGE_REFERENCE, IMAGE_REFERENCE);
                 field.Tag = rf;
                 table.Nodes.Add(field);
                 treeView.SelectedNode = field;
@@ -349,32 +374,32 @@ namespace DataClassFileBuilder
             if (table.Parent != null)
                 table = table.Parent;
 
-            if (table.Tag as TypeConfiguration.MappedClass == null)
+			if (table.Tag as ConfigurationContainer.Table == null)
             {
                 MessageBox.Show(this, "Please select a table where the ignored field be inserted", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             else
             {
-                TypeConfiguration.IgnoredField rf = new TypeConfiguration.IgnoredField();
-                (table.Tag as TypeConfiguration.MappedClass).IgnoredFields.Add(Guid.NewGuid().ToString(), rf);
-                TreeNode field = new TreeNode(rf.Fieldname, IMAGE_IGNOREDFIELD, IMAGE_IGNOREDFIELD);
-                field.Tag = rf;
-                table.Nodes.Add(field);
-                treeView.SelectedNode = field;
-                field.EnsureVisible();
+				//TypeConfiguration.IgnoredField rf = new TypeConfiguration.IgnoredField();
+				//(table.Tag as TypeConfiguration.MappedClass).IgnoredFields.Add(Guid.NewGuid().ToString(), rf);
+				//TreeNode field = new TreeNode(rf.Fieldname, IMAGE_IGNOREDFIELD, IMAGE_IGNOREDFIELD);
+				//field.Tag = rf;
+				//table.Nodes.Add(field);
+				//treeView.SelectedNode = field;
+				//field.EnsureVisible();
             }
 
         }
 
         private void addIgnoredTableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TypeConfiguration.IgnoredClass ic = new TypeConfiguration.IgnoredClass();
-            TreeNode field = new TreeNode(ic.Tablename, IMAGE_IGNOREDTABLE, IMAGE_IGNOREDTABLE);
-            field.Tag = ic;
-            treeView.Nodes.Add(field);
-            treeView.SelectedNode = field;
-            field.EnsureVisible();
+			//TypeConfiguration.IgnoredClass ic = new TypeConfiguration.IgnoredClass();
+			//TreeNode field = new TreeNode(ic.Tablename, IMAGE_IGNOREDTABLE, IMAGE_IGNOREDTABLE);
+			//field.Tag = ic;
+			//treeView.Nodes.Add(field);
+			//treeView.SelectedNode = field;
+			//field.EnsureVisible();
         }
 
         private void RemoveButton_Click(object sender, EventArgs e)
@@ -385,64 +410,64 @@ namespace DataClassFileBuilder
                 return;
             }
 
-            if (treeView.SelectedNode.Tag as TypeConfiguration.MappedClass != null)
+			if (treeView.SelectedNode.Tag as ConfigurationContainer.Table != null)
             {
-                TypeConfiguration.IgnoredClass ic = new TypeConfiguration.IgnoredClass();
-                ic.Tablename = (treeView.SelectedNode.Tag as TypeConfiguration.MappedClass).TableName;
-                treeView.SelectedNode.Remove();
+				//TypeConfiguration.IgnoredClass ic = new TypeConfiguration.IgnoredClass();
+				//ic.Tablename = (treeView.SelectedNode.Tag as TypeConfiguration.MappedClass).Tablename;
+				//treeView.SelectedNode.Remove();
 
-                TreeNode field = new TreeNode(ic.Tablename, IMAGE_IGNOREDTABLE, IMAGE_IGNOREDTABLE);
-                field.Tag = ic;
-                treeView.Nodes.Add(field);
-                treeView.SelectedNode = field;
-                field.EnsureVisible();
+				//TreeNode field = new TreeNode(ic.Tablename, IMAGE_IGNOREDTABLE, IMAGE_IGNOREDTABLE);
+				//field.Tag = ic;
+				//treeView.Nodes.Add(field);
+				//treeView.SelectedNode = field;
+				//field.EnsureVisible();
             }
-            else if (treeView.SelectedNode.Tag as TypeConfiguration.MappedField != null)
+			else if (treeView.SelectedNode.Tag as ConfigurationContainer.Column != null)
             {
-                TypeConfiguration.MappedClass mc = treeView.SelectedNode.Parent.Tag as TypeConfiguration.MappedClass;
-                TypeConfiguration.IgnoredField rf = new TypeConfiguration.IgnoredField();
-                rf.Fieldname = (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).ColumnName;
-                mc.IgnoredFields.Add(rf.Fieldname, rf);
+				ConfigurationContainer.Table mc = treeView.SelectedNode.Parent.Tag as ConfigurationContainer.Table;
+				//TypeConfiguration.IgnoredField rf = new TypeConfiguration.IgnoredField();
+				//rf.Fieldname = (treeView.SelectedNode.Tag as DatabaseDiscover.Column).Name;
+				//mc.IgnoredFields.Add(rf.Fieldname, rf);
 
-                foreach(string key in mc.Columns.Keys)
-                    if (mc.Columns[key] == treeView.SelectedNode.Tag)
+				//foreach (DatabaseDiscover.Column col in mc.Columns)
+				//    if (mc.MappedFields[key] == treeView.SelectedNode.Tag)
+				//    {
+				//        mc.MappedFields.Remove(key);
+				//        break;
+				//    }
+
+				//TreeNode table = treeView.SelectedNode.Parent;
+				//treeView.SelectedNode.Remove();
+
+				//TreeNode field = new TreeNode(rf.Fieldname, IMAGE_IGNOREDFIELD, IMAGE_IGNOREDFIELD);
+				//field.Tag = rf;
+				//table.Nodes.Add(field);
+				//treeView.SelectedNode = field;
+				//field.EnsureVisible();
+            }
+			//else if (treeView.SelectedNode.Tag as TypeConfiguration.IgnoredClass != null)
+			//{
+			//    treeView.SelectedNode.Remove();
+			//}
+			//else if (treeView.SelectedNode.Tag as TypeConfiguration.IgnoredField != null)
+			//{
+			//    TypeConfiguration.MappedClass mc = treeView.SelectedNode.Parent.Tag as TypeConfiguration.MappedClass;
+			//    foreach (string key in mc.IgnoredFields.Keys)
+			//        if (mc.IgnoredFields[key] == treeView.SelectedNode.Tag)
+			//        {
+			//            mc.IgnoredFields.Remove(key);
+			//            break;
+			//        }
+
+			//    treeView.SelectedNode.Remove();
+			//}
+			else if (treeView.SelectedNode.Tag as ConfigurationContainer.Relation != null)
+            {
+				ConfigurationContainer.Table mc = treeView.SelectedNode.Parent.Tag as ConfigurationContainer.Table;
+				foreach (ConfigurationContainer.Relation r in mc.Relations)
+                    if (r == treeView.SelectedNode.Tag)
                     {
-                        mc.Columns.Remove(key);
-                        break;
-                    }
-
-                TreeNode table = treeView.SelectedNode.Parent;
-                treeView.SelectedNode.Remove();
-
-                TreeNode field = new TreeNode(rf.Fieldname, IMAGE_IGNOREDFIELD, IMAGE_IGNOREDFIELD);
-                field.Tag = rf;
-                table.Nodes.Add(field);
-                treeView.SelectedNode = field;
-                field.EnsureVisible();
-            }
-            else if (treeView.SelectedNode.Tag as TypeConfiguration.IgnoredClass != null)
-            {
-                treeView.SelectedNode.Remove();
-            }
-            else if (treeView.SelectedNode.Tag as TypeConfiguration.IgnoredField != null)
-            {
-                TypeConfiguration.MappedClass mc = treeView.SelectedNode.Parent.Tag as TypeConfiguration.MappedClass;
-                foreach (string key in mc.IgnoredFields.Keys)
-                    if (mc.IgnoredFields[key] == treeView.SelectedNode.Tag)
-                    {
-                        mc.IgnoredFields.Remove(key);
-                        break;
-                    }
-
-                treeView.SelectedNode.Remove();
-            }
-            else if (treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField != null)
-            {
-                TypeConfiguration.MappedClass mc = treeView.SelectedNode.Parent.Tag as TypeConfiguration.MappedClass;
-                foreach (string key in mc.ReferenceColumns.Keys)
-                    if (mc.ReferenceColumns[key] == treeView.SelectedNode.Tag)
-                    {
-                        mc.ReferenceColumns.Remove(key);
+                        mc.Relations.Remove(r);
                         break;
                     }
 
@@ -453,48 +478,60 @@ namespace DataClassFileBuilder
         private void ReferenceReverseTablename_SelectedIndexChanged(object sender, EventArgs e)
         {
             ReferenceReverseColumnname.Items.Clear();
-            ReferencePropertyname.Items.Clear();
+            //ReferencePropertyname.Items.Clear();
 
-            foreach(TypeConfiguration.MappedClass mc in m_classes)
-                if (mc.TableName == ReferenceReverseTablename.Text)
+			foreach (ConfigurationContainer.Table mc in m_classes)
+                if (mc.Name == ReferenceReverseTablename.Text)
                 {
-                    ReferencePropertyname.Items.Add(mc.TableName);
-                    foreach (string s in mc.Columns.Keys)
-                        ReferenceReverseColumnname.Items.Add(s);
+                    //ReferencePropertyname.Items.Add(mc.Name);
+                    foreach (ConfigurationContainer.Column col in mc.Columns)
+                        ReferenceReverseColumnname.Items.Add(col.Name);
                     break;
                 }
         }
 
         private void OKBtn_Click(object sender, EventArgs e)
         {
-            m_classes = new List<TypeConfiguration.MappedClass>();
-            m_ignoredclasses = new List<TypeConfiguration.IgnoredClass>();
+			m_classes = new List<ConfigurationContainer.Table>();
+			//m_ignoredclasses = new List<TypeConfiguration.IgnoredClass>();
 
-            foreach (TreeNode n in treeView.Nodes)
-                if (n.Tag as TypeConfiguration.MappedClass != null)
-                    m_classes.Add(n.Tag as TypeConfiguration.MappedClass);
-                else if (n.Tag as TypeConfiguration.IgnoredClass != null)
-                    m_ignoredclasses.Add(n.Tag as TypeConfiguration.IgnoredClass);
+			foreach (TreeNode n in treeView.Nodes)
+				if (n.Tag as ConfigurationContainer.Table != null)
+					m_classes.Add(n.Tag as ConfigurationContainer.Table);
+				//else if (n.Tag as TypeConfiguration.IgnoredClass != null)
+				//    m_ignoredclasses.Add(n.Tag as TypeConfiguration.IgnoredClass);
 
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+			//validate relation names (They have to be unique)
+			Dictionary<string, ConfigurationContainer.Relation> tmp = new Dictionary<string, ConfigurationContainer.Relation>();
+			foreach (ConfigurationContainer.Table t in m_classes)
+			{
+				foreach (ConfigurationContainer.Relation r in t.Relations)
+					if (r.Name != "newrelation" && !tmp.ContainsKey(r.Name)) tmp.Add(r.Name, r);
+					else
+					{
+						MessageBox.Show("There're two relations with the name \"" + r.Name + "\"", "Double relations", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+						return;
+					}
+			}
+
+			this.DialogResult = DialogResult.OK;
+			this.Close();
         }
 
-        public List<TypeConfiguration.MappedClass> Tables { get { return m_classes; } }
-        public List<TypeConfiguration.IgnoredClass> Ignored { get { return m_ignoredclasses; } }
+		public ConfigurationContainer.Table[] Tables { get { return m_classes.ToArray(); } }
 
         private void FieldDefaultValue_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.MappedField == null)
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Column == null)
                 return;
-            if ((treeView.SelectedNode.Tag as TypeConfiguration.MappedField).DataType == typeof(string))
-                (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).DefaultValue = FieldDefaultValue.Text;
+			if ((treeView.SelectedNode.Tag as ConfigurationContainer.Column).Typename == "System.String")
+				(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Default = FieldDefaultValue.Text;
             else if (FieldDefaultValue.Text.Trim().Length == 0)
-                (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).DefaultValue = null;
+				(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Default = null;
             else
                 try
                 {
-                    (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).DefaultValue = Convert.ChangeType(FieldDefaultValue.Text, (treeView.SelectedNode.Tag as TypeConfiguration.MappedField).DataType);
+					(treeView.SelectedNode.Tag as ConfigurationContainer.Column).Default = Convert.ChangeType(FieldDefaultValue.Text, (treeView.SelectedNode.Tag as ConfigurationContainer.Column).GetFieldType());
                     errorProvider1.SetError(FieldDefaultValue, null);
                 }
                 catch (Exception ex)
@@ -505,19 +542,16 @@ namespace DataClassFileBuilder
 
         private void GenerateRelationKey_Click(object sender, EventArgs e)
         {
-            ReferenceRelationKey.Text = Guid.NewGuid().ToString();
-        }
-
-        private void ReferencePropertyname_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
+				return;
+			ReferenceRelationKey.Text = (treeView.SelectedNode.Tag as ConfigurationContainer.Relation).Tablename + ReferencePropertyname.Text;
         }
 
         private void ReferenceRelationKey_TextChanged(object sender, EventArgs e)
         {
-            if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField == null)
+			if (m_isUpdating || treeView.SelectedNode == null || treeView.SelectedNode.Tag as ConfigurationContainer.Relation == null)
                 return;
-            (treeView.SelectedNode.Tag as TypeConfiguration.ReferenceField).RelationKey = ReferenceRelationKey.Text;
+			(treeView.SelectedNode.Tag as ConfigurationContainer.Relation).Name = ReferenceRelationKey.Text;
         }
 
     }

@@ -20,13 +20,15 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Data.LightDatamodel;
 
 namespace Datamodel.UnitTest
 {
     partial class Note
     {
-        public System.Guid Guid { get { return this.RelationManager.GetGuidForObject(this); } }
-        public bool ExistsInDB { get { return this.RelationManager.ExistsInDb(this); } }
-
+		public override string ToString()
+		{
+			return "Note " + m_ID.ToString();
+		}
     }
 }
