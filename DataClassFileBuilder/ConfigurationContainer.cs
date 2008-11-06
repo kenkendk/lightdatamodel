@@ -130,6 +130,7 @@ namespace DataClassFileBuilder
 					ret[i].Columns[k].Typename = col.Value.FullName;
 					ret[i].Columns[k].PrimaryKey = ret[i].PrimaryKey == ret[i].Columns[k].Name;
 					ret[i].Columns[k].Autonumber = provider.IsAutoIncrement(ret[i].Name, ret[i].Columns[k].Name);
+					ret[i].Columns[k].Index = provider.IsIndexed(ret[i].Name, ret[i].Columns[k].Name);
 					k++;
 				}
 			}

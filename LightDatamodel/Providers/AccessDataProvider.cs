@@ -122,6 +122,27 @@ namespace System.Data.LightDatamodel
 			return "?";
 		}
 
+		public override bool IsIndexed(string tablename, string column)
+		{
+			if (base.IsIndexed(tablename, column)) return true;
+
+			OpenConnection();
+
+			//get from schema
+			try
+			{
+			OleDb.OleDbConnection conn = (OleDb.OleDbConnection)m_connection;
+			DataTable schema = conn.GetOleDbSchemaTable(OleDb.OleDbSchemaGuid.Indexes, new object[] { null, null, null, null, tablename });
+			DataRow[] row = schema.Select("COLUMN_NAME = '" + column + "'");
+			if (row != null && row.Length > 0) return true;
+			else return false;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Couldn't load IsIndexed from table \"" + tablename + "\"\nError: " + ex.Message);
+			}
+		}
+
         public override bool IsAutoIncrement(string tablename, string column)
         {
 			OpenConnection();

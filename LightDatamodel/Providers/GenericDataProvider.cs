@@ -299,6 +299,13 @@ namespace System.Data.LightDatamodel
 
         #region IDataProvider Members
 
+		public virtual bool IsIndexed(string tablename, string column)
+		{
+			OpenConnection();
+			if (GetPrimaryKey(tablename) == column) return true;
+			return false;
+		}
+
         /// <summary>
 		/// This will return the corresponding DBNull value. Eg. a date dbnull could be the classic date 1-1-1
 		/// DBNull will be eliminated from the code. There's no such thing as a secondary meaning/use of a field. 

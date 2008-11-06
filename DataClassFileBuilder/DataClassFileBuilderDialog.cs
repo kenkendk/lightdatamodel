@@ -1006,7 +1006,7 @@ namespace DataClassFileBuilder
                         if (mf.IgnoreWithUpdate) attributes += "IgnoreWithUpdate, ";
                         if (mf.IgnoreWithSelect) attributes += "IgnoreWithSelect, ";
 						if (mf.PrimaryKey) attributes += "PrimaryKey, ";
-						if (mf.Index) attributes += "Index, ";
+						if (mf.Index && !mf.PrimaryKey) attributes += "Index, ";
 						if (mf.Default != null) attributes += "Default(" + FormatObjectToCSharp(mf.Default, false) + "), ";
 
 						ConfigurationContainer.Relation[] relations = GetRelationsToField(mapping.Name, mf.Name, tableLookup);

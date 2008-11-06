@@ -97,6 +97,35 @@ namespace System.Data.LightDatamodel
 		{
 		}
 
+		/// <summary>
+		/// Will return true if indexed. BEWARE. This MSSQL-function is slow!
+		/// </summary>
+		/// <param name="tablename"></param>
+		/// <param name="column"></param>
+		/// <returns></returns>
+		public override bool IsIndexed(string tablename, string column)
+		{
+			if (base.IsIndexed(tablename, column)) return true;
+
+			OpenConnection();
+
+			//get from schema
+			try
+			{
+				IDbCommand cmd = m_connection.CreateCommand();
+				cmd.CommandText = "SELECT sysobjects.name AS TABLE_NAME, sysindexes.name AS INDEX_NAME, syscolumns.name AS COLUMN_NAME FROM (sysindexkeys INNER JOIN (sysobjects INNER JOIN sysindexes ON sysobjects.id = sysindexes.id) ON (sysindexkeys.indid = sysindexes.indid) AND (sysindexkeys.id = sysindexes.id)) INNER JOIN syscolumns ON (sysindexkeys.id = syscolumns.id) AND (sysindexkeys.colid = syscolumns.colid) WHERE sysobjects.name = '" + tablename + "' AND syscolumns.name = '" + column + "'";
+				bool hasindex = false;
+				IDataReader dr = cmd.ExecuteReader();
+				if (dr.Read()) hasindex = true;
+				dr.Close();
+				return hasindex;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Couldn't load IsIndexed from table \"" + tablename + "\"\nError: " + ex.Message);
+			}
+		}
+
         public override bool IsAutoIncrement(string tablename, string column)
         {
 			OpenConnection();
