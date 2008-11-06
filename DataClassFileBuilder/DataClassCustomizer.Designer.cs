@@ -31,8 +31,8 @@
 			this.components = new System.ComponentModel.Container();
 			System.Windows.Forms.GroupBox groupBox1;
 			System.Windows.Forms.GroupBox groupBox2;
-			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataClassCustomizer));
 			System.Windows.Forms.Label label15;
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataClassCustomizer));
 			this.ReferenceColumnname = new System.Windows.Forms.ComboBox();
 			this.ReferencePropertyname = new System.Windows.Forms.TextBox();
 			this.label8 = new System.Windows.Forms.Label();
@@ -57,6 +57,7 @@
 			this.IgnoredFieldName = new System.Windows.Forms.TextBox();
 			this.label11 = new System.Windows.Forms.Label();
 			this.ReferenceProperties = new System.Windows.Forms.GroupBox();
+			this.SwapButton = new System.Windows.Forms.Button();
 			this.ReferenceType = new System.Windows.Forms.ComboBox();
 			this.label14 = new System.Windows.Forms.Label();
 			this.GenerateRelationKey = new System.Windows.Forms.Button();
@@ -82,7 +83,6 @@
 			this.label3 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
-			this.SwapButton = new System.Windows.Forms.Button();
 			groupBox1 = new System.Windows.Forms.GroupBox();
 			groupBox2 = new System.Windows.Forms.GroupBox();
 			label15 = new System.Windows.Forms.Label();
@@ -172,6 +172,16 @@
 			groupBox2.TabStop = false;
 			groupBox2.Text = "Parent";
 			// 
+			// label15
+			// 
+			label15.AutoSize = true;
+			label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			label15.Location = new System.Drawing.Point(8, 88);
+			label15.Name = "label15";
+			label15.Size = new System.Drawing.Size(284, 12);
+			label15.TabIndex = 23;
+			label15.Text = "The parent column value will be transfered to the child before commit";
+			// 
 			// ReferenceReversePropertyname
 			// 
 			this.ReferenceReversePropertyname.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
@@ -180,7 +190,7 @@
 			this.ReferenceReversePropertyname.Name = "ReferenceReversePropertyname";
 			this.ReferenceReversePropertyname.Size = new System.Drawing.Size(216, 20);
 			this.ReferenceReversePropertyname.TabIndex = 22;
-			this.ReferenceReversePropertyname.TextChanged += new System.EventHandler(this.ReferencePropertyname_TextChanged);
+			this.ReferenceReversePropertyname.TextChanged += new System.EventHandler(this.ReferenceReversePropertyname_TextChanged);
 			// 
 			// label7
 			// 
@@ -405,6 +415,17 @@
 			this.ReferenceProperties.TabIndex = 0;
 			this.ReferenceProperties.TabStop = false;
 			this.ReferenceProperties.Text = "Reference properties";
+			// 
+			// SwapButton
+			// 
+			this.SwapButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.SwapButton.Enabled = false;
+			this.SwapButton.Location = new System.Drawing.Point(216, 120);
+			this.SwapButton.Name = "SwapButton";
+			this.SwapButton.Size = new System.Drawing.Size(112, 20);
+			this.SwapButton.TabIndex = 31;
+			this.SwapButton.Text = "Swap parent - child";
+			this.SwapButton.UseVisualStyleBackColor = true;
 			// 
 			// ReferenceType
 			// 
@@ -676,27 +697,6 @@
 			// errorProvider1
 			// 
 			this.errorProvider1.ContainerControl = this;
-			// 
-			// label15
-			// 
-			label15.AutoSize = true;
-			label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			label15.Location = new System.Drawing.Point(8, 88);
-			label15.Name = "label15";
-			label15.Size = new System.Drawing.Size(284, 12);
-			label15.TabIndex = 23;
-			label15.Text = "The parent column value will be transfered to the child before commit";
-			// 
-			// SwapButton
-			// 
-			this.SwapButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.SwapButton.Enabled = false;
-			this.SwapButton.Location = new System.Drawing.Point(216, 120);
-			this.SwapButton.Name = "SwapButton";
-			this.SwapButton.Size = new System.Drawing.Size(112, 20);
-			this.SwapButton.TabIndex = 31;
-			this.SwapButton.Text = "Swap parent - child";
-			this.SwapButton.UseVisualStyleBackColor = true;
 			// 
 			// DataClassCustomizer
 			// 

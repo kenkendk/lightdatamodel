@@ -231,6 +231,23 @@ namespace Datamodel.UnitTest
 			int np = fetcher.GetObjects<Project>().Length;
 			int nv = fetcher.GetObjects<TestView>().Length;
 			if (np != nv) throw new Exception("Bah");
+
+			//test non autoincrementing table
+			TableWithNoAutoincremetion tableno = new TableWithNoAutoincremetion();
+			tableno.ID = "MUFLEBASSE";
+			tableno.Meh = 42;		//answer to the universe
+			fetcher.Add(tableno);
+			fetcher.Commit(tableno);
+			tableno = fetcher.GetObjectById<TableWithNoAutoincremetion>("MUFLEBASSE");
+			if (tableno == null || tableno.Meh != 42) throw new Exception("Bah");
+			tableno.ID = "YAKKATYKKY";
+			fetcher.Commit(tableno);
+			tableno = fetcher.GetObjectById<TableWithNoAutoincremetion>("YAKKATYKKY");
+			if (tableno == null || tableno.Meh != 42) throw new Exception("Bah");
+			fetcher.DeleteObject(tableno);
+			tableno = fetcher.GetObjectById<TableWithNoAutoincremetion>("YAKKATYKKY");
+			if (tableno != null) throw new Exception("Bah");
+		
 		}
 
 		public static void TestCache()
@@ -405,6 +422,23 @@ namespace Datamodel.UnitTest
 			int np = fetcher.GetObjects<Project>().Length;
 			int nv = fetcher.GetObjects<TestView>().Length;
 			if (np != nv) throw new Exception("Bah");
+
+			//test non autoincrementing table
+			TableWithNoAutoincremetion tableno = new TableWithNoAutoincremetion();
+			tableno.ID = "MUFLEBASSE";
+			tableno.Meh = 42;		//answer to the universe
+			fetcher.Add(tableno);
+			fetcher.Commit(tableno);
+			tableno = fetcher.GetObjectById<TableWithNoAutoincremetion>("MUFLEBASSE");
+			if (tableno == null || tableno.Meh != 42) throw new Exception("Bah");
+			tableno.ID = "YAKKATYKKY";
+			fetcher.Commit(tableno);
+			tableno = fetcher.GetObjectById<TableWithNoAutoincremetion>("YAKKATYKKY");
+			if (tableno == null || tableno.Meh != 42) throw new Exception("Bah");
+			fetcher.DeleteObject(tableno);
+			fetcher.CommitAll();
+			tableno = fetcher.GetObjectById<TableWithNoAutoincremetion>("YAKKATYKKY");
+			if (tableno != null) throw new Exception("Bah");
 		}
 
 		public static void TestQueryModel(IDbConnection con)
@@ -824,6 +858,12 @@ namespace Datamodel.UnitTest
 			//    throw new Exception("Failed to actually remove item");
 
 			p = (Project)hub.Add(new Project());
+			if (hub.GetObjectById<Note>(1) == null)
+			{
+				Note newnote1 = new Note();
+				newnote1.ID = 1;
+				hub.Add(newnote1);
+			}
 			p.ProjectNoteID = 1;
 			if (p.ProjectNote == null)
 				throw new Exception("Failed to set relation through ID update");

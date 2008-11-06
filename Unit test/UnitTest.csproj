@@ -92,7 +92,7 @@
       <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
     </ProjectReference>
     <ProjectReference Include="Datamodel\UnitTest.Datamodel.csproj">
-      <Project>{D8FAE879-F4A2-4E81-9B36-AED0D824C265}</Project>
+      <Project>{40498004-BC1F-4DA4-885D-3E2D82F2179E}</Project>
       <Name>UnitTest.Datamodel</Name>
     </ProjectReference>
   </ItemGroup>
