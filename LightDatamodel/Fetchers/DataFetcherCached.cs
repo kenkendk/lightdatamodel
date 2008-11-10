@@ -1041,7 +1041,9 @@ namespace System.Data.LightDatamodel
 		public virtual object[] GetObjectsByIndex(Type type, string indexname, object indexvalue)
 		{
 			//First search DB ... the loadreducer will prevent multiple searches
-			GetObjects(type, m_mappings[type][indexname].Databasefield + "=?", indexvalue);
+			//GetObjects(type, m_mappings[type][indexname].Databasefield + "=?", indexvalue);	//this will evaluate whole cache
+			QueryModel.Operation op = QueryModel.Parser.ParseQuery(m_mappings[type][indexname].Databasefield + "=?", indexvalue);
+			if (!HasLoaded(type, op)) InsertObjectsInCache(LoadObjects(type, op));
 
 			//search cache
 			Array objs = null;
