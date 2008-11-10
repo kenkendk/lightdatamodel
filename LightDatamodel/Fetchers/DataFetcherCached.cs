@@ -171,6 +171,7 @@ namespace System.Data.LightDatamodel
 				ICollection<IDataClass> list = m_list[type][indexname].Items[indexvalue];
 				IDataClass[] ret = (IDataClass[])Array.CreateInstance(type, list == null ? 0 : list.Count);
 				int c = 0;
+				if(list != null)
 				foreach (IDataClass itm in list)
 					ret[c++] = itm;
 				return ret;
