@@ -940,7 +940,7 @@ namespace System.Data.LightDatamodel
 
 			//now we shall wait for the threads to finish
 			for (int i = 0; i < assyncronloaders.Length; i++)
-				if (assyncronloaders[i].Thread.IsAlive) assyncronloaders[i].Thread.Join();
+				assyncronloaders[i].Event.WaitOne();
 
 			//And now! We shall filter the loaded objects into the cache
 			foreach (AssyncronObjectLoader ol in assyncronloaders)
@@ -958,17 +958,18 @@ namespace System.Data.LightDatamodel
 			private DataFetcher m_fetcher;
 			private Type m_typetoload;
 			private object[] m_loadedobjects;
-			private System.Threading.Thread m_thread;
 			private Exception m_exception;
+			private System.Threading.ManualResetEvent m_event;
 
-			public System.Threading.Thread Thread { get { return m_thread; } }
 			public object[] LoadedObjects { get { return m_loadedobjects; } }
 			public Exception Exception { get { return m_exception; } }
 			public Type TypeToLoad { get { return m_typetoload; } }
+			public System.Threading.ManualResetEvent Event { get { return m_event; } }
 
 			public AssyncronObjectLoader(IDataFetcher templatefetcher, Type typetoload)
 			{
 				m_typetoload = typetoload;
+				m_event = new System.Threading.ManualResetEvent(false);
 
 				//make copy of connection, so that we won't interfere with our parent ... MUAHAHAHAHAHAHAH!!!!! HELT STILLE SOM EN NINJA!
 				IDataProvider provider;
@@ -983,11 +984,10 @@ namespace System.Data.LightDatamodel
 
 			public void BeginThread()
 			{
-				m_thread = new System.Threading.Thread(new System.Threading.ThreadStart(this.StartLoad));
-				m_thread.Start();
+				System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(this.StartLoad));
 			}
 
-			private void StartLoad()
+			private void StartLoad(object dummy)
 			{
 				try
 				{
@@ -997,7 +997,7 @@ namespace System.Data.LightDatamodel
 				{
 					m_exception = ex;
 				}
-				System.Threading.Thread.CurrentThread.Abort();	//DIE
+				m_event.Set();
 			}
 		}
 
