@@ -37,10 +37,12 @@ namespace System.Data.LightDatamodel
 
 		public Dictionary<IDataClass, Dictionary<string, ObjectConnection>> ObjectRelationCache { get { return m_objectrelationcache; } }
 
+		[System.Diagnostics.DebuggerDisplay("Name = {Name}")]
 		public class ObjectConnection
 		{
+			public string Name { get { return Relation.Name; } }
 			public TypeConfiguration.ReferenceField Relation;
-			public List<IDataClass> SubObjects = new List<IDataClass>();
+			public SortedList<IDataClass, IDataClass> SubObjects = new SortedList<IDataClass, IDataClass>();
 			public ObjectConnection(TypeConfiguration.ReferenceField relation)
 			{
 				Relation = relation;
@@ -119,7 +121,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		protected virtual IDataClass GetRelatedObjectFromCesspool(string relationkey, IDataClass owner)
 		{
-			if (m_objectrelationcache[owner][relationkey].SubObjects.Count > 0) return m_objectrelationcache[owner][relationkey].SubObjects[0];
+			if (m_objectrelationcache[owner][relationkey].SubObjects.Count > 0) return m_objectrelationcache[owner][relationkey].SubObjects.Values[0];
 			return null;
 		}
 
@@ -136,7 +138,7 @@ namespace System.Data.LightDatamodel
 				ret = (IDataClass[])Array.CreateInstance(m_relations[relationkey].Child.Type, m_objectrelationcache[owner][relationkey].SubObjects.Count);
 			else
 				ret = (IDataClass[])Array.CreateInstance(m_relations[relationkey].Parent.Type, m_objectrelationcache[owner][relationkey].SubObjects.Count);
-			m_objectrelationcache[owner][relationkey].SubObjects.CopyTo(ret, 0);
+			m_objectrelationcache[owner][relationkey].SubObjects.Values.CopyTo(ret, 0);
 			return ret;
 		}
 
@@ -183,13 +185,13 @@ namespace System.Data.LightDatamodel
 			else
 			{
 				//only 1
-				List<IDataClass> c = new List<IDataClass>();
-				c.Add(target);
+				SortedList<IDataClass, IDataClass> c = new SortedList<IDataClass, IDataClass>(1);
+				c.Add(target, target);
 				m_objectrelationcache[owner][relationkey].SubObjects = c;
 
 				//also set the counterpart
-				List<IDataClass> p = new List<IDataClass>();
-				p.Add(owner);
+				SortedList<IDataClass, IDataClass> p = new SortedList<IDataClass, IDataClass>(1);
+				p.Add(owner, owner);
 				m_objectrelationcache[target][relationkey].SubObjects = p;
 
 			}
@@ -201,8 +203,8 @@ namespace System.Data.LightDatamodel
 
 		public void AddRelatedObject(string relationkey, IDataClass owner, IDataClass target)
 		{
-			m_objectrelationcache[owner][relationkey].SubObjects.Add(target);
-			m_objectrelationcache[target][relationkey].SubObjects.Add(owner);
+			if (!m_objectrelationcache[owner][relationkey].SubObjects.ContainsKey(target)) m_objectrelationcache[owner][relationkey].SubObjects.Add(target, target);
+			if (!m_objectrelationcache[target][relationkey].SubObjects.ContainsKey(owner)) m_objectrelationcache[target][relationkey].SubObjects.Add(owner, owner);
 		}
 
 
@@ -237,12 +239,8 @@ namespace System.Data.LightDatamodel
 
 				if (item != null)
 				{
-					//add object
-					m_fetcher.m_objectrelationcache[m_owner][m_relationkey].SubObjects.Add(item);
+					m_fetcher.AddRelatedObject(m_relationkey, m_owner, item);
 					m_combinedlist.Insert(index, item);
-
-					//add reverse
-					m_fetcher.m_objectrelationcache[item][m_relationkey].SubObjects.Add(m_owner);
 				}
 			}
 
@@ -265,11 +263,8 @@ namespace System.Data.LightDatamodel
 
 			public void Add(DATACLASS item)
 			{
-				//add object
-				m_fetcher.m_objectrelationcache[m_owner as IDataClass][m_relationkey].SubObjects.Add(item);
+				m_fetcher.AddRelatedObject(m_relationkey, m_owner, item);
 				m_combinedlist.Add(item);
-				//add reverse
-				m_fetcher.m_objectrelationcache[item as IDataClass][m_relationkey].SubObjects.Add(m_owner);
 			}
 
 			public void Clear()
@@ -286,7 +281,7 @@ namespace System.Data.LightDatamodel
 				}
 
 				//reset column values
-				foreach(IDataClass obj in m_fetcher.m_objectrelationcache[m_owner][m_relationkey].SubObjects)
+				foreach(IDataClass obj in m_fetcher.m_objectrelationcache[m_owner][m_relationkey].SubObjects.Values)
 					if (obj.GetType() == m_fetcher.m_relations[m_relationkey].Child.Type)
 						m_fetcher.m_relations[m_relationkey].ChildField.SetValueWithEvents(obj as DataClassBase, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
 
@@ -362,7 +357,7 @@ namespace System.Data.LightDatamodel
 		{
 			foreach (ObjectConnection rel in m_objectrelationcache[obj].Values)
 			{
-				foreach (IDataClass child in rel.SubObjects)
+				foreach (IDataClass child in rel.SubObjects.Values)
 					m_objectrelationcache[child][rel.Relation.Name].SubObjects.Remove(obj);
 			}
 			m_objectrelationcache.Remove(obj);
@@ -435,31 +430,10 @@ namespace System.Data.LightDatamodel
 			//update IDs
 			UpdateObjectKeys(obj);
 
-#if DEBUG
-			//validate
-			List<IList<IDataClass>> tmp = new List<IList<IDataClass>>();
-			foreach(TypeConfiguration.ReferenceField rel in m_mappings[obj.GetType()].ReferenceFields.Values)
-				tmp.Add(GetRelatedObjects(rel.Name, obj));
-#endif
-
 			base.Commit(obj);
-
-#if DEBUG
-			//validate
-			List<IList<IDataClass>> tmp2 = new List<IList<IDataClass>>();
-			foreach (TypeConfiguration.ReferenceField rel in m_mappings[obj.GetType()].ReferenceFields.Values)
-				tmp2.Add(GetRelatedObjects(rel.Name, obj));
-#endif
 
 			//update IDs again, in case of auto increment
 			if (obj.ObjectState != ObjectStates.Deleted) UpdateObjectKeys(obj);
-
-#if DEBUG
-			//validate
-			List<IList<IDataClass>> tmp3 = new List<IList<IDataClass>>();
-			foreach (TypeConfiguration.ReferenceField rel in m_mappings[obj.GetType()].ReferenceFields.Values)
-				tmp3.Add(GetRelatedObjects(rel.Name, obj));
-#endif
 
 			//remove if needed
 			if (obj.ObjectState == ObjectStates.Deleted) UnregisterObject(obj);

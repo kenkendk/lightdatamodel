@@ -565,7 +565,7 @@ namespace Datamodel.UnitTest
 			if (n.ProjectNotes[0] != p)
 				throw new Exception("Bad relation");
 
-			nd.CommitAll();
+			nd.CommitAll();	
 
 			TestRelationCache(hub);
 
@@ -681,6 +681,8 @@ namespace Datamodel.UnitTest
 			//ng = n.Guid;
 
 			nd.CommitAll();
+
+			TestRelationCache(hub);
 
 			//p = (Project)hub.GetObjectByGuid(pg);
 			//n = (Note)hub.GetObjectByGuid(ng);
@@ -902,9 +904,24 @@ namespace Datamodel.UnitTest
 
 				foreach (DataFetcherWithRelations.ObjectConnection rel in hub.ObjectRelationCache[obj].Values)
 				{
-					foreach (IDataClass child in rel.SubObjects)
-						if (!hub.ObjectRelationCache[child][rel.Relation.Name].SubObjects.Contains(obj)) throw new Exception("Bah");
+					foreach (IDataClass child in rel.SubObjects.Values)
+						if (!hub.ObjectRelationCache[child][rel.Relation.Name].SubObjects.ContainsKey(obj)) throw new Exception("Bah");
+
+					//test for doubles
+					//Dictionary<IDataClass, IDataClass> tmp = new Dictionary<IDataClass, IDataClass>();
+					//foreach (IDataClass child in rel.SubObjects)
+					//{
+					//    try
+					//    {
+					//        tmp.Add(child, child);
+					//    }
+					//    catch
+					//    {
+					//        throw new Exception("Double relation");
+					//    }
+					//}
 				}
+
 			}
 			hub.LocalCache.Lock.ReleaseReaderLock();
 		}
