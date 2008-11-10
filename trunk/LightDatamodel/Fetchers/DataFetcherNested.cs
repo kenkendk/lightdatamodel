@@ -88,7 +88,7 @@ namespace System.Data.LightDatamodel
 		protected override void UpdateObject(object obj)
 		{
 			ObjectTransformer.CopyObject((IDataClass)obj, m_tempobjects[(IDataClass)obj]);
-			CopyRelationsToSourceFetcher((IDataClass)obj, m_tempobjects[(IDataClass)obj]);
+			CopyRelationsToSourceFetcher((IDataClass)obj, m_tempobjects[(IDataClass)obj]);		//should we trigger events here?
 			((DataClassBase)m_tempobjects[(IDataClass)obj]).m_isdirty = false;
 		}
 
@@ -111,7 +111,7 @@ namespace System.Data.LightDatamodel
 			{
 
 				foreach (ObjectConnection rel in sourceManager.ObjectRelationCache[source].Values)
-					foreach (IDataClass obj in sourceManager.ObjectRelationCache[source][rel.Relation.Name].SubObjects)
+					foreach (IDataClass obj in sourceManager.ObjectRelationCache[source][rel.Relation.Name].SubObjects.Values)
 					{
 						IDataClass localcopy = m_originalobjects.ContainsKey(obj) ? m_originalobjects[obj] : null;
 
@@ -125,8 +125,8 @@ namespace System.Data.LightDatamodel
 							HookObject(localcopy);
 							InsertObjectsInCache(localcopy);		//this one differs from LoadObjects
 							CopyRelationsFromSourceFetcher(obj, localcopy);
+							targetManager.AddRelatedObject(rel.Relation.Name, target, localcopy);//???
 						}
-						targetManager.AddRelatedObject(rel.Relation.Name, target, localcopy);
 					}
 			}
 		}
@@ -144,15 +144,15 @@ namespace System.Data.LightDatamodel
 			{
 				foreach (ObjectConnection rel in sourceManager.ObjectRelationCache[source].Values)
 				{
-					List<IDataClass> sourcerelations = sourceManager.ObjectRelationCache[source][rel.Relation.Name].SubObjects;
-					List<IDataClass> targetrelations = targetManager.ObjectRelationCache[target][rel.Relation.Name].SubObjects;
+					SortedList<IDataClass, IDataClass> sourcerelations = sourceManager.ObjectRelationCache[source][rel.Relation.Name].SubObjects;
+					SortedList<IDataClass, IDataClass> targetrelations = targetManager.ObjectRelationCache[target][rel.Relation.Name].SubObjects;
 
 					//Now, MERGE!!! ..... wrrrrrnnnnn cruncy cruncy ... actually, let's just overwrite it
 					targetrelations.Clear();
-					foreach (IDataClass obj in sourcerelations)
+					foreach (IDataClass obj in sourcerelations.Values)
 					{
-						if (!m_tempobjects.ContainsKey(obj)) Commit(obj);
-						targetManager.AddRelatedObject(rel.Relation.Name, target, m_tempobjects[obj]);
+						if (!m_tempobjects.ContainsKey(obj)) Commit(obj);	//relations will be copied here
+						else targetManager.AddRelatedObject(rel.Relation.Name, target, m_tempobjects[obj]);
 					}
 				}
 			}
