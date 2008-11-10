@@ -446,6 +446,15 @@ namespace Datamodel.UnitTest
 			fetcher.RefreshObject(p1);		//refresing a non cached object should cache it
 			p1 = fetcher.GetObjectFromCacheById<Project>(p1.ID);
 			if (p1 == null) throw new Exception("Bah!");
+
+			//test the assyncron loading
+			fetcher.LoadAndCacheObjects(typeof(TableWithNoAutoincremetion), typeof(Project), typeof(Note), typeof(Registration));
+			p1 = fetcher.GetObjectFromCacheById<Project>(p1.ID);
+			if (p1 == null) throw new Exception("Bah!");
+			fetcher.ClearCache();
+			fetcher.LoadAndCacheObjects(typeof(TableWithNoAutoincremetion), typeof(Project), typeof(Note), typeof(Registration));
+			p1 = fetcher.GetObjectFromCacheById<Project>(p1.ID);
+			if (p1 == null) throw new Exception("Bah!");
 		}
 
 		public static void TestQueryModel(IDbConnection con)
@@ -892,6 +901,29 @@ namespace Datamodel.UnitTest
 			p.ProjectNoteID = -1;
 			if (p.ProjectNote != null)
 				throw new Exception("Failed to set relation through ID update");
+
+			Note n1 = hub.GetObjects<Note>()[0];
+			p.ProjectNoteID = n1.ID;
+			hub.CommitAll();
+			if (p.ProjectNote == null) throw new Exception("Failed to set relation through ID update");
+
+			//test the assyncron loading
+			hub.LoadAndCacheObjects(typeof(TableWithNoAutoincremetion), typeof(Project), typeof(Note), typeof(Registration));
+			p = hub.GetObjectFromCacheById<Project>(p.ID);
+			if (p == null || p.ProjectNote == null) throw new Exception("Bah!");
+			hub.ClearCache();
+			hub.LoadAndCacheObjects(typeof(TableWithNoAutoincremetion), typeof(Project), typeof(Note), typeof(Registration));
+			p = hub.GetObjectFromCacheById<Project>(p.ID);
+			if (p == null || p.ProjectNote == null) throw new Exception("Bah!");
+
+			nd = new DataFetcherNested(hub);
+			nd.LoadAndCacheObjects(typeof(TableWithNoAutoincremetion), typeof(Project), typeof(Note), typeof(Registration));
+			p = nd.GetObjectFromCacheById<Project>(p.ID);
+			if (p == null || p.ProjectNote == null) throw new Exception("Bah!");
+			nd.ClearCache();
+			nd.LoadAndCacheObjects(typeof(TableWithNoAutoincremetion), typeof(Project), typeof(Note), typeof(Registration));
+			p = nd.GetObjectFromCacheById<Project>(p.ID);
+			if (p == null || p.ProjectNote == null) throw new Exception("Bah!");
 
 		}
 

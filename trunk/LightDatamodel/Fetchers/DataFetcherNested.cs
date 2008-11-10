@@ -53,24 +53,26 @@ namespace System.Data.LightDatamodel
 		protected override object[] LoadObjects(Type type, QueryModel.Operation op)
 		{
 			object[] tmp = m_baseFetcher.GetObjects(type, op);
-			object[] res = (object[])Array.CreateInstance(type, tmp.Length);
 			for (int i = 0; i < tmp.Length; i++)
-			{
-				if (m_originalobjects.ContainsKey(tmp[i] as IDataClass)) res[i] = m_originalobjects[tmp[i] as IDataClass];
-				else
-				{
-					//create local copy
-					IDataClass localcopy = (IDataClass)Activator.CreateInstance(tmp[i].GetType());
-					m_originalobjects.Add(tmp[i] as IDataClass, localcopy as IDataClass);
-					m_tempobjects.Add(localcopy as IDataClass, tmp[i] as IDataClass);
-					ObjectTransformer.CopyObject(tmp[i] as IDataClass, localcopy as IDataClass);
-					HookObject(localcopy as IDataClass);
-					res[i] = localcopy;
-					CopyRelationsFromSourceFetcher(tmp[i] as IDataClass, localcopy);
-				}
-			}
+			    tmp[i] = ConvertBaseObject(tmp[i] as IDataClass);
 
-			return res;
+			//they will be hooked later on
+
+			return tmp;
+		}
+
+		private IDataClass ConvertBaseObject(IDataClass obj)
+		{
+			if (m_originalobjects.ContainsKey(obj)) return m_originalobjects[obj];
+			else
+			{
+				IDataClass localcopy = (IDataClass)Activator.CreateInstance(obj.GetType());
+				m_originalobjects.Add(obj, localcopy);
+				m_tempobjects.Add(localcopy, obj);
+				ObjectTransformer.CopyObject(obj, localcopy);
+				CopyRelationsFromSourceFetcher(obj, localcopy);
+				return localcopy;
+			}
 		}
 
 		protected override void InsertObject(object obj)
@@ -118,14 +120,10 @@ namespace System.Data.LightDatamodel
 						//create copy
 						if (localcopy == null)
 						{
-							localcopy = (IDataClass)Activator.CreateInstance(obj.GetType());
-							m_originalobjects.Add(obj, localcopy);
-							m_tempobjects.Add(localcopy, obj);
-							ObjectTransformer.CopyObject(obj, localcopy);
-							HookObject(localcopy);
+							localcopy = ConvertBaseObject(obj);
+							HookObject(localcopy);					//this one differs from LoadObjects
 							InsertObjectsInCache(localcopy);		//this one differs from LoadObjects
-							CopyRelationsFromSourceFetcher(obj, localcopy);
-							targetManager.AddRelatedObject(rel.Relation.Name, target, localcopy);//???
+							targetManager.AddRelatedObject(rel.Relation.Name, target, localcopy);
 						}
 					}
 			}
