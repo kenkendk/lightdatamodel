@@ -38,7 +38,7 @@ namespace System.Data.LightDatamodel
 		public event DataConnectionEventHandler AfterDataConnection;
 
 		public IDataProvider Provider { get { return m_provider; } }
-		public TypeConfiguration Mappings { get { return m_mappings; } }
+		public TypeConfiguration Mappings { get { return m_mappings; } set { m_mappings = value; } }
 
 		public DataFetcher(IDataProvider provider)
 		{

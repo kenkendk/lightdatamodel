@@ -917,6 +917,90 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
+		/// This will assyncronly load and cache the given types, in a safe way
+		/// </summary>
+		/// <param name="types"></param>
+		public virtual void LoadAndCacheObjects(params Type[] types)
+		{
+			if (types == null || types.Length == 0) return;
+
+			//investigate types
+			List<Type> typestoload = new List<Type>();
+			foreach (Type type in types)
+				if (!HasLoaded(type, new QueryModel.Operation(QueryModel.Operators.NOP))) typestoload.Add(type);
+			if (typestoload.Count == 0) return;
+
+			//start your threadings!
+			AssyncronObjectLoader[] assyncronloaders = new AssyncronObjectLoader[typestoload.Count];
+			for (int i = 0; i < typestoload.Count; i++)
+				assyncronloaders[i] = new AssyncronObjectLoader(this, typestoload[i]);
+			for (int i = 0; i < assyncronloaders.Length; i++)
+				assyncronloaders[i].BeginThread();
+
+			//now we shall wait for the threads to finish
+			for (int i = 0; i < assyncronloaders.Length; i++)
+				if (assyncronloaders[i].Thread.IsAlive) assyncronloaders[i].Thread.Join();
+
+			//And now! We shall filter the loaded objects into the cache
+			foreach (AssyncronObjectLoader ol in assyncronloaders)
+				if (ol.Exception != null) throw new Exception("Couldn't load type " + ol.TypeToLoad.Name + "\nError: " + ol.Exception.Message);
+				else InsertObjectsInCache(ol.LoadedObjects);
+
+			//and done
+		}
+
+		/// <summary>
+		/// This will assyncronly load some given objects (used by LoadAndCacheObjects)
+		/// </summary>
+		private class AssyncronObjectLoader
+		{
+			private DataFetcher m_fetcher;
+			private Type m_typetoload;
+			private object[] m_loadedobjects;
+			private System.Threading.Thread m_thread;
+			private Exception m_exception;
+
+			public System.Threading.Thread Thread { get { return m_thread; } }
+			public object[] LoadedObjects { get { return m_loadedobjects; } }
+			public Exception Exception { get { return m_exception; } }
+			public Type TypeToLoad { get { return m_typetoload; } }
+
+			public AssyncronObjectLoader(IDataFetcher templatefetcher, Type typetoload)
+			{
+				m_typetoload = typetoload;
+
+				//make copy of connection, so that we won't interfere with our parent ... MUAHAHAHAHAHAHAH!!!!! HELT STILLE SOM EN NINJA!
+				IDataProvider provider;
+				provider = (IDataProvider)Activator.CreateInstance(templatefetcher.Provider.GetType());
+				provider.Connection = (IDbConnection)Activator.CreateInstance(templatefetcher.Provider.Connection.GetType());
+				provider.ConnectionString = templatefetcher.Provider.ConnectionString;
+				m_fetcher = new DataFetcher(provider);
+
+				//also copy the type mappings ... CHEATER!!!
+				m_fetcher.Mappings = templatefetcher.Mappings;		//this will be a shared resource then. Beware.
+			}
+
+			public void BeginThread()
+			{
+				m_thread = new System.Threading.Thread(new System.Threading.ThreadStart(this.StartLoad));
+				m_thread.Start();
+			}
+
+			private void StartLoad()
+			{
+				try
+				{
+					m_loadedobjects = m_fetcher.GetObjects(m_typetoload);
+				}
+				catch (Exception ex)
+				{
+					m_exception = ex;
+				}
+				System.Threading.Thread.CurrentThread.Abort();	//DIE
+			}
+		}
+
+		/// <summary>
 		/// This will retrive an object, starting with a search in the indexed cache
 		/// </summary>
 		/// <param name="type"></param>
