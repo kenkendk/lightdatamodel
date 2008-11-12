@@ -49,6 +49,7 @@ namespace System.Data.LightDatamodel
 		int GetColumnStringLength(string tablename, string column);
 
 		string ConnectionString { get;set;}
+		string OriginalConnectionString { get; }
 		IDbConnection Connection { get;set; }
 		void BeginTransaction(Guid id);
 		void CommitTransaction(Guid id);

@@ -91,6 +91,7 @@ namespace System.Data.LightDatamodel
 			}
 
 			m_connection = new SqlConnection(connectionstring);
+			m_originalconnectionstring = connectionstring;
 		}
 
 		public MSSQLDataProvider() : this("")

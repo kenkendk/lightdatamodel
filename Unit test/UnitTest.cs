@@ -293,11 +293,11 @@ namespace Datamodel.UnitTest
 
 				Project p = (Project)test[typeof(Project), "ID", 1];
 
-				test.RemoveObject(typeof(Project), "ID", 1, p);
+				test.RemoveObjectFromIndex(typeof(Project), "ID", 1, p);
 				if (test.Count != 5) throw new Exception("Bah!");
 
 				p = (Project)test[typeof(Project), "ID", 4];
-				test.RemoveObject(typeof(Project), "ID", 4, p);
+				test.RemoveObjectFromIndex(typeof(Project), "ID", 4, p);
 				if (test.Count != 4) throw new Exception("Bah!");
 
 				c = 0;
@@ -455,6 +455,25 @@ namespace Datamodel.UnitTest
 			fetcher.LoadAndCacheObjects(typeof(TableWithNoAutoincremetion), typeof(Project), typeof(Note), typeof(Registration));
 			p1 = fetcher.GetObjectFromCacheById<Project>(p1.ID);
 			if (p1 == null) throw new Exception("Bah!");
+
+			//test delete from index (note has index on NoteText)
+			n1 = new Note();
+			n1.NoteText = "aaa";
+			fetcher.Add(n1);
+			n1 = new Note();
+			n1.NoteText = "aaa";
+			fetcher.Add(n1);
+			n1 = new Note();
+			n1.NoteText = "aaa";
+			fetcher.Add(n1);
+			fetcher.CommitAll();
+			fetcher.ClearCache();
+			Note[] notes = fetcher.GetObjectsByIndex<Note>("NoteText", "aaa");
+			if (notes.Length != 3) throw new Exception("Bah");
+			fetcher.DeleteObject(notes[0]);
+			notes = fetcher.GetObjectsByIndex<Note>("NoteText", "aaa");
+			if (notes.Length != 2) throw new Exception("Bah");
+
 		}
 
 		public static void TestQueryModel(IDbConnection con)

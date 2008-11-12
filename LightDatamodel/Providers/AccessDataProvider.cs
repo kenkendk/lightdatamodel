@@ -79,6 +79,7 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_connection = new OleDb.OleDbConnection(connectionstring);
+				m_originalconnectionstring = connectionstring;
 			}
 			catch (Exception ex)
 			{

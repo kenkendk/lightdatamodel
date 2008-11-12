@@ -94,12 +94,13 @@ namespace System.Data.LightDatamodel
 				throw new Exception("Cannot find a suitable SQLite provider, try including the SQLite dll (System.Data.SQLite.dll)\n or manually set the connection type System.Data.LightDataModel.SQLiteDataProvider.SQLiteConnectionType = typeof(System.Data.SQLite.SQLiteConnection)");
 
             m_connection = (IDbConnection)Activator.CreateInstance(SQLiteConnectionType, new object[] {connectionstring});
-
+			m_originalconnectionstring = connectionstring;
 		}
 
 		public SQLiteDataProvider(IDbConnection cmd)
 		{
 			m_connection = cmd;
+			m_originalconnectionstring = cmd.ConnectionString;
 		}
 
         public override bool IsAutoIncrement(string tablename, string column)
