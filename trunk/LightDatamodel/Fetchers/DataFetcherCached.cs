@@ -742,7 +742,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass
 		{
-			return (DATACLASS[])GetObjectFromCache(typeof(DATACLASS), query);
+			return (DATACLASS[])(Array)GetObjectsFromCache(typeof(DATACLASS), query);
 		}
 
 		/// <summary>
