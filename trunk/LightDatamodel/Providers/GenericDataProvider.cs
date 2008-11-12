@@ -30,6 +30,7 @@ namespace System.Data.LightDatamodel
 	{
 		protected IDbConnection m_connection;
 		protected IDataFetcher m_parent;
+		protected string m_originalconnectionstring;
 
 		public IDbConnection Connection
 		{
@@ -41,6 +42,14 @@ namespace System.Data.LightDatamodel
 		{
 			get { return m_parent; }
 			set { m_parent = value; }
+		}
+
+		/// <summary>
+		/// The connectionstring will be obscured when opened by eg. SQL Server
+		/// </summary>
+		public string OriginalConnectionString
+		{
+			get { return m_originalconnectionstring; }
 		}
 
         private class SQLFilterBuilder : QueryModel.OperationOrParameter

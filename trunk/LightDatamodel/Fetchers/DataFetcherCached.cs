@@ -99,7 +99,7 @@ namespace System.Data.LightDatamodel
 #if DEBUG
 				if (!Lock.IsWriterLockHeld) throw new Exception("This will need lock");
 #endif
-				RemoveObject(obj.GetType(), indexname, oldvalue, (IDataClass)obj);
+				RemoveObjectFromIndex(obj.GetType(), indexname, oldvalue, (IDataClass)obj);		//only removes from 1 index
 				Add(obj.GetType(), indexname, newvalue, (IDataClass)obj);
 			}
 
@@ -344,13 +344,13 @@ namespace System.Data.LightDatamodel
 			//}
 
 			/// <summary>
-			/// This is used for removing an object. Will not remove from Deleted
+			/// This is used for removing an object. Will not remove from Deleted. Will only remove from 1 index
 			/// </summary>
 			/// <param name="type"></param>
 			/// <param name="indexname"></param>
 			/// <param name="indexvalue"></param>
 			/// <returns></returns>
-			public bool RemoveObject(Type type, string indexname, object indexvalue, IDataClass item)
+			public bool RemoveObjectFromIndex(Type type, string indexname, object indexvalue, IDataClass item)
 			{
 #if DEBUG
 				if (!Lock.IsWriterLockHeld) throw new Exception("This will need lock");
@@ -660,9 +660,7 @@ namespace System.Data.LightDatamodel
 			{
 				m_cache.Lock.AcquireWriterLock(-1);
 				foreach (TypeConfiguration.MappedField index in m_mappings[obj.GetType()].IndexFields)
-				{
-					m_cache.RemoveObject(obj.GetType(), index.Databasefield, index.Field.GetValue(obj), obj);
-				}
+				    m_cache.RemoveObjectFromIndex(obj.GetType(), index.Databasefield, index.Field.GetValue(obj), obj);
 				m_cache.DeletedObjects.Remove(obj);		//it could be a deleted object
 			}
 			finally
@@ -873,8 +871,10 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_cache.Lock.AcquireWriterLock(-1);
-				bool removed = m_cache.RemoveObject(item.GetType(), m_mappings[item.GetType()].PrimaryKey.Databasefield, m_mappings[item.GetType()].PrimaryKey.Field.GetValue(obj), obj);
-				if (removed && obj.ObjectState != ObjectStates.New)	//only add object 1 time
+				bool removed = true;
+				foreach (TypeConfiguration.MappedField index in m_mappings[obj.GetType()].IndexFields)
+					removed = removed & m_cache.RemoveObjectFromIndex(obj.GetType(), index.Databasefield, index.Field.GetValue(obj), obj);
+				if (obj.ObjectState != ObjectStates.New)	//only add object 1 time
 				{
 					//check if it's already in delete que
 					QueryModel.Operation op = QueryModel.Parser.ParseQuery("GetType.FullName = ? AND " + m_mappings[item.GetType()].PrimaryKey.Property.Name + " = ?", item.GetType().FullName, m_mappings[item.GetType()].PrimaryKey.Field.GetValue(item));
@@ -975,7 +975,7 @@ namespace System.Data.LightDatamodel
 				IDataProvider provider;
 				provider = (IDataProvider)Activator.CreateInstance(templatefetcher.Provider.GetType());
 				provider.Connection = (IDbConnection)Activator.CreateInstance(templatefetcher.Provider.Connection.GetType());
-				provider.ConnectionString = templatefetcher.Provider.ConnectionString;
+				provider.ConnectionString = templatefetcher.Provider.OriginalConnectionString;
 				m_fetcher = new DataFetcher(provider);
 
 				//also copy the type mappings ... CHEATER!!!
