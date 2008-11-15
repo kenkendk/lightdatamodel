@@ -100,6 +100,13 @@
     <Compile Include="Fetchers\DataFetcherCached.cs" />
     <Compile Include="Fetchers\DataFetcherNested.cs" />
     <Compile Include="Fetchers\DataFetcherWithRelations.cs" />
+    <Compile Include="QueryModel\Compare and Sort\Compare.cs" />
+    <Compile Include="QueryModel\Compare and Sort\Sorting.cs" />
+    <Compile Include="QueryModel\Operations\Enums.cs" />
+    <Compile Include="QueryModel\Operations\Operation.cs" />
+    <Compile Include="QueryModel\Operations\OperationOrParameter.cs" />
+    <Compile Include="QueryModel\Operations\Parameter.cs" />
+    <Compile Include="QueryModel\Parser\Parser.cs" />
     <Compile Include="Providers\AccessDataProvider.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -112,7 +119,7 @@
     </Compile>
     <Compile Include="Utilities\MultiDictionary.cs" />
     <Compile Include="Utilities\ObjectTransformer.cs" />
-    <Compile Include="Utilities\QueryModel.cs" />
+    <Compile Include="QueryModel\Query.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
