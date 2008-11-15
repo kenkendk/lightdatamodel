@@ -604,8 +604,7 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_cache.Lock.AcquireReaderLock(-1);
-				object[] ret = operation.EvaluateList(m_cache.GetObjects(type));
-				return ret.Length == 0 ? (object[])Array.CreateInstance(type, 0) : ret;		//return correct type
+				return (object[])Query.SearchLinear(operation, m_cache.GetObjects(type)).ToArray(type);
 			}
 			finally
 			{
@@ -717,7 +716,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
 		{
-			return GetObjectsFromCache<DATACLASS>(QueryModel.Parser.ParseQuery(filter, parameters)); //this has lock
+			return GetObjectsFromCache<DATACLASS>(Query.Parse(filter, parameters)); //this has lock
 		}
 
 
@@ -769,8 +768,7 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_cache.Lock.AcquireReaderLock(-1);
-				object[] ret = query.EvaluateList(m_cache.GetObjects(type));
-				return ret.Length == 0 ? (object[])Array.CreateInstance(type, 0) : ret;	//return correct type
+				return (object[])Query.SearchLinear(query, m_cache.GetObjects(type)).ToArray(type);
 			}
 			finally
 			{
@@ -801,7 +799,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public object[] GetObjectsFromCache(Type type, string filter, params object[] parameters)
 		{
-			return GetObjectsFromCache(type, QueryModel.Parser.ParseQuery(filter, parameters)); //this has lock
+			return GetObjectsFromCache(type, Query.Parse(filter, parameters)); //this has lock
 		}
 
 		/// <summary>
@@ -831,8 +829,22 @@ namespace System.Data.LightDatamodel
 						DataClassBase dbitem = (DataClassBase)item;
 						if (m_cache[item.GetType(), m_mappings[dbitem.GetType()].PrimaryKey.Databasefield, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] == null)
 						{
-							QueryModel.Operation opdeleted = QueryModel.Parser.ParseQuery("GetType.FullName = ? AND " + m_mappings[dbitem.GetType()].PrimaryKey.Property.Name + " = ?", item.GetType().FullName, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem));
-							if (opdeleted.EvaluateList(m_cache.DeletedObjects).Length > 0) continue;
+
+                            //Manual build of the query:
+                            //Query.Parse("(GetType() IS ?) AND (" + m_mappings[dbitem.GetType()].PrimaryKey.Property.Name + " = ?)", item.GetType(), m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem));
+                            QueryModel.Operation opdeleted =
+                                Query.And(
+                                    Query.Is(
+                                        Query.FunctionCall("GetType"),
+                                        Query.Value(item.GetType())
+                                    ),
+                                    Query.Equal(
+                                        Query.Property(m_mappings[dbitem.GetType()].PrimaryKey.Property.Name),
+                                        Query.Value(m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem))
+                                    )
+                                );
+                                
+							if (Query.FindFirst(opdeleted, m_cache.DeletedObjects) != null) continue;
 
 							dbitem.m_state = ObjectStates.Default;
 							dbitem.m_isdirty = false;
@@ -876,10 +888,22 @@ namespace System.Data.LightDatamodel
 					removed = removed & m_cache.RemoveObjectFromIndex(obj.GetType(), index.Databasefield, index.Field.GetValue(obj), obj);
 				if (obj.ObjectState != ObjectStates.New)	//only add object 1 time
 				{
-					//check if it's already in delete que
-					QueryModel.Operation op = QueryModel.Parser.ParseQuery("GetType.FullName = ? AND " + m_mappings[item.GetType()].PrimaryKey.Property.Name + " = ?", item.GetType().FullName, m_mappings[item.GetType()].PrimaryKey.Field.GetValue(item));
-					object[] o = op.EvaluateList(m_cache.DeletedObjects);
-					if (o == null || o.Length == 0) m_cache.DeletedObjects.Add(obj);
+					//check if it's already in delete queue
+
+                    //Manual build of
+                    //Query.Parse("(GetType() IS ?) AND (" + m_mappings[item.GetType()].PrimaryKey.Property.Name + " = ?)", item.GetType(), m_mappings[item.GetType()].PrimaryKey.Field.GetValue(item));
+                    QueryModel.Operation op =
+                        Query.And(
+                            Query.Is(
+                                Query.FunctionCall("GetType"),
+                                Query.Value(item.GetType())
+                            ),
+                            Query.Equal(
+                                Query.Property(m_mappings[item.GetType()].PrimaryKey.Property.Name),
+                                Query.Value(m_mappings[item.GetType()].PrimaryKey.Field.GetValue(item))
+                            )
+                        );
+					if (Query.FindFirst(op, m_cache.DeletedObjects) == null) m_cache.DeletedObjects.Add(obj);
 				}
 				(obj as DataClassBase).m_state = ObjectStates.Deleted;
 			}
@@ -903,7 +927,7 @@ namespace System.Data.LightDatamodel
 			//load if needed
 			if (m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id] == null)		//will these need locks?
 			{
-				QueryModel.Operation op = QueryModel.Parser.ParseQuery(m_mappings[type].PrimaryKey.Databasefield + "=?", id);
+				QueryModel.Operation op = Query.Equal(Query.Property(m_mappings[type].PrimaryKey.Databasefield), Query.Value(id));
 				if (!HasLoaded(type, op))
 				{
 					object[] items = LoadObjects(type, op);
@@ -1042,7 +1066,7 @@ namespace System.Data.LightDatamodel
 		{
 			//First search DB ... the loadreducer will prevent multiple searches
 			//GetObjects(type, m_mappings[type][indexname].Databasefield + "=?", indexvalue);	//this will evaluate whole cache
-			QueryModel.Operation op = QueryModel.Parser.ParseQuery(m_mappings[type][indexname].Databasefield + "=?", indexvalue);
+			QueryModel.Operation op = Query.Equal(Query.Property(m_mappings[type][indexname].Databasefield), Query.Value(indexvalue));
 			if (!HasLoaded(type, op)) InsertObjectsInCache(LoadObjects(type, op));
 
 			//search cache

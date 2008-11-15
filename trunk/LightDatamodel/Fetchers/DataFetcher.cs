@@ -184,7 +184,7 @@ namespace System.Data.LightDatamodel
 		/// <returns>All matching objects</returns>
 		public DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass
 		{
-			return GetObjects<DATACLASS>(QueryModel.Parser.ParseQuery(filter, parameters));
+			return GetObjects<DATACLASS>(Query.Parse(filter, parameters));
 		}
 
 		/// <summary>
@@ -223,7 +223,7 @@ namespace System.Data.LightDatamodel
 		/// <returns>All matching objects</returns>
 		public object[] GetObjects(Type type, string filter, params object[] parameters)
 		{
-			return GetObjects(type, QueryModel.Parser.ParseQuery(filter, parameters));
+			return GetObjects(type, Query.Parse(filter, parameters));
 		}
 
 		/// <summary>
@@ -294,7 +294,7 @@ namespace System.Data.LightDatamodel
 
 			//Fetch From Data source
 			OnBeforeDataConnection(type, DataActions.Fetch);
-            object[] items = LoadObjects(type, QueryModel.Parser.ParseQuery(m_mappings[type].PrimaryKey.Databasefield + "=?", id));
+            object[] items = LoadObjects(type, Query.Equal(Query.Property(m_mappings[type].PrimaryKey.Databasefield), Query.Value(id)));
             if (items == null || items.Length == 0) return null;
 
 			Add((IDataClass)items[0]);
@@ -381,7 +381,7 @@ namespace System.Data.LightDatamodel
 			if(obj.ObjectState == ObjectStates.Deleted) return;
 
 			OnBeforeDataConnection(obj, DataActions.Fetch);
-			object[] items = LoadObjects(obj.GetType(), QueryModel.Parser.ParseQuery(m_mappings[obj.GetType()].PrimaryKey.Databasefield + "=?", m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)));
+			object[] items = LoadObjects(obj.GetType(), Query.Equal(Query.Property(m_mappings[obj.GetType()].PrimaryKey.Databasefield), Query.Value(m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj))));
 			if (items == null || items.Length == 0) throw new NoSuchObjectException("Row (" + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj) + ") from table \"" + obj.GetType().Name + "\" can't be fetched", obj);
 			if (items.Length != 1) throw new Exception("Row (" + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj) + ") from table \"" + obj.GetType().Name + "\" gave " + items.Length.ToString() + " rows");
             ObjectTransformer.CopyObject(items[0], obj);

@@ -487,9 +487,9 @@ namespace Datamodel.UnitTest
 			}
 			hub.CommitAll();
 
-			Operation op1 = new Operation(Operators.GreaterThan, new OperationOrParameter[] { new Parameter("ID", true), new Parameter(0, false) });
-			Operation op2 = new Operation(Operators.LessThan, new OperationOrParameter[] { new Parameter("ID", true), new Parameter(1000, false) });
-			Operation op3 = new Operation(Operators.And, new OperationOrParameter[] { op1, op2 });
+			Operation op1 = Query.GreaterThan(Query.Property("ID"), Query.Value(0));
+			Operation op2 = Query.LessThan(Query.Property("ID"), Query.Value(1000));
+            Operation op3 = Query.And(op1, op2);
 
 			object[] f = hub.GetObjects(typeof(Project), "");
 			foreach (Project p in f)
@@ -504,7 +504,31 @@ namespace Datamodel.UnitTest
 
 			int listlen = f.Length;
 
-			Operation op = Parser.ParseQuery("ID = 5 AND X = \"test\" AND Y = 5.3");
+            //Basic function invocation
+            Operation opy1 = Query.Parse("GetType() Is ?", typeof(string));
+            //Function invocation and use of a property on the result
+            Operation opy2 = Query.Parse("GetType().FullName = ?", typeof(string).FullName);
+            //Longer nesting of the above, the left and right hand side are equvalent
+            Operation opy3 = Query.Parse("GetType().Assembly.GetType().FullName = ?", typeof(string).Assembly.GetType().FullName);
+            //Static function invocation, and use of the this column
+            Operation opy4 = Query.Parse("::System.Convert.ToString(this) = ?", "4");
+            //The left and right hand side are equvalent
+            Operation opy5 = Query.Parse("this.GetType() is GetType()");
+
+            object[] testitems = new object[] { "", 4, 'c' };
+
+            if (opy1.EvaluateList(testitems).Count != 1)
+                throw new Exception("Invalid function call");
+            if (opy2.EvaluateList(testitems).Count != 1)
+                throw new Exception("Invalid function call");
+            if (opy3.EvaluateList(testitems).Count != 3)
+                throw new Exception("Invalid function call");
+            if (opy4.EvaluateList(testitems).Count != 1)
+                throw new Exception("Invalid function call");
+            if (opy5.EvaluateList(testitems).Count != 3)
+                throw new Exception("Invalid function call");
+
+			Operation op = Query.Parse("ID = 5 AND X = \"test\" AND Y = 5.3");
 
 			System.Data.LightDatamodel.QueryModel.Operation opx =
 				new Operation(Operators.In, new OperationOrParameter[] {
@@ -512,50 +536,50 @@ namespace Datamodel.UnitTest
 																		   new Parameter(new Parameter[] { new Parameter(1, false), new Parameter(2, false) }, false),
 																		   new Parameter("Right", true) });
 
-			op = Parser.ParseQuery("ID IN (1,2,3,4,5) ORDER BY ID DESC");
-			if (op.EvaluateList(f).Length != listlen)
+			op = Query.Parse("ID IN (1,2,3,4,5) ORDER BY ID DESC");
+            if (op.EvaluateList(f).Count != listlen)
 				throw new Exception("IN operator failure");
 
-			op = Parser.ParseQuery("ID IN (\"1\",\"2\",\"3\",\"4\",\"5\") ORDER BY ID ASC");
-			if (op.EvaluateList(f).Length != listlen)
+            op = Query.Parse("ID IN (\"1\",\"2\",\"3\",\"4\",\"5\") ORDER BY ID ASC");
+            if (op.EvaluateList(f).Count != listlen)
 				throw new Exception("IN operator failure with strings");
 
-			op = Parser.ParseQuery("ORDER BY ID DESC");
-			if (op.EvaluateList(f).Length != listlen)
+            op = Query.Parse("ORDER BY ID DESC");
+            if (op.EvaluateList(f).Count != listlen)
 				throw new Exception("Missing elements af sorting");
-			op = Parser.ParseQuery("ID BETWEEN ? AND ?", 3, 2);
-			if (op.EvaluateList(f).Length != 2)
+            op = Query.Parse("ID BETWEEN ? AND ?", 3, 2);
+            if (op.EvaluateList(f).Count != 2)
 				throw new Exception("Bad result from the BETWEEN operator");
 
-			op = Parser.ParseQuery("IIF(ID=1,\"1\",\"2\") = 2");
-			if (op.EvaluateList(f).Length != 2)
+            op = Query.Parse("IIF(ID=1,\"1\",\"2\") = 2");
+            if (op.EvaluateList(f).Count != 2)
 				throw new Exception("Bad result from the IIF operator");
 
-			op = Parser.ParseQuery("GetType.FullName = \"" + typeof(Project).FullName + "\" AND ID = 1");
-			if (op.EvaluateList(f).Length != 1)
+            op = Query.Parse("GetType().FullName = \"" + typeof(Project).FullName + "\" AND ID = 1");
+            if (op.EvaluateList(f).Count != 1)
 				throw new Exception("Bad result from the method operator");
 
 			ArrayList l = new ArrayList(f);
 			l.Add("invalid obj");
 
 			//This will break if the evaluation is not lazy
-			op = Parser.ParseQuery("GetType.FullName = \"" + typeof(Project).FullName + "\" AND ID = 1");
-			if (op.EvaluateList(l).Length != 1)
+            op = Query.Parse("GetType().FullName = \"" + typeof(Project).FullName + "\" AND ID = 1");
+            if (op.EvaluateList(l).Count != 1)
 				throw new Exception("Bad result from the lazy method operator");
 
 			ArrayList ids = new ArrayList();
 			ids.Add(1);
 			ids.Add(listlen + 1);
-			op = Parser.ParseQuery("ID IN (?)", ids);
-			if (op.EvaluateList(f).Length != 1)
+            op = Query.Parse("ID IN (?)", ids);
+            if (op.EvaluateList(f).Count != 1)
 				throw new Exception("Bad result from the IN operator with a parameter and a list");
 
-			op = Parser.ParseQuery("ID IN (?)");
-			if (op.EvaluateList(f, ids).Length != 1)
+            op = Query.Parse("ID IN (?)");
+            if (op.EvaluateList(f, ids).Count != 1)
 				throw new Exception("Bad result from the IN operator with a parameter and a list, late bind");
 
-			op = Parser.ParseQuery("(ID IN (?)) OR ID = ?", ids);
-			if (op.EvaluateList(f, 2).Length != 2)
+            op = Query.Parse("(ID IN (?)) OR ID = ?", ids);
+            if (op.EvaluateList(f, 2).Count != 2)
 				throw new Exception("Bad result from the IN operator with a parameter and a list, plus a bind argument");
 
 		}
