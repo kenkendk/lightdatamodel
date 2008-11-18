@@ -968,6 +968,35 @@ namespace Datamodel.UnitTest
 			p = nd.GetObjectFromCacheById<Project>(p.ID);
 			if (p == null || p.ProjectNote == null) throw new Exception("Bah!");
 
+
+			//test lazy added relations
+			DataFetcherWithRelations lazyrelations = new DataFetcherWithRelations(hub.Provider);
+			lazyrelations.AddRelation("Testrelation", typeof(Registration), "NoteID", typeof(Note), "ID");
+			Note lazynote = new Note();
+			lazynote.NoteText = "lazy";
+			lazyrelations.Add(lazynote);
+			Registration lazyreg = new Registration();
+			lazyreg.ActiveAcknowledge = true;
+			lazyrelations.Add(lazyreg);
+			lazyrelations.AddRelatedObject("Testrelation", lazynote, lazyreg);
+			lazyreg = new Registration();
+			lazyreg.ActiveAcknowledge = true;
+			lazyrelations.Add(lazyreg);
+			lazyrelations.AddRelatedObject("Testrelation", lazynote, lazyreg);
+			lazyreg = new Registration();
+			lazyreg.ActiveAcknowledge = true;
+			lazyrelations.Add(lazyreg);
+			lazyrelations.AddRelatedObject("Testrelation", lazynote, lazyreg);
+			if(lazyrelations.GetRelatedObjects<Registration>("Testrelation", lazynote).Count != 3) throw new Exception("Bah!");
+			if (lazyrelations.GetRelatedObject<Note>("Testrelation", lazyreg) != lazynote) throw new Exception("Bah!");
+			lazyrelations.CommitAll();
+			if (lazyrelations.GetRelatedObjects<Registration>("Testrelation", lazynote).Count != 3) throw new Exception("Bah!");
+			if (lazyrelations.GetRelatedObject<Note>("Testrelation", lazyreg) != lazynote) throw new Exception("Bah!");
+			lazyrelations.ClearCache();
+			lazynote = lazyrelations.GetObjectById<Note>(lazynote.ID);
+			lazyreg = lazyrelations.GetObjectById<Registration>(lazyreg.ID);
+			if (lazyrelations.GetRelatedObjects<Registration>("Testrelation", lazynote).Count != 3) throw new Exception("Bah!");
+			if (lazyrelations.GetRelatedObject<Note>("Testrelation", lazyreg) != lazynote) throw new Exception("Bah!");
 		}
 
 		private static void TestRelationCache(DataFetcherWithRelations hub)
@@ -980,7 +1009,7 @@ namespace Datamodel.UnitTest
 				foreach (DataFetcherWithRelations.ObjectConnection rel in hub.ObjectRelationCache[obj].Values)
 				{
 					foreach (IDataClass child in rel.SubObjects.Values)
-						if (!hub.ObjectRelationCache[child][rel.Relation.Name].SubObjects.ContainsKey(obj)) throw new Exception("Bah");
+						if (!hub.ObjectRelationCache[child][rel.Relation.Name].SubObjects.ContainsKey(obj.GetHashCode())) throw new Exception("Bah");
 
 					//test for doubles
 					//Dictionary<IDataClass, IDataClass> tmp = new Dictionary<IDataClass, IDataClass>();
