@@ -28,7 +28,7 @@ namespace System.Data.LightDatamodel
 		/// <summary>
 		/// This is a lookuptable for the relations
 		/// </summary>
-		private Dictionary<string, TypeConfiguration.ReferenceField> m_relations = new Dictionary<string, TypeConfiguration.ReferenceField>();
+		private Dictionary<string, TypeConfiguration.Reference> m_relations = new Dictionary<string, TypeConfiguration.Reference>();
 
 		/// <summary>
 		/// This is a cache for 'loosely' related objects
@@ -41,9 +41,9 @@ namespace System.Data.LightDatamodel
 		public class ObjectConnection
 		{
 			public string Name { get { return Relation.Name; } }
-			public TypeConfiguration.ReferenceField Relation;
-			public SortedList<IDataClass, IDataClass> SubObjects = new SortedList<IDataClass, IDataClass>();
-			public ObjectConnection(TypeConfiguration.ReferenceField relation)
+			public TypeConfiguration.Reference Relation;
+			public SortedList<int, IDataClass> SubObjects = new SortedList<int, IDataClass>();		//hashcode, IDataClass
+			public ObjectConnection(TypeConfiguration.Reference relation)
 			{
 				Relation = relation;
 			}
@@ -58,8 +58,24 @@ namespace System.Data.LightDatamodel
 		private void m_mappings_TypesInitialized(object sender, EventArgs e)
 		{
 			foreach (TypeConfiguration.MappedClass mc in m_mappings)
-				foreach (TypeConfiguration.ReferenceField rf in mc.ReferenceFields.Values)
+				foreach (TypeConfiguration.Reference rf in mc.References.Values)
 					if (!m_relations.ContainsKey(rf.Name)) m_relations.Add(rf.Name, rf);
+		}
+
+		/// <summary>
+		/// This will manually add a relation to the model
+		/// </summary>
+		/// <param name="name"></param>
+		/// <param name="childobject"></param>
+		/// <param name="childcolumn"></param>
+		/// <param name="parentobject"></param>
+		/// <param name="parentcolumn"></param>
+		public void AddRelation(string name, Type childobject, string childcolumn, Type parentobject, string parentcolumn)
+		{
+			TypeConfiguration.Reference r = new TypeConfiguration.Reference(name, m_mappings[childobject].MappedFields[childcolumn], m_mappings[parentobject].MappedFields[parentcolumn], m_mappings[childobject], m_mappings[parentobject]);
+			m_mappings[childobject].References.Add(r.Name, r);
+			m_mappings[parentobject].References.Add(r.Name, r);
+			m_relations.Add(r.Name, r);
 		}
 
 		/// <summary>
@@ -185,13 +201,13 @@ namespace System.Data.LightDatamodel
 			else
 			{
 				//only 1
-				SortedList<IDataClass, IDataClass> c = new SortedList<IDataClass, IDataClass>(1);
-				c.Add(target, target);
+				SortedList<int, IDataClass> c = new SortedList<int, IDataClass>(1);
+				c.Add(target.GetHashCode(), target);
 				m_objectrelationcache[owner][relationkey].SubObjects = c;
 
 				//also set the counterpart
-				SortedList<IDataClass, IDataClass> p = new SortedList<IDataClass, IDataClass>(1);
-				p.Add(owner, owner);
+				SortedList<int, IDataClass> p = new SortedList<int, IDataClass>(1);
+				p.Add(owner.GetHashCode(), owner);
 				m_objectrelationcache[target][relationkey].SubObjects = p;
 
 			}
@@ -203,8 +219,8 @@ namespace System.Data.LightDatamodel
 
 		public void AddRelatedObject(string relationkey, IDataClass owner, IDataClass target)
 		{
-			if (!m_objectrelationcache[owner][relationkey].SubObjects.ContainsKey(target)) m_objectrelationcache[owner][relationkey].SubObjects.Add(target, target);
-			if (!m_objectrelationcache[target][relationkey].SubObjects.ContainsKey(owner)) m_objectrelationcache[target][relationkey].SubObjects.Add(owner, owner);
+			if (!m_objectrelationcache[owner][relationkey].SubObjects.ContainsKey(target.GetHashCode())) m_objectrelationcache[owner][relationkey].SubObjects.Add(target.GetHashCode(), target);
+			if (!m_objectrelationcache[target][relationkey].SubObjects.ContainsKey(owner.GetHashCode())) m_objectrelationcache[target][relationkey].SubObjects.Add(owner.GetHashCode(), owner);
 		}
 
 
@@ -277,7 +293,7 @@ namespace System.Data.LightDatamodel
 						m_fetcher.m_relations[m_relationkey].ChildField.SetValueWithEvents(obj as DataClassBase, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
 
 					//remove
-					m_fetcher.m_objectrelationcache[obj][m_relationkey].SubObjects.Remove(m_owner);
+					m_fetcher.m_objectrelationcache[obj][m_relationkey].SubObjects.Remove(m_owner.GetHashCode());
 				}
 
 				//reset column values
@@ -315,14 +331,14 @@ namespace System.Data.LightDatamodel
 				if (m_combinedlist.Remove(item))
 				{
 					//remove from current
-					m_fetcher.m_objectrelationcache[m_owner][m_relationkey].SubObjects.Remove(item);
+					m_fetcher.m_objectrelationcache[m_owner][m_relationkey].SubObjects.Remove(item.GetHashCode());
 
 					//reset column values
 					if (item.GetType() == m_fetcher.m_relations[m_relationkey].Child.Type)
 						m_fetcher.m_relations[m_relationkey].ChildField.SetValueWithEvents(item as DataClassBase, m_fetcher.m_relations[m_relationkey].ChildField.GetDefaultValue(m_fetcher.m_provider));
 
 					//remove from reverse
-					m_fetcher.m_objectrelationcache[item][m_relationkey].SubObjects.Remove(m_owner);
+					m_fetcher.m_objectrelationcache[item][m_relationkey].SubObjects.Remove(m_owner.GetHashCode());
 
 					//reset column values
 					if (m_owner.GetType() == m_fetcher.m_relations[m_relationkey].Child.Type)
@@ -358,7 +374,7 @@ namespace System.Data.LightDatamodel
 			foreach (ObjectConnection rel in m_objectrelationcache[obj].Values)
 			{
 				foreach (IDataClass child in rel.SubObjects.Values)
-					m_objectrelationcache[child][rel.Relation.Name].SubObjects.Remove(obj);
+					m_objectrelationcache[child][rel.Relation.Name].SubObjects.Remove(obj.GetHashCode());
 			}
 			m_objectrelationcache.Remove(obj);
 		}
@@ -368,7 +384,7 @@ namespace System.Data.LightDatamodel
 			if (!m_objectrelationcache.ContainsKey(obj))
 			{
 				m_objectrelationcache.Add(obj, new Dictionary<string, ObjectConnection>());
-				foreach (TypeConfiguration.ReferenceField r in m_mappings[obj.GetType()].ReferenceFields.Values)
+				foreach (TypeConfiguration.Reference r in m_mappings[obj.GetType()].References.Values)
 					m_objectrelationcache[obj].Add(r.Name, new ObjectConnection(r));
 			}
 		}

@@ -102,7 +102,7 @@ namespace System.Data.LightDatamodel
             private Type m_type;
             private MappedField m_primaryKey;
             private Dictionary<string, MappedField> m_fields;
-            private Dictionary<string, ReferenceField> m_referenceFields;
+            private Dictionary<string, Reference> m_references;
 			private LinkedList<MappedField> m_indexes;
             private string m_viewSql;
 
@@ -151,7 +151,7 @@ namespace System.Data.LightDatamodel
 
 			protected internal void InitializeRelations()
 			{
-				m_referenceFields = new Dictionary<string, ReferenceField>();
+				m_references = new Dictionary<string, Reference>();
 				foreach (MappedField fi in m_fields.Values)
 				{
 					if (GetAttribute<DatabaseField>(fi.Field) != null)
@@ -177,8 +177,8 @@ namespace System.Data.LightDatamodel
 								parentfield = tmp2;
 							}
 
-							ReferenceField newref = new ReferenceField(rel.Name, childfield, parentfield, child, parent);
-							m_referenceFields.Add(rel.Name, newref);
+							Reference newref = new Reference(rel.Name, childfield, parentfield, child, parent);
+							m_references.Add(rel.Name, newref);
 						}
 					}
 				}
@@ -224,7 +224,7 @@ namespace System.Data.LightDatamodel
             /// <summary>
             /// Gets the list of reference fields
             /// </summary>
-            public Dictionary<string, ReferenceField> ReferenceFields { get { return m_referenceFields; }}
+            public Dictionary<string, Reference> References { get { return m_references; }}
         
         }
 
@@ -349,7 +349,7 @@ namespace System.Data.LightDatamodel
         /// <summary>
         /// This class contains mapping information for a relational field
         /// </summary>
-        public class ReferenceField
+        public class Reference
         {
 			private MappedField m_childField;
 			private MappedField m_parentField;
@@ -357,7 +357,7 @@ namespace System.Data.LightDatamodel
 			private MappedClass m_parent;
 			private MappedClass m_child;
 
-			public ReferenceField(string name, MappedField childField, MappedField parentField, MappedClass child, MappedClass parent)
+			public Reference(string name, MappedField childField, MappedField parentField, MappedClass child, MappedClass parent)
 			{
 				m_name = name;
 				m_childField = childField;

@@ -142,8 +142,8 @@ namespace System.Data.LightDatamodel
 			{
 				foreach (ObjectConnection rel in sourceManager.ObjectRelationCache[source].Values)
 				{
-					SortedList<IDataClass, IDataClass> sourcerelations = sourceManager.ObjectRelationCache[source][rel.Relation.Name].SubObjects;
-					SortedList<IDataClass, IDataClass> targetrelations = targetManager.ObjectRelationCache[target][rel.Relation.Name].SubObjects;
+					SortedList<int, IDataClass> sourcerelations = sourceManager.ObjectRelationCache[source][rel.Relation.Name].SubObjects;
+					SortedList<int, IDataClass> targetrelations = targetManager.ObjectRelationCache[target][rel.Relation.Name].SubObjects;
 
 					//Now, MERGE!!! ..... wrrrrrnnnnn cruncy cruncy ... actually, let's just overwrite it
 					targetrelations.Clear();
