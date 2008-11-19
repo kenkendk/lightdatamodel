@@ -253,6 +253,7 @@ namespace System.Data.LightDatamodel
 			if (m_transactions.Count == 5)
 				throw new Exception("Access databases have a limit of 5 nested transactions");
 
+			OpenConnection();
 			IDbCommand cmd = m_connection.CreateCommand();
 			cmd.CommandText = "BEGIN TRANSACTION";
 			cmd.ExecuteNonQuery();

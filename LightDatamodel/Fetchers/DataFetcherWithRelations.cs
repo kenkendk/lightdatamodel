@@ -371,12 +371,15 @@ namespace System.Data.LightDatamodel
 
 		private void UnregisterObject(IDataClass obj)
 		{
-			foreach (ObjectConnection rel in m_objectrelationcache[obj].Values)
+			if(m_objectrelationcache.ContainsKey(obj))
 			{
-				foreach (IDataClass child in rel.SubObjects.Values)
-					m_objectrelationcache[child][rel.Relation.Name].SubObjects.Remove(obj.GetHashCode());
+				foreach (ObjectConnection rel in m_objectrelationcache[obj].Values)
+				{
+					foreach (IDataClass child in rel.SubObjects.Values)
+						m_objectrelationcache[child][rel.Relation.Name].SubObjects.Remove(obj.GetHashCode());
+				}
+				m_objectrelationcache.Remove(obj);
 			}
-			m_objectrelationcache.Remove(obj);
 		}
 
 		private void RegisterObject(IDataClass obj)
@@ -443,16 +446,23 @@ namespace System.Data.LightDatamodel
 
 		public override void Commit(IDataClass obj)
 		{
-			//update IDs
-			UpdateObjectKeys(obj);
+			if (obj.ObjectState != ObjectStates.Deleted)
+			{
+				//update IDs
+				UpdateObjectKeys(obj);
 
-			base.Commit(obj);
+				base.Commit(obj);
 
-			//update IDs again, in case of auto increment
-			if (obj.ObjectState != ObjectStates.Deleted) UpdateObjectKeys(obj);
+				//update IDs again, in case of auto increment
+				UpdateObjectKeys(obj);
+			}
+			else
+			{
+				base.Commit(obj);
 
-			//remove if needed
-			if (obj.ObjectState == ObjectStates.Deleted) UnregisterObject(obj);
+				//remove if needed
+				UnregisterObject(obj);
+			}
 		}
 
 		public override void ClearCache()

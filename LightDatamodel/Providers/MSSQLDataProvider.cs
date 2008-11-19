@@ -245,6 +245,7 @@ namespace System.Data.LightDatamodel
 
 		public override void BeginTransaction(Guid id)
 		{
+			OpenConnection();
 			IDbCommand cmd = m_connection.CreateCommand();
 			cmd.CommandText = "BEGIN TRANSACTION";
 			cmd.ExecuteNonQuery();
