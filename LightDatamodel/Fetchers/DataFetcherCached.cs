@@ -1038,8 +1038,11 @@ namespace System.Data.LightDatamodel
 			IDataClass obj = m_cache[type, indexname, indexvalue];		//will this need lock?
 			if (obj != null) return obj;
 
-			//search DB
-			return GetObject(type, m_mappings[type][indexname].Databasefield + "=?", indexvalue);
+			//check if we have loaded all
+			if (m_loadreducer.ContainsKey(type) && m_loadreducer[type].ContainsKey("")) 
+				return null;
+			else //search DB
+				return GetObject(type, m_mappings[type][indexname].Databasefield + "=?", indexvalue);
 		}
 
 		/// <summary>
