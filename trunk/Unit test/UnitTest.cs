@@ -95,7 +95,12 @@ namespace Datamodel.UnitTest
 			TestRelationsExtended(con);
 			System.Console.WriteLine("" + (System.Environment.TickCount - extendedstart) + " ms");
 
-			System.Console.WriteLine("Done! Whole process took " + (System.Environment.TickCount - start) + " ms");
+            System.Console.WriteLine("Nested fetcher model...");
+            int nestedstart = System.Environment.TickCount;
+            TestNestedFetcher(con);
+            System.Console.WriteLine("" + (System.Environment.TickCount - nestedstart) + " ms");
+            
+            System.Console.WriteLine("Done! Whole process took " + (System.Environment.TickCount - start) + " ms");
 			System.Console.ReadKey();
 		}
 
@@ -319,7 +324,23 @@ namespace Datamodel.UnitTest
 			{
 				test.Lock.ReleaseWriterLock();
 			}
+
 		}
+
+		/// <summary>
+		/// This will test the nested fetcher
+		/// </summary>
+		/// <param name="con"></param>
+        public static void TestNestedFetcher(IDbConnection con)
+        {
+            DataFetcherCached baseFetcher = new DataFetcherCached(new SQLiteDataProvider(con));
+            DataFetcherNested fetcher = new DataFetcherNested(baseFetcher);
+
+            Project p1 = fetcher.Add<Project>();
+            Project p2 = fetcher.Add<Project>();
+
+            fetcher.CommitAll();
+        }
 
 		/// <summary>
 		/// This will test the third layer (the cache on top of the direct fetcher)

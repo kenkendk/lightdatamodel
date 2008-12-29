@@ -79,10 +79,6 @@
     <Reference Include="System.XML">
       <Name>System.XML</Name>
     </Reference>
-    <Reference Include="LightDatamodel">
-      <Name>LightDatamodel</Name>
-      <HintPath>.\LightDatamodel.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -98,6 +94,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="LightDatamodel.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\LightDatamodel\LightDatamodel.csproj">
+      <Project>{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}</Project>
+      <Name>LightDatamodel</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

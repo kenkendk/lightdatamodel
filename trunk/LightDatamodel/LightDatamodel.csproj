@@ -102,7 +102,6 @@
     </Compile>
     <Compile Include="Base\DataClassBase.cs" />
     <Compile Include="Base\DataFetcherInterfaces.cs" />
-    <Compile Include="Base\ExtendedInterfaces.cs" />
     <Compile Include="Base\ProviderInterfaces.cs" />
     <Compile Include="Base\TypeConfiguration.cs" />
     <Compile Include="Fetchers\DataFetcher.cs" />

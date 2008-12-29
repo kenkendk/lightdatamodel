@@ -55,6 +55,30 @@ namespace System.Data.LightDatamodel
 		TypeConfiguration Mappings { get; }
 	}
 
+    public interface IDataFetcherCached : IDataFetcher
+    {
+        void ClearCache();
+        void CommitAll();
+        void DiscardObject(IDataClass obj);
+        DATACLASS GetObjectByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
+        object GetObjectByIndex(Type type, string indexname, object indexvalue);
+        object GetObjectFromCache(Type type, string filter, params object[] parameters);
+        object GetObjectFromCache(Type type, System.Data.LightDatamodel.QueryModel.Operation query);
+        DATACLASS GetObjectFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
+        DATACLASS GetObjectFromCache<DATACLASS>(System.Data.LightDatamodel.QueryModel.Operation query) where DATACLASS : IDataClass;
+        DATACLASS GetObjectFromCacheById<DATACLASS>(object id);
+        object GetObjectFromCacheById(Type type, object id);
+        object[] GetObjectsByIndex(Type type, string indexname, object indexvalue);
+        DATACLASS[] GetObjectsByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
+        object[] GetObjectsFromCache(Type type, System.Data.LightDatamodel.QueryModel.Operation query);
+        object[] GetObjectsFromCache(Type type, string filter, params object[] parameters);
+        DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
+        DATACLASS[] GetObjectsFromCache<DATACLASS>(System.Data.LightDatamodel.QueryModel.Operation query) where DATACLASS : IDataClass;
+        bool IsDirty { get; }
+        void LoadAndCacheObjects(params Type[] types);
+        DataFetcherCached.Cache LocalCache { get; }
+    }
+
 	public interface IDataClass
 	{
 		IDataFetcher DataParent { get; set;}
@@ -112,4 +136,6 @@ namespace System.Data.LightDatamodel
 		View = 1,
 		Base = 2,
 	}
+
+    public delegate void ObjectStateChangeHandler(object sender, IDataClass obj, ObjectStates oldstate, ObjectStates newstate);
 }

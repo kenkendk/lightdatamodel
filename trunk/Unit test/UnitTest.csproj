@@ -87,9 +87,8 @@
       <Name>System.XML</Name>
     </Reference>
     <ProjectReference Include="..\LightDatamodel\LightDatamodel.csproj">
-      <Name>LightDatamodel</Name>
       <Project>{CAE8433B-F013-474E-B7FC-4DE0D5933AD1}</Project>
-      <Package>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</Package>
+      <Name>LightDatamodel</Name>
     </ProjectReference>
     <ProjectReference Include="Datamodel\UnitTest.Datamodel.csproj">
       <Project>{40498004-BC1F-4DA4-885D-3E2D82F2179E}</Project>
