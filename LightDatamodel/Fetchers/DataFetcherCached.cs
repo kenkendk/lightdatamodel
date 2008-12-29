@@ -27,7 +27,7 @@ namespace System.Data.LightDatamodel
 	/// <summary>
 	/// Will fetch and commit objects directly to source
 	/// </summary>
-	public class DataFetcherCached : DataFetcher
+	public class DataFetcherCached : DataFetcher, System.Data.LightDatamodel.IDataFetcherCached
 	{
 		protected Cache m_cache = new Cache();
 		protected Dictionary<Type, Dictionary<string, string>> m_loadreducer = new Dictionary<Type, Dictionary<string, string>>();

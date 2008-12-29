@@ -71,6 +71,14 @@ namespace System.Data.LightDatamodel
 		{
 			if (BeforeDataCommit != null) BeforeDataCommit(obj, action);
 		}
+
+        private static long m_next_unique_id = -1;
+        private static object m_next_unique_id_lock = new object();
+        protected static long GetNextUniqueID()
+        {
+            lock(m_next_unique_id_lock)
+                return m_next_unique_id--;
+        }
 	}
 
 	/// <summary>
