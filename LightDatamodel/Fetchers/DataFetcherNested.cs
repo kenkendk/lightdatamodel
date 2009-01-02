@@ -81,11 +81,21 @@ namespace System.Data.LightDatamodel
 			m_originalobjects.Add(item, (IDataClass)obj);
 			m_tempobjects.Add((IDataClass)obj, item);
 			ObjectTransformer.CopyObject((IDataClass)obj, item);
+            ((DataClassBase)item).ObjectState = ObjectStates.Default;
 			m_baseFetcher.Add(item);
+            ((DataClassBase)item).ObjectState = ((IDataClass)obj).ObjectState;
 			CopyRelationsToSourceFetcher((IDataClass)obj, item);
+            
+            ((DataClassBase)obj).m_originalvalues = null;
 			((DataClassBase)obj).m_isdirty = false;
 			((DataClassBase)obj).m_state = ObjectStates.Default;
 		}
+
+        public override void RefreshObject(IDataClass obj)
+        {
+            //We do nothing, because the copy is purely in-memory, so there is no chance the properties have changed
+            ((DataClassBase)obj).m_isdirty = false;
+        }
 
 		protected override void UpdateObject(object obj)
 		{

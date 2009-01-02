@@ -20,7 +20,7 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[AutoIncrement, PrimaryKey, DatabaseField("ID")]
-		private System.Int64 m_ID = rnd.Next(int.MinValue, -1);
+		private System.Int64 m_ID = long.MinValue;
 		[DatabaseField("LeftID")]
 		private System.Int64 m_LeftID = long.MinValue;
 		[DatabaseField("RightID")]
