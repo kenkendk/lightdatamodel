@@ -1176,7 +1176,8 @@ namespace System.Data.LightDatamodel
 		/// <param name="newobj"></param>
 		public override IDataClass Add(IDataClass newobj)
 		{
-			(newobj as DataClassBase).m_state = ObjectStates.New;
+            HookObject(newobj);
+
 			try
 			{
 				m_cache.Lock.AcquireWriterLock(-1);
@@ -1188,8 +1189,7 @@ namespace System.Data.LightDatamodel
 				m_cache.Lock.ReleaseWriterLock();
 			}
 
-			HookObject(newobj);
-			if (ObjectAddRemove != null) ObjectAddRemove(this, newobj, ObjectStates.New, ObjectStates.New);
+            if (ObjectAddRemove != null) ObjectAddRemove(this, newobj, ObjectStates.New, ObjectStates.New);
 			return newobj;
 		}
 

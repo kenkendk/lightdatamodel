@@ -20,7 +20,7 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[AutoIncrement, PrimaryKey, Relation("ProjectCurrentTaskNote", typeof(Project), "CurrentTaskNoteID", false), Relation("ProjectProjectNote", typeof(Project), "ProjectNoteID", false), DatabaseField("ID")]
-		private System.Int64 m_ID = rnd.Next(int.MinValue, -1);
+		private System.Int64 m_ID = long.MinValue;
 		[DatabaseField("NoteText")]
 		private System.String m_NoteText = "";
 #endregion

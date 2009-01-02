@@ -20,7 +20,7 @@ namespace Datamodel.UnitTest
 #region " private members "
 
 		[AutoIncrement, PrimaryKey, DatabaseField("ID")]
-		private System.Int64 m_ID = rnd.Next(int.MinValue, -1);
+		private System.Int64 m_ID = long.MinValue;
 		[Relation("ProjectCurrentTaskNote", typeof(Note), "ID"), DatabaseField("CurrentTaskNoteID")]
 		private System.Int64 m_CurrentTaskNoteID = long.MinValue;
 		[Relation("ProjectProjectNote", typeof(Note), "ID"), DatabaseField("ProjectNoteID")]

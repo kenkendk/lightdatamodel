@@ -1017,7 +1017,7 @@ namespace DataClassFileBuilder
 						sw.Write(attributes);
 
                         string defaultValue;
-                        if (mf.Default != null && !mf.Autonumber)
+                        if (mf.Default != null)
                         {
                             if (mf.Default as string == null)
                                 defaultValue = mf.Default.ToString();
@@ -1169,13 +1169,13 @@ namespace DataClassFileBuilder
 			}
 			else if (obj.GetType() == typeof(bool))
 				return (bool)obj ? "true" : "false";
-            else if ((obj.GetType() == typeof(int) || obj.GetType() == typeof(long)) && columnisunique)
+            /*else if ((obj.GetType() == typeof(int) || obj.GetType() == typeof(long)) && columnisunique)
             {
                 if (obj.GetType() == typeof(int))
                     return "(int)DataClassBase.GetNextUniqueID()";
                 else
                     return "DataClassBase.GetNextUniqueID()";
-            }
+            }*/
             else if (obj.GetType() == typeof(long) && (long)obj == long.MinValue)
                 return "long.MinValue";
             else if (obj.GetType() == typeof(int) && (int)obj == int.MinValue)

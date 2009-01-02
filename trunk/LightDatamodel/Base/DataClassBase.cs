@@ -34,9 +34,8 @@ namespace System.Data.LightDatamodel
 	{
 		internal protected bool m_isdirty = true;
 		internal protected IDataFetcher m_dataparent;
-		internal protected ObjectStates m_state = ObjectStates.Default;
+		internal protected ObjectStates m_state = ObjectStates.New;
 		internal protected Dictionary<string, object> m_originalvalues;
-		internal protected static Random rnd = new Random();		//used to provide unique (almost) to new objects
 
 		public event DataChangeEventHandler BeforeDataChange;
 		public event DataChangeEventHandler AfterDataChange;
@@ -71,14 +70,6 @@ namespace System.Data.LightDatamodel
 		{
 			if (BeforeDataCommit != null) BeforeDataCommit(obj, action);
 		}
-
-        private static long m_next_unique_id = -1;
-        private static object m_next_unique_id_lock = new object();
-        protected static long GetNextUniqueID()
-        {
-            lock(m_next_unique_id_lock)
-                return m_next_unique_id--;
-        }
 	}
 
 	/// <summary>

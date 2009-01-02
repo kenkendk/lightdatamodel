@@ -197,6 +197,8 @@ namespace System.Data.LightDatamodel
             {
                 object newobj = Activator.CreateInstance(type);
 				ObjectTransformer.PopulateDataClass(newobj, reader, provider);
+                if (newobj is DataClassBase)
+                    (newobj as DataClassBase).ObjectState = ObjectStates.Default;
                 items.AddLast(newobj);
             }
 
