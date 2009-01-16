@@ -506,6 +506,8 @@ namespace Datamodel.UnitTest
 			notes[0].NoteText = "YummyYummyYummy";
 			if (fetcher.IsDirty) throw new Exception("Bah");
 			if (!nf.IsDirty) throw new Exception("Bah");
+			nf.CommitAll();
+			if (!fetcher.IsDirty) throw new Exception("Bah");
 
 		}
 

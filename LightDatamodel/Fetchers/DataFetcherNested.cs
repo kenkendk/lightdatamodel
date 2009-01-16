@@ -101,7 +101,7 @@ namespace System.Data.LightDatamodel
 		{
 			ObjectTransformer.CopyObject((IDataClass)obj, m_tempobjects[(IDataClass)obj]);
 			CopyRelationsToSourceFetcher((IDataClass)obj, m_tempobjects[(IDataClass)obj]);		//should we trigger events here?
-			((DataClassBase)m_tempobjects[(IDataClass)obj]).m_isdirty = false;
+			((DataClassBase)(IDataClass)obj).m_isdirty = false;
 		}
 
 		protected override void RemoveObject(object obj)
