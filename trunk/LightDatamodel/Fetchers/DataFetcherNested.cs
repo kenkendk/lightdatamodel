@@ -31,6 +31,11 @@ namespace System.Data.LightDatamodel
 		private Dictionary<IDataClass, IDataClass> m_originalobjects = new Dictionary<IDataClass, IDataClass>();
 		private Dictionary<IDataClass, IDataClass> m_tempobjects = new Dictionary<IDataClass, IDataClass>();
 
+		public IDataFetcher BaseFetcher
+		{
+			get { return m_baseFetcher; }
+		}
+
 		public DataFetcherNested(IDataFetcher basefetcher)
 			: base(basefetcher.Provider)
 		{
