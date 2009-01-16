@@ -64,6 +64,15 @@ namespace System.Data.LightDatamodel
 						//we assume that the keys already exists 
 						m_list[type][indexname][indexvalue] = value;
 					}
+					catch (ArgumentNullException)
+					{
+						if(indexvalue == null)
+							throw new ArgumentNullException("indexvalue");
+						else if(indexname == null)
+							throw new ArgumentNullException("indexname");
+						else if (type == null)
+							throw new ArgumentNullException("type");
+					}
 					catch
 					{
 #if DEBUG
@@ -267,6 +276,7 @@ namespace System.Data.LightDatamodel
 					{
 						foreach (KeyValuePair<object, IDataClass> obj in index.Value)
 							if (obj.Value.IsDirty) ret.Add(obj.Value);
+						break;	//only iterate first index
 					}
 				return ret.ToArray();
 			}

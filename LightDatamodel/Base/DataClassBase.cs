@@ -45,6 +45,7 @@ namespace System.Data.LightDatamodel
 		public IDataFetcher DataParent { get { return m_dataparent; } set { m_dataparent = value; } }
 		public virtual bool IsDirty{get{return m_isdirty;}}
 		public virtual ObjectStates ObjectState{get{return m_state;}set{m_state=value;}}
+		public Dictionary<string, object> OriginalValues{get { return m_originalvalues; }}
 
 		protected virtual internal void OnBeforeDataChange(object sender, string propertyname, object oldvalue, object newvalue)
 		{
@@ -69,6 +70,26 @@ namespace System.Data.LightDatamodel
 		protected virtual internal void OnBeforeDataCommit(object obj, DataActions action)
 		{
 			if (BeforeDataCommit != null) BeforeDataCommit(obj, action);
+		}
+
+		/// <summary>
+		/// This will rollback a given property change
+		/// </summary>
+		/// <param name="property"></param>
+		/// <returns></returns>
+		public bool Rollback(string property)
+		{
+			try
+			{
+				GetType().GetProperty(property).SetValue(this, m_originalvalues[property], null);
+				bool success = m_originalvalues.Remove(property);
+				if (m_originalvalues.Count == 0) m_isdirty = false;
+				return success;
+			}
+			catch
+			{
+				throw new Exception("Couldn't remove change");
+			}
 		}
 	}
 

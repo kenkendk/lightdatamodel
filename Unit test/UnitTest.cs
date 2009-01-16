@@ -495,6 +495,18 @@ namespace Datamodel.UnitTest
 			notes = fetcher.GetObjectsByIndex<Note>("NoteText", "aaa");
 			if (notes.Length != 2) throw new Exception("Bah");
 
+
+			//small test with Nested fetcher
+			bool isdeity = fetcher.IsDirty;
+			if (isdeity) fetcher.CommitAll();
+			isdeity = fetcher.IsDirty;
+			if (isdeity) throw new Exception("Bah");
+			DataFetcherNested nf = new DataFetcherNested(fetcher);
+			notes = nf.GetObjects<Note>();
+			notes[0].NoteText = "YummyYummyYummy";
+			if (fetcher.IsDirty) throw new Exception("Bah");
+			if (!nf.IsDirty) throw new Exception("Bah");
+
 		}
 
 		public static void TestQueryModel(IDbConnection con)
