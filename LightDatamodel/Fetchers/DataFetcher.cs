@@ -48,7 +48,7 @@ namespace System.Data.LightDatamodel
         /// <returns>A generated ID</returns>
         public delegate object TemporaryUniqueIDGenerator(object item, Type type);
 
-        public virtual TemporaryUniqueIDGenerator TemporaryIDGenerator
+        public static TemporaryUniqueIDGenerator TemporaryIDGenerator
         {
             get { return m_temporaryIdGenerator; }
             set { m_temporaryIdGenerator = value; }
@@ -56,9 +56,14 @@ namespace System.Data.LightDatamodel
 
         protected static long m_next_unique_id = -1;
         protected static object m_next_unique_id_lock = new object();
-        protected TemporaryUniqueIDGenerator m_temporaryIdGenerator;
+        protected static TemporaryUniqueIDGenerator m_temporaryIdGenerator;
 
-        protected virtual object GetNextTemporaryUniqueID(object item, Type type)
+		public static T GetNextTemporaryUniqueID<T>(object item)
+		{
+			return (T)GetNextTemporaryUniqueID(item, typeof(T));
+		}
+
+        public static object GetNextTemporaryUniqueID(object item, Type type)
         {
             lock (m_next_unique_id_lock)
             {
