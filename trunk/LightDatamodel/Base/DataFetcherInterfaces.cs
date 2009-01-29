@@ -58,7 +58,7 @@ namespace System.Data.LightDatamodel
     public interface IDataFetcherCached : IDataFetcher
     {
         void ClearCache();
-        void CommitAll();
+        void CommitAll(UpdateProgressHandler updatefunction);
         void DiscardObject(IDataClass obj);
         DATACLASS GetObjectByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
         object GetObjectByIndex(Type type, string indexname, object indexvalue);
@@ -94,6 +94,7 @@ namespace System.Data.LightDatamodel
 
 	public delegate void DataConnectionEventHandler(object sender, DataActions action);
 	public delegate void DataChangeEventHandler(object sender, string propertyname, object oldvalue, object newvalue);
+	public delegate void UpdateProgressHandler(int currentvalue, int maximumvalue);
 
 	/// <summary>
 	/// This enum represents the different states an object may have

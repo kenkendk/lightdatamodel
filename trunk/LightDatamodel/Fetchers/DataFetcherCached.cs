@@ -49,10 +49,10 @@ namespace System.Data.LightDatamodel
 			//this is the actual cache
 			//Type, Indexname, (Indexvalue & IDataClass)
 			private Dictionary<Type, Dictionary<string, MultiDictionary<object, IDataClass>>> m_list = new Dictionary<Type, Dictionary<string, MultiDictionary<object, IDataClass>>>();
-			protected List<IDataClass> m_deletedobjects = new List<IDataClass>();
+			protected Dictionary<string, IDataClass> m_deletedobjects = new Dictionary<string, IDataClass>();
 			public System.Threading.ReaderWriterLock Lock = new System.Threading.ReaderWriterLock();
 
-			public List<IDataClass> DeletedObjects { get { return m_deletedobjects; } }
+			public Dictionary<string, IDataClass> DeletedObjects { get { return m_deletedobjects; } }
 
 			public IDataClass this[Type type, string indexname, object indexvalue]
 			{
@@ -507,6 +507,14 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		public virtual void CommitAll()
 		{
+			CommitAll(null);
+		}
+
+		/// <summary>
+		/// Commits all cached objects to data source
+		/// </summary>
+		public virtual void CommitAll(UpdateProgressHandler updatefunction)
+		{
 			Guid transactionID = Guid.NewGuid();
 			bool inTransaction = false;
 
@@ -518,7 +526,7 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				m_cache.Lock.AcquireReaderLock(-1);			//different lock
-				deletedobjects = new LinkedList<IDataClass>(m_cache.DeletedObjects);
+				deletedobjects = new LinkedList<IDataClass>(m_cache.DeletedObjects.Values);
 				newobjects = new LinkedList<IDataClass>();
 				updatedobjects = new LinkedList<IDataClass>();
 				foreach (IDataClass obj in m_cache)
@@ -536,6 +544,8 @@ namespace System.Data.LightDatamodel
 			}
 
 			if (deletedobjects.Count == 0 && newobjects.Count == 0 && updatedobjects.Count == 0) return;
+			int maxposts = deletedobjects.Count + newobjects.Count + updatedobjects.Count;
+			if (updatefunction != null) updatefunction(0, maxposts);
 
 			//create copies for rollback
 			LinkedList<IDataClass> copydeletedobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(deletedobjects) ;
@@ -555,18 +565,28 @@ namespace System.Data.LightDatamodel
 				{
 					m_provider.BeginTransaction(transactionID); //SQLite can only handle 1 transaction ... and not writing from multiple threads isn't that bad, is it?
 					inTransaction = true;
+					int i = 0;
 
 					//delete (First we delete. In case we've delete a primary key, that also will be inserted)
 					foreach (IDataClass c in deletedobjects)
+					{
 						Commit(c); //no lock
+						if (updatefunction != null) updatefunction(++i, maxposts);
+					}
 
 					//update (second we update. In case we changed some primary keys, that also will be inserted)
 					foreach (IDataClass c in updatedobjects)
+					{
 						Commit(c); //no lock
+						if (updatefunction != null) updatefunction(++i, maxposts);
+					}
 
 					//create
 					foreach (IDataClass c in newobjects)
+					{
 						Commit(c); //no lock ... //will also rebalance objects in cache (means lock)
+						if (updatefunction != null) updatefunction(++i, maxposts);
+					}
 
 					m_provider.CommitTransaction(transactionID);
 					inTransaction = false;
@@ -594,7 +614,7 @@ namespace System.Data.LightDatamodel
 			}
 
 			//recursive commit
-			CommitAll();
+			CommitAll(updatefunction);
 		}
 
 		/// <summary>
@@ -670,7 +690,8 @@ namespace System.Data.LightDatamodel
 				m_cache.Lock.AcquireWriterLock(-1);
 				foreach (TypeConfiguration.MappedField index in m_mappings[obj.GetType()].IndexFields)
 				    m_cache.RemoveObjectFromIndex(obj.GetType(), index.Databasefield, index.Field.GetValue(obj), obj);
-				m_cache.DeletedObjects.Remove(obj);		//it could be a deleted object
+				string deletekey = obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString();
+				m_cache.DeletedObjects.Remove(deletekey);		//it could be a deleted object
 			}
 			finally
 			{
@@ -837,6 +858,7 @@ namespace System.Data.LightDatamodel
 					else if (item is DataClassBase)
 					{
 						DataClassBase dbitem = (DataClassBase)item;
+						if (m_mappings[dbitem.GetType()].PrimaryKey == null) throw new Exception("Object " + dbitem.GetType().Name + " doesn't have a primary key");
 						if (m_cache[item.GetType(), m_mappings[dbitem.GetType()].PrimaryKey.Databasefield, m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem)] == null)
 						{
 
@@ -902,18 +924,22 @@ namespace System.Data.LightDatamodel
 
                     //Manual build of
                     //Query.Parse("(GetType() IS ?) AND (" + m_mappings[item.GetType()].PrimaryKey.Property.Name + " = ?)", item.GetType(), m_mappings[item.GetType()].PrimaryKey.Field.GetValue(item));
-                    QueryModel.Operation op =
-                        Query.And(
-                            Query.Is(
-                                Query.FunctionCall("GetType"),
-                                Query.Value(item.GetType())
-                            ),
-                            Query.Equal(
-                                Query.Property(m_mappings[item.GetType()].PrimaryKey.Property.Name),
-                                Query.Value(m_mappings[item.GetType()].PrimaryKey.Field.GetValue(item))
-                            )
-                        );
-					if (Query.FindFirst(op, m_cache.DeletedObjects) == null) m_cache.DeletedObjects.Add(obj);
+					//QueryModel.Operation op =
+					//    Query.And(
+					//        Query.Is(
+					//            Query.FunctionCall("GetType"),
+					//            Query.Value(item.GetType())
+					//        ),
+					//        Query.Equal(
+					//            Query.Property(m_mappings[item.GetType()].PrimaryKey.Property.Name),
+					//            Query.Value(m_mappings[item.GetType()].PrimaryKey.Field.GetValue(item))
+					//        )
+					//    );
+					//if (Query.FindFirst(op, m_cache.DeletedObjects) == null) m_cache.DeletedObjects.Add(obj);
+
+					//we assume pks to be not null and unique
+					string deletekey = obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString();
+					if (!m_cache.DeletedObjects.ContainsKey(deletekey)) m_cache.DeletedObjects.Add(deletekey, obj);
 				}
 				(obj as DataClassBase).m_state = ObjectStates.Deleted;
 			}
@@ -1232,7 +1258,8 @@ namespace System.Data.LightDatamodel
 					try
 					{
 						m_cache.Lock.AcquireWriterLock(-1);
-						m_cache.DeletedObjects.Remove(obj);
+						string deletekey = obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString();
+						m_cache.DeletedObjects.Remove(deletekey);
 					}
 					finally
 					{
