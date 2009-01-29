@@ -452,7 +452,7 @@ namespace DataClassFileBuilder
 				{
 					string[] lines = filecontent.Substring(p1, p2 - p1 + 11).Split('\n');
 					for(int i = 0; i < lines.Length; i++)
-						lines[i] = lines[i].TrimStart('/').TrimStart(' ');
+						lines[i] = lines[i].TrimStart('/').TrimStart(' ').Replace("&amp;", "&").Replace("&", "&amp;");
 					string xml = "";
 					for(int i = 0; i < lines.Length; i++)
 						xml += lines[i];
