@@ -99,6 +99,7 @@ namespace System.Data.LightDatamodel
         public override void RefreshObject(IDataClass obj)
         {
             //We do nothing, because the copy is purely in-memory, so there is no chance the properties have changed
+            UpdateObjectKeys(obj);
             ((DataClassBase)obj).m_isdirty = false;
         }
 

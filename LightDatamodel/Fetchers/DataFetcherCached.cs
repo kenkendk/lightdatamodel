@@ -502,18 +502,151 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
-		/// <summary>
-		/// Commits all cached objects to data source
-		/// </summary>
-		public virtual void CommitAll()
-		{
-			CommitAll(null);
-		}
+        /// <summary>
+        /// Traverses an objects references to find related objects
+        /// </summary>
+        /// <param name="item">The item to list relations for</param>
+        /// <returns>A list of related objects</returns>
+        public virtual List<IDataClass> FindObjectRelations(IDataClass item)
+        {
+            Dictionary<IDataClass, object> visited = new Dictionary<IDataClass,object>();
+            Queue<IDataClass> unexplored = new Queue<IDataClass>();
+            List<IDataClass> results = new List<IDataClass>();
+            unexplored.Enqueue(item);
+
+            while (unexplored.Count > 0)
+            {
+                IDataClass current = unexplored.Dequeue();
+                if (visited.ContainsKey(current))
+                    continue;
+                else
+                    visited.Add(current, null);
+
+                results.Add(current);
+
+                GetReferencedItems(current, unexplored);
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Puts all items that are referenced into the supplied queue
+        /// </summary>
+        /// <param name="item">The item to examine</param>
+        /// <param name="queue">The queue to place related items into</param>
+        protected virtual void GetReferencedItems(IDataClass item, Queue<IDataClass> queue)
+        {
+            TypeConfiguration.MappedClass itemtype = m_mappings[item.GetType()];
+            foreach (TypeConfiguration.Reference r in itemtype.References.Values)
+            {
+                object rel;
+                if (r.Child == itemtype)
+                    rel = r.ChildField.Field.GetValue(item);
+                else
+                    rel = r.ParentField.Field.GetValue(item);
+
+                if (rel == null)
+                    continue;
+
+                if (rel is IEnumerable)
+                {
+                    foreach (object o in (IEnumerable)rel)
+                        if (o is IDataClass)
+                            queue.Enqueue((IDataClass)o);
+                }
+                else if (rel is IDataClass)
+                    queue.Enqueue((IDataClass)rel);
+            }
+        }
+
+        /// <summary>
+        /// Commits the objects and any relations they have that are modified
+        /// </summary>
+        /// <param name="items">The objects to add</param>
+        /// <returns>The items that were committed</returns>
+        public virtual List<IDataClass> CommitWithRelations(params IDataClass[] items)
+        {
+            List<IDataClass> dirty = new List<IDataClass>();
+            if (items != null)
+                foreach(IDataClass item in items)
+                    foreach (IDataClass i in FindObjectRelations(item))
+                        if (i.IsDirty || i.ObjectState != ObjectStates.Default)
+                            dirty.Add(i);
+
+            Commit(dirty.ToArray());
+
+            return dirty;
+        }
+
+        public virtual void CommitRecursive(params IDataClass[] items)
+        {
+            Commit(items);
+            if (this is DataFetcherNested)
+            {
+                DataFetcherNested n = this as DataFetcherNested;
+                List<IDataClass> newitems = new List<IDataClass>();
+                foreach (IDataClass obj in items)
+                    newitems.Add((IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)));
+
+                if (((DataFetcherNested)this).BaseFetcher is IDataFetcherCached)
+                    ((IDataFetcherCached)n.BaseFetcher).CommitRecursive(newitems.ToArray());
+                else
+                    n.BaseFetcher.Commit(newitems.ToArray());
+
+                for (int i = 0; i < items.Length; i++)
+                {
+                    TypeConfiguration.MappedField fi = m_mappings[items[i].GetType()].PrimaryKey;
+                    fi.Field.SetValue((DataClassBase)items[i], fi.Field.GetValue(newitems[i]));
+                }
+
+                foreach (IDataClass obj in items)
+                    RefreshObject(obj);
+            }
+        }
+
+        public virtual List<IDataClass> CommitRecursiveWithRelations(params IDataClass[] items)
+        {
+            List<IDataClass> modified = CommitWithRelations(items);
+            if (this is DataFetcherNested)
+            {
+                DataFetcherNested n = this as DataFetcherNested;
+                List<IDataClass> newitems = new List<IDataClass>();
+                foreach (IDataClass obj in modified)
+                    newitems.Add((IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)));
+
+                if (n.BaseFetcher is IDataFetcherCached)
+                    ((IDataFetcherCached)n.BaseFetcher).CommitRecursiveWithRelations(newitems.ToArray());
+                else
+                    n.BaseFetcher.Commit(newitems.ToArray());
+
+                for (int i = 0; i < modified.Count; i++)
+                {
+                    TypeConfiguration.MappedField fi = m_mappings[modified[i].GetType()].PrimaryKey;
+                    fi.Field.SetValue((DataClassBase)modified[i], fi.Field.GetValue(newitems[i]));
+                }
+
+                foreach (IDataClass obj in modified)
+                    RefreshObject(obj);
+            }
+
+            return modified;
+
+        }
 
 		/// <summary>
 		/// Commits all cached objects to data source
 		/// </summary>
-		public virtual void CommitAll(UpdateProgressHandler updatefunction)
+		public virtual List<IDataClass> CommitAll()
+		{
+			return CommitAll(null);
+		}
+
+		/// <summary>
+		/// Commits all cached objects to data source
+        /// <param name="items">The items to commit, or null to commit all dirty items</param>
+		/// </summary>
+		public virtual List<IDataClass> CommitAll(UpdateProgressHandler updatefunction)
 		{
 			Guid transactionID = Guid.NewGuid();
 			bool inTransaction = false;
@@ -522,28 +655,30 @@ namespace System.Data.LightDatamodel
 			LinkedList<IDataClass> newobjects = null;
 			LinkedList<IDataClass> updatedobjects = null;
 
-			//get objects
+            //get objects
 			try
 			{
 				m_cache.Lock.AcquireReaderLock(-1);			//different lock
-				deletedobjects = new LinkedList<IDataClass>(m_cache.DeletedObjects.Values);
-				newobjects = new LinkedList<IDataClass>();
-				updatedobjects = new LinkedList<IDataClass>();
-				foreach (IDataClass obj in m_cache)
-					if (obj.IsDirty)
-					{
-						if (obj.ObjectState == ObjectStates.New)
-							newobjects.AddLast(obj);
-						else
-							updatedobjects.AddLast(obj);
-					}
+
+                newobjects = new LinkedList<IDataClass>();
+                updatedobjects = new LinkedList<IDataClass>();
+                deletedobjects = new LinkedList<IDataClass>(m_cache.DeletedObjects.Values);
+
+                foreach (IDataClass obj in m_cache)
+                    if (obj.IsDirty)
+                    {
+                        if (obj.ObjectState == ObjectStates.New)
+                            newobjects.AddLast(obj);
+                        else
+                            updatedobjects.AddLast(obj);
+                    }
 			}
 			finally
 			{
 				m_cache.Lock.ReleaseReaderLock();
 			}
 
-			if (deletedobjects.Count == 0 && newobjects.Count == 0 && updatedobjects.Count == 0) return;
+			if (deletedobjects.Count == 0 && newobjects.Count == 0 && updatedobjects.Count == 0) return new List<IDataClass>();
 			int maxposts = deletedobjects.Count + newobjects.Count + updatedobjects.Count;
 			if (updatefunction != null) updatefunction(0, maxposts);
 
@@ -613,8 +748,26 @@ namespace System.Data.LightDatamodel
 				m_transactionlock.ReleaseWriterLock();
 			}
 
-			//recursive commit
-			CommitAll(updatefunction);
+            List<IDataClass> affected = new List<IDataClass>();
+            affected.AddRange(newobjects);
+            affected.AddRange(updatedobjects);
+            affected.AddRange(deletedobjects);
+
+            //recursive commit
+            affected.AddRange(CommitAll(updatefunction));
+
+            //Remove duplicates
+            Dictionary<IDataClass, object> tmp = new Dictionary<IDataClass, object>();
+            for (int i = 0; i < affected.Count; i++)
+                if (tmp.ContainsKey(affected[i]))
+                {
+                    affected.RemoveAt(i);
+                    i--;
+                }
+                else
+                    tmp.Add(affected[i], null);
+            
+            return affected;
 		}
 
 		/// <summary>
@@ -1230,47 +1383,32 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
-		/// This will commit the object to the database
+		/// This will commit the objects to the database
 		/// </summary>
-		/// <param name="obj"></param>
-		/// <param name="refreshobject"></param>
-		public override void Commit(IDataClass obj)
+		/// <param name="items"></param>
+		public override void Commit(params IDataClass[] items)
 		{
-			//new object?
-			if ((obj as DataClassBase).m_dataparent == null) Add(obj);
+            try
+            {
+                //TODO: Should be in DataFetcher (base class)?
+                m_transactionlock.AcquireWriterLock(-1); //we can run this function (Commit) in multiple threads. Hence the readerlock
 
-			try
-			{
-				m_transactionlock.AcquireReaderLock(-1);		//we can run this function (Commit) in multiple threads. Hence the readerlock
+                List<string> delkeys = new List<string>();
+                if (items != null && items.Length > 0)
+                    foreach (IDataClass obj in items)
+                        if (obj.ObjectState == ObjectStates.Deleted)
+                            delkeys.Add(obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString());
 
-				//sql
-				if (obj.ObjectState == ObjectStates.Default)
-				{
-					base.Commit(obj);
-				}
-				else if (obj.ObjectState == ObjectStates.New)
-				{
-					base.Commit(obj);		//TODO: Beware of the events
-				}
-				else if (obj.ObjectState == ObjectStates.Deleted)
-				{
-					base.Commit(obj); //TODO: Beware of the events
-					try
-					{
-						m_cache.Lock.AcquireWriterLock(-1);
-						string deletekey = obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString();
-						m_cache.DeletedObjects.Remove(deletekey);
-					}
-					finally
-					{
-						m_cache.Lock.ReleaseWriterLock();
-					}
-				}
-			}
-			finally
-			{
-				m_transactionlock.ReleaseReaderLock();
-			}
+                base.Commit(items);
+
+                foreach (string k in delkeys)
+                    m_cache.DeletedObjects.Remove(k);
+
+            }
+            finally 
+            {
+                m_transactionlock.ReleaseWriterLock();
+            }
 		}
 
 		/// <summary>

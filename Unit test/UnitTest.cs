@@ -333,13 +333,43 @@ namespace Datamodel.UnitTest
 		/// <param name="con"></param>
         public static void TestNestedFetcher(IDbConnection con)
         {
-            DataFetcherCached baseFetcher = new DataFetcherCached(new SQLiteDataProvider(con));
+            DataFetcherCached baseFetcher = new DataFetcherWithRelations(new SQLiteDataProvider(con));
             DataFetcherNested fetcher = new DataFetcherNested(baseFetcher);
 
             Project p1 = fetcher.Add<Project>();
             Project p2 = fetcher.Add<Project>();
 
             fetcher.CommitAll();
+            baseFetcher.CommitAll();
+
+            p1 = fetcher.Add<Project>();
+            Note n1 = fetcher.Add<Note>();
+            p1.CurrentTaskNote = n1;
+
+            fetcher.CommitWithRelations(p1);
+            if (n1.ObjectState == ObjectStates.New)
+                throw new Exception("Bad relation commit");
+
+            n1 = baseFetcher.GetObjectById<Note>(n1.ID);
+            if (n1.ObjectState != ObjectStates.New)
+                throw new Exception("Bad relation commit");
+
+            p1 = fetcher.Add<Project>();
+            n1 = fetcher.Add<Note>();
+            p1.CurrentTaskNote = n1;
+
+            fetcher.CommitRecursiveWithRelations(p1);
+
+            n1 = baseFetcher.GetObjectById<Note>(n1.ID);
+            if (n1.ObjectState == ObjectStates.New)
+                throw new Exception("Bad recursive relation commit");
+
+            p1 = baseFetcher.GetObjectById<Project>(p1.ID);
+            if (p1.ObjectState == ObjectStates.New)
+                throw new Exception("Bad recursive relation commit");
+
+            if (p1.CurrentTaskNote != n1)
+                throw new Exception("Bad recursive update");
         }
 
 		/// <summary>
@@ -1223,6 +1253,7 @@ namespace Datamodel.UnitTest
 				if (m_thread.Name == "TestTråd 5")
 				{
 					int ko = 1;		// <-- place break point here
+                    ko++; //Remove compile warning
 				}
 
 				//insert
@@ -1237,7 +1268,7 @@ namespace Datamodel.UnitTest
 						ns[i] = new Note();
 						m_conn.Commit(ns[i]);
 					}
-					catch (NoSuchObjectException ex)
+					catch (NoSuchObjectException)
 					{
 						//this can happen if the object is deleted, right after creation, but before refresh
 						//I'm not sure wheter we should deal with this or not
@@ -1269,10 +1300,10 @@ namespace Datamodel.UnitTest
 					{
 						m_conn.DeleteObject(p);
 					}
-					catch (NoSuchObjectException ex)
+					catch (NoSuchObjectException)
 					{
 						//Again, this might already be deleted
-					}
+                    }
 				}
 				foreach (Note n in ns)
 				{
@@ -1280,7 +1311,7 @@ namespace Datamodel.UnitTest
 					{
 						m_conn.DeleteObject(n);
 					}
-					catch (NoSuchObjectException ex)
+					catch (NoSuchObjectException)
 					{
 						//Again, this might already be deleted
 					}

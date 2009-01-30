@@ -20,6 +20,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace System.Data.LightDatamodel
 {
@@ -455,39 +456,73 @@ namespace System.Data.LightDatamodel
         /// Commits an object into the data source
         /// </summary>
         /// <param name="obj"></param>
-		public virtual void Commit(IDataClass obj)
+		public virtual void Commit(params IDataClass[] items)
 		{
-			//new object?
-			if (((DataClassBase)obj).m_dataparent == null) Add(obj);
+            if (items == null || items.Length == 0)
+                return;
 
-			//save
-			if (obj.ObjectState == ObjectStates.Default)
-			{
-				if (!obj.IsDirty) return;
-				OnBeforeDataConnection(obj, DataActions.Update);
-				((DataClassBase)obj).OnBeforeDataCommit(obj, DataActions.Update);
-                UpdateObject(obj);
-				OnAfterDataConnection(obj, DataActions.Update);
-				((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Update);
-				RefreshObject(obj);
+            Guid transactionId = Guid.NewGuid();
+            bool inTransaction = false;
+            LinkedList<IDataClass> copyobjects = null;
+
+            try
+            {
+                if (items.Length != 1)
+                {
+                    inTransaction = true;
+                    m_provider.BeginTransaction(transactionId);
+                    copyobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(items);
+                }
+
+                foreach (IDataClass obj in items)
+                {
+                    //new object?
+                    if (((DataClassBase)obj).m_dataparent == null) Add(obj);
+
+                    //save
+                    if (obj.ObjectState == ObjectStates.Default)
+                    {
+                        if (!obj.IsDirty) continue;
+                        OnBeforeDataConnection(obj, DataActions.Update);
+                        ((DataClassBase)obj).OnBeforeDataCommit(obj, DataActions.Update);
+                        UpdateObject(obj);
+                        OnAfterDataConnection(obj, DataActions.Update);
+                        ((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Update);
+                        RefreshObject(obj);
+                    }
+                    else if (obj.ObjectState == ObjectStates.New)
+                    {
+                        OnBeforeDataConnection(obj, DataActions.Insert);
+                        ((DataClassBase)obj).OnBeforeDataCommit(obj, DataActions.Insert);
+                        InsertObject(obj);
+                        OnAfterDataConnection(obj, DataActions.Insert);
+                        ((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Insert);
+                        RefreshObject(obj);
+                    }
+                    else if (obj.ObjectState == ObjectStates.Deleted)
+                    {
+                        OnBeforeDataConnection(obj, DataActions.Delete);
+                        ((DataClassBase)obj).OnBeforeDataCommit(obj, DataActions.Delete);
+                        RemoveObject(obj);
+                        OnAfterDataConnection(obj, DataActions.Delete);
+                        ((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Delete);
+                    }
+                }
+
+                if (inTransaction)
+                {
+                    m_provider.CommitTransaction(transactionId);
+                    inTransaction = false;
+                }
             }
-			else if (obj.ObjectState == ObjectStates.New)
-			{
-				OnBeforeDataConnection(obj, DataActions.Insert);
-				((DataClassBase)obj).OnBeforeDataCommit(obj, DataActions.Insert);
-                InsertObject(obj);
-				OnAfterDataConnection(obj, DataActions.Insert);
-				((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Insert);
-				RefreshObject(obj);
+            finally
+            {
+                if (inTransaction)
+                {
+                    m_provider.RollbackTransaction(transactionId);
+                    ObjectTransformer.CopyArray<IDataClass>(copyobjects, items);
+                }
             }
-			else if (obj.ObjectState == ObjectStates.Deleted)
-			{
-				OnBeforeDataConnection(obj, DataActions.Delete);
-				((DataClassBase)obj).OnBeforeDataCommit(obj, DataActions.Delete);
-                RemoveObject(obj);
-				OnAfterDataConnection(obj, DataActions.Delete);
-				((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Delete);
-			}
 
 		}
 
