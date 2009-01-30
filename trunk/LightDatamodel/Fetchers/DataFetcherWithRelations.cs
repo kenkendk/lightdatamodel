@@ -396,7 +396,7 @@ namespace System.Data.LightDatamodel
 		/// This will update the column values in the relations. (Will only update registered 'loose' objects)
 		/// </summary>
 		/// <param name="obj"></param>
-		private void UpdateObjectKeys(IDataClass obj)
+		protected void UpdateObjectKeys(IDataClass obj)
 		{
 			foreach (ObjectConnection rel in m_objectrelationcache[obj].Values)
 			{
@@ -444,25 +444,32 @@ namespace System.Data.LightDatamodel
 			UnregisterObject(item as IDataClass);
 		}
 
-		public override void Commit(IDataClass obj)
+		public override void Commit(params IDataClass[] items)
 		{
-			if (obj.ObjectState != ObjectStates.Deleted)
-			{
-				//update IDs
-				UpdateObjectKeys(obj);
+            if (items == null || items.Length == 0)
+                return;
 
-				base.Commit(obj);
+            List<IDataClass> updated = new List<IDataClass>();
+            List<IDataClass> deleted = new List<IDataClass>();
 
-				//update IDs again, in case of auto increment
-				UpdateObjectKeys(obj);
-			}
-			else
-			{
-				base.Commit(obj);
+            foreach (IDataClass obj in items)
+                if (obj.ObjectState != ObjectStates.Deleted)
+                {
+                    UpdateObjectKeys(obj);
+                    updated.Add(obj);
+                }
+                else
+                    deleted.Add(obj);
 
-				//remove if needed
-				UnregisterObject(obj);
-			}
+            base.Commit(items);
+
+            //Refresh keys
+            foreach (IDataClass obj in updated)
+                UpdateObjectKeys(obj);
+
+            //Unhook
+            foreach (IDataClass obj in deleted)
+                UnregisterObject(obj);
 		}
 
 		public override void ClearCache()
@@ -491,5 +498,14 @@ namespace System.Data.LightDatamodel
 		}
 
 		#endregion
+
+        protected override void GetReferencedItems(IDataClass item, Queue<IDataClass> queue)
+        {
+            TypeConfiguration.MappedClass ic = m_mappings[item.GetType()];
+            foreach (TypeConfiguration.Reference r in ic.References.Values)
+                if (m_objectrelationcache.ContainsKey(item) && m_objectrelationcache[item].ContainsKey(r.Name))
+                    foreach (IDataClass ro in m_objectrelationcache[item][r.Name].SubObjects.Values)
+                        queue.Enqueue(ro);
+        }
 	}
 }

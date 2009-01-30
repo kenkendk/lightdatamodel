@@ -19,6 +19,7 @@
 #endregion
 using System;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace System.Data.LightDatamodel
 {
@@ -43,7 +44,7 @@ namespace System.Data.LightDatamodel
 		object GetObject(Type type, string filter, params object[] parameters);
 		DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass;
 		object GetObjectById(Type type, object id);
-		void Commit(IDataClass obj);
+		void Commit(params IDataClass[] obj);
 		DATACLASS Add<DATACLASS>() where DATACLASS : IDataClass;
 		object Add(Type type);
 		IDataClass Add(IDataClass newobj);
@@ -57,9 +58,15 @@ namespace System.Data.LightDatamodel
 
     public interface IDataFetcherCached : IDataFetcher
     {
+        List<IDataClass> CommitAll();
+        List<IDataClass> CommitAll(UpdateProgressHandler updatefunction);
+
         void ClearCache();
-        void CommitAll(UpdateProgressHandler updatefunction);
         void DiscardObject(IDataClass obj);
+        void CommitRecursive(params IDataClass[] items);
+        List<IDataClass> CommitRecursiveWithRelations(params IDataClass[] items);
+        List<IDataClass> CommitWithRelations(params IDataClass[] items);
+
         DATACLASS GetObjectByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
         object GetObjectByIndex(Type type, string indexname, object indexvalue);
         object GetObjectFromCache(Type type, string filter, params object[] parameters);

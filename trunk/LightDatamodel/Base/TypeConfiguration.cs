@@ -54,29 +54,27 @@ namespace System.Data.LightDatamodel
         {
 			get
 			{
-					if (!m_knownTypes.ContainsKey(type))
+				if (!m_knownTypes.ContainsKey(type))
+				{
+					lock (m_knownTypes)
 					{
-						lock (m_knownTypes)
-						{
-							if (m_knownTypes.ContainsKey(type)) return m_knownTypes[type];		//do a recheck due to the lock
+						if (m_knownTypes.ContainsKey(type)) return m_knownTypes[type];		//do a recheck due to the lock
 
+						//When no mapping info is avalible, just use reflection
+						foreach (Type t in type.Assembly.GetExportedTypes())
+							if (t.IsClass && typeof(IDataClass).IsAssignableFrom(t))
+								m_knownTypes.Add(t, new MappedClass(this, t));
 
-							//When no mapping info is avalible, just use reflection
-							foreach (Type t in type.Assembly.GetExportedTypes())
-								if (t.IsClass && typeof(IDataClass).IsAssignableFrom(t))
-									m_knownTypes.Add(t, new MappedClass(this, t));
-
-							//initialize relations
-							foreach (MappedClass mc in m_knownTypes.Values)
-								mc.InitializeRelations();
-
-						}
-
-							if (!m_knownTypes.ContainsKey(type))
-								throw new Exception(string.Format("The supplied type '{0}' could not be mapped!", type.FullName));
-
-						if (TypesInitialized != null) TypesInitialized(this, null);
+						//initialize relations
+						foreach (MappedClass mc in m_knownTypes.Values)
+							mc.InitializeRelations();
 					}
+
+					if (!m_knownTypes.ContainsKey(type))
+						throw new Exception(string.Format("The supplied type '{0}' could not be mapped!", type.FullName));
+
+					if (TypesInitialized != null) TypesInitialized(this, null);
+				}
 
 				return m_knownTypes[type];
 			}
