@@ -55,7 +55,7 @@ namespace System.Data.LightDatamodel.QueryModel
         /// <summary>
         /// Initialize the global filter list
         /// </summary>
-        private static object InitializeFilters()
+        private static void InitializeFilters()
         {
             WhiteSpace = new Dictionary<string, string>();
             OperatorList = new Dictionary<string, Operators>();
@@ -116,8 +116,6 @@ namespace System.Data.LightDatamodel.QueryModel
             OperatorPrecedence.Add(Operators.Or, 8);
             OperatorPrecedence.Add(Operators.In, 8);
             OperatorPrecedence.Add(Operators.Between, 8);
-
-            return null;
         }
 
         /// <summary>
