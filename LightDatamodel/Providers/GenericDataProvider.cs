@@ -754,6 +754,10 @@ namespace System.Data.LightDatamodel
 				sb.Append(QuoteTablename(typeinfo.Tablename));
 				sb.Append(" SET ");
 				bool hasedits = false;
+
+                //Let the "AddParameter" command detect the type of command
+                cmd.CommandText = sb.ToString();
+
 				foreach (TypeConfiguration.MappedField mf in typeinfo.MappedFields.Values)
 					if (!mf.IgnoreWithUpdate && (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(mf.Databasefield)))
 					{

@@ -177,7 +177,10 @@ namespace System.Data.LightDatamodel
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Couldn't set field\nError: " + ex.Message);
+                    string name = "<unknown>";
+                    try { name = reader.GetName(i); }
+                    catch { }
+                    throw new Exception("Couldn't set field \"" + name + "\"\nError: " + ex.Message);
                 }
             }
             return obj;

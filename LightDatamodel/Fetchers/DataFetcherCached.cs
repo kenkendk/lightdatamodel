@@ -567,16 +567,17 @@ namespace System.Data.LightDatamodel
         /// <returns>The items that were committed</returns>
         public virtual List<IDataClass> CommitWithRelations(params IDataClass[] items)
         {
-            List<IDataClass> dirty = new List<IDataClass>();
+            Dictionary<IDataClass, object> dirty = new Dictionary<IDataClass, object>();
             if (items != null)
-                foreach(IDataClass item in items)
+                foreach (IDataClass item in items)
                     foreach (IDataClass i in FindObjectRelations(item))
                         if (i.IsDirty || i.ObjectState != ObjectStates.Default)
-                            dirty.Add(i);
+                            dirty[i] = null;
 
-            Commit(dirty.ToArray());
+            List<IDataClass> lst = new List<IDataClass>(dirty.Keys);
+            Commit(lst.ToArray());
 
-            return dirty;
+            return lst;
         }
 
         public virtual void CommitRecursive(params IDataClass[] items)
