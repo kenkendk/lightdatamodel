@@ -60,9 +60,6 @@ namespace System.Data.LightDatamodel
 			object[] tmp = m_baseFetcher.GetObjects(type, op);
 			for (int i = 0; i < tmp.Length; i++)
 			    tmp[i] = ConvertBaseObject(tmp[i] as IDataClass);
-
-			//they will be hooked later on
-
 			return tmp;
 		}
 
@@ -77,6 +74,33 @@ namespace System.Data.LightDatamodel
 				ObjectTransformer.CopyObject(obj, localcopy);
 				CopyRelationsFromSourceFetcher(obj, localcopy);
 				return localcopy;
+			}
+		}
+
+		public override void LoadAndCacheObjects(params Type[] types)
+		{
+			DataFetcherCached conn = m_baseFetcher as DataFetcherCached;
+			if (conn == null) throw new Exception("The current base-fecther doesn't support the LoadAndCacheObjects");
+
+			//load from base fetcher
+			conn.LoadAndCacheObjects(types);
+
+			foreach (Type t in types)
+			{
+				object[] objs = m_baseFetcher.GetObjects(t);
+				if (objs != null)
+				{
+					//create local copies
+					object[] converted = new object[objs.Length];
+					int i = 0;
+					foreach (object o in objs) converted[i++] = ConvertBaseObject((IDataClass)o);
+
+					//insert manually in cache
+					InsertObjectsInCache(converted);
+				}
+
+				//register loaded objects
+				HasLoaded(t, new QueryModel.Operation(QueryModel.Operators.NOP));
 			}
 		}
 
@@ -105,8 +129,10 @@ namespace System.Data.LightDatamodel
 
 		protected override void UpdateObject(object obj)
 		{
-			ObjectTransformer.CopyObject((IDataClass)obj, m_tempobjects[(IDataClass)obj]);
-			CopyRelationsToSourceFetcher((IDataClass)obj, m_tempobjects[(IDataClass)obj]);		//should we trigger events here?
+			IDataClass localcopy = (IDataClass)obj;
+			IDataClass originalobject = m_tempobjects[localcopy];
+			ObjectTransformer.CopyObject(localcopy, originalobject);
+			CopyRelationsToSourceFetcher(localcopy, originalobject);		//should we trigger events here?
 			((DataClassBase)(IDataClass)obj).m_isdirty = false;
 		}
 

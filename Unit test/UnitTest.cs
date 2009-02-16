@@ -370,6 +370,20 @@ namespace Datamodel.UnitTest
 
             if (p1.CurrentTaskNote != n1)
                 throw new Exception("Bad recursive update");
+
+			//test LoadAndCache
+			fetcher.ClearCache();
+			fetcher.LoadAndCacheObjects(typeof(Note), typeof(Project));
+			Project[] tmp = fetcher.GetObjects<Project>();
+			tmp[tmp.Length - 1].Title = "FISK!!!!!";
+			try
+			{
+				fetcher.CommitAll();
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("NAAA na na naaa NA!!! " + ex.Message);
+			}
         }
 
 		/// <summary>
