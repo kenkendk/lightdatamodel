@@ -90,6 +90,11 @@ namespace System.Data.LightDatamodel
 			return GetEnumerator();
 		}
 
+		public int Count
+		{
+			get { return m_knownTypes.Count; }
+		}
+
         /// <summary>
         /// This class contains the type info for a single class/table
         /// </summary>
