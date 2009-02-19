@@ -97,6 +97,10 @@ namespace System.Data.LightDatamodel.QueryModel
         /// Returns the value of the parameter. The value is the column name if the property is a column. Call evaluate to get the column value.
         /// </summary>
         public virtual object Value { get { return m_value; } }
+		/// <summary>
+		/// Returns functionargs if available
+		/// </summary>
+		public OperationOrParameter[] FunctionArguments { get { return m_functionArgs; } }
 
         /// <summary>
         /// Gets or sets the operation used as the basis for the call, null means the queried object

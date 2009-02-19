@@ -55,7 +55,7 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
-		protected override object[] LoadObjects(Type type, QueryModel.Operation op)
+		protected override object[] LoadObjects(Type type, QueryModel.OperationOrParameter op)
 		{
 			object[] tmp = m_baseFetcher.GetObjects(type, op);
 			for (int i = 0; i < tmp.Length; i++)
@@ -75,6 +75,29 @@ namespace System.Data.LightDatamodel
 				CopyRelationsFromSourceFetcher(obj, localcopy);
 				return localcopy;
 			}
+		}
+
+		public override RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter, params object[] parameters)
+		{
+			//first load cache from base fetcher
+			IDataFetcherCached basecache = m_baseFetcher as IDataFetcherCached;
+			if (basecache != null)
+			{
+				DATACLASS[] objs = basecache.GetObjectsFromCache<DATACLASS>(filter, parameters);
+				if (objs != null)
+				{
+					//create local copies
+					object[] converted = new object[objs.Length];
+					int i = 0;
+					foreach (object o in objs) converted[i++] = ConvertBaseObject((IDataClass)o);
+
+					//insert manually in cache
+					InsertObjectsInCache(converted);
+				}
+			}
+
+			//continue
+			return base.Compute<RETURNVALUE, DATACLASS>(expression, filter, parameters);
 		}
 
 		public override void LoadAndCacheObjects(params Type[] types)

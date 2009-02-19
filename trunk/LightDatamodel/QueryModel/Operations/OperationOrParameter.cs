@@ -269,5 +269,51 @@ namespace System.Data.LightDatamodel.QueryModel
 
             }
         }
+
+		/// <summary>
+		/// Evaluates a list of objects against the query
+		/// </summary>
+		/// <param name="items">The items to filter</param>
+		/// <returns>A filtered list with only the matching items</returns>
+		public virtual ArrayList EvaluateList(IEnumerable items, params object[] parameters)
+		{
+			ArrayList lst = new ArrayList();
+			foreach (object o in items)
+				if (ResAsBool(this.Evaluate(o, parameters)))
+					lst.Add(o);
+			return lst;
+		}
+
+		/// <summary>
+		/// Evaluates a list of objects against the query
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="items"></param>
+		/// <param name="parameters"></param>
+		/// <returns></returns>
+		public virtual List<T> EvaluateList<T>(IEnumerable items, params object[] parameters)
+		{
+			System.Collections.Generic.List<T> lst = new System.Collections.Generic.List<T>();
+			foreach (object o in items)
+				if (ResAsBool(this.Evaluate(o, parameters)))
+					lst.Add((T)o);
+			return lst;
+		}
+
+
+		/// <summary>
+		/// Returns a boolean value for any object
+		/// </summary>
+		/// <param name="item">The item to convert to a boolean</param>
+		/// <returns>The most appropriate boolean return value</returns>
+		public static bool ResAsBool(object item)
+		{
+			if (item == null)
+				return false;
+			else if (item.GetType() == typeof(bool))
+				return (bool)item;
+			else
+				return false;
+		}
     }
 }

@@ -36,10 +36,10 @@ namespace System.Data.LightDatamodel
 
 		DATACLASS[] GetObjects<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 		DATACLASS[] GetObjects<DATACLASS>() where DATACLASS : IDataClass;
-		DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass;
+		DATACLASS[] GetObjects<DATACLASS>(QueryModel.OperationOrParameter operation) where DATACLASS : IDataClass;
 		object[] GetObjects(Type type);
 		object[] GetObjects(Type type, string filter, params object[] parameters);
-		object[] GetObjects(Type type, QueryModel.Operation operation);
+		object[] GetObjects(Type type, QueryModel.OperationOrParameter operation);
 		DATACLASS GetObject<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
 		object GetObject(Type type, string filter, params object[] parameters);
 		DATACLASS GetObjectById<DATACLASS>(object id) where DATACLASS : IDataClass;
@@ -49,7 +49,7 @@ namespace System.Data.LightDatamodel
 		object Add(Type type);
 		IDataClass Add(IDataClass newobj);
 		IDataProvider Provider { get; }
-        RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter);
+        RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter, params object[] parameters) where DATACLASS : IDataClass;
 		void DeleteObject<DATACLASS>(object id) where DATACLASS : IDataClass;
         void DeleteObject(object item);
 		void RefreshObject(IDataClass obj);
@@ -70,17 +70,17 @@ namespace System.Data.LightDatamodel
         DATACLASS GetObjectByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
         object GetObjectByIndex(Type type, string indexname, object indexvalue);
         object GetObjectFromCache(Type type, string filter, params object[] parameters);
-        object GetObjectFromCache(Type type, System.Data.LightDatamodel.QueryModel.Operation query);
+		object GetObjectFromCache(Type type, System.Data.LightDatamodel.QueryModel.OperationOrParameter query);
         DATACLASS GetObjectFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
-        DATACLASS GetObjectFromCache<DATACLASS>(System.Data.LightDatamodel.QueryModel.Operation query) where DATACLASS : IDataClass;
+		DATACLASS GetObjectFromCache<DATACLASS>(System.Data.LightDatamodel.QueryModel.OperationOrParameter query) where DATACLASS : IDataClass;
         DATACLASS GetObjectFromCacheById<DATACLASS>(object id);
         object GetObjectFromCacheById(Type type, object id);
         object[] GetObjectsByIndex(Type type, string indexname, object indexvalue);
         DATACLASS[] GetObjectsByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
-        object[] GetObjectsFromCache(Type type, System.Data.LightDatamodel.QueryModel.Operation query);
+		object[] GetObjectsFromCache(Type type, System.Data.LightDatamodel.QueryModel.OperationOrParameter query);
         object[] GetObjectsFromCache(Type type, string filter, params object[] parameters);
         DATACLASS[] GetObjectsFromCache<DATACLASS>(string filter, params object[] parameters) where DATACLASS : IDataClass;
-        DATACLASS[] GetObjectsFromCache<DATACLASS>(System.Data.LightDatamodel.QueryModel.Operation query) where DATACLASS : IDataClass;
+		DATACLASS[] GetObjectsFromCache<DATACLASS>(System.Data.LightDatamodel.QueryModel.OperationOrParameter query) where DATACLASS : IDataClass;
         bool IsDirty { get; }
         void LoadAndCacheObjects(params Type[] types);
         DataFetcherCached.Cache LocalCache { get; }
