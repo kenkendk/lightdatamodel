@@ -131,7 +131,7 @@ namespace System.Data.LightDatamodel.QueryModel
         /// </summary>
         /// <param name="query">The SQL Query to parse</param>
         /// <returns>The equvalent query structure</returns>
-        public static Operation ParseQuery(string query, params object[] values)
+		public static OperationOrParameter ParseQuery(string query, params object[] values)
         {
             if (query == null || query.Trim().Length == 0)
                 return new Operation(Operators.NOP);
@@ -141,10 +141,10 @@ namespace System.Data.LightDatamodel.QueryModel
             OperationOrParameter[] op = InternalParseQuery(query, values, ref bindIndex);
             if (op.Length != 1)
                 throw new Exception("Failed to parse the query into a meaningfull representation");
-            else if (!op[0].IsOperation)
-                throw new Exception("Query does not produce a valid statement");
+            /*else if (!op[0].IsOperation)
+                throw new Exception("Query does not produce a valid statement");*/
 
-            return (Operation)op[0];
+            return op[0];
         }
 
         /// <summary>

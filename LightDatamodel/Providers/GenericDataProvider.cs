@@ -54,7 +54,7 @@ namespace System.Data.LightDatamodel
 
         private class SQLFilterBuilder : QueryModel.OperationOrParameter
         {
-            public SQLFilterBuilder(GenericDataProvider provider, IDbCommand cmd, QueryModel.Operation op)
+			public SQLFilterBuilder(GenericDataProvider provider, IDbCommand cmd, QueryModel.OperationOrParameter op)
             {
                 m_cmd = cmd;
                 m_provider = provider;
@@ -66,7 +66,7 @@ namespace System.Data.LightDatamodel
 
             private IDbCommand m_cmd;
             private GenericDataProvider m_provider;
-            private QueryModel.Operation m_operation;
+			private QueryModel.OperationOrParameter m_operation;
             private int m_colid = 4;
 
 			//public IDbCommand Command
@@ -353,11 +353,12 @@ namespace System.Data.LightDatamodel
 		/// <param name="expression"></param>
 		/// <param name="filter"></param>
 		/// <returns></returns>
-		public virtual object Compute(string tablename, string expression, string filter)
+		public virtual object Compute(string tablename, string expression, QueryModel.OperationOrParameter operation)
 		{
 			OpenConnection();
 			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "SELECT " + expression + " FROM " + QuoteTablename(tablename) + ( !String.IsNullOrEmpty(filter) ? " WHERE " + filter : "");
+			string sqlfilter = new SQLFilterBuilder(this, cmd, operation).ToString();
+			cmd.CommandText = "SELECT " + expression + " FROM " + QuoteTablename(tablename) + (!string.IsNullOrEmpty(sqlfilter) ? " WHERE " + sqlfilter : "");
 
 			try
 			{
@@ -593,7 +594,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="tablename"></param>
 		/// <param name="operation"></param>
 		/// <returns></returns>
-		public virtual object[] SelectRows(Type type, QueryModel.Operation operation)
+		public virtual object[] SelectRows(Type type, QueryModel.OperationOrParameter operation)
 		{
 			OpenConnection();
             using (IDbCommand cmd = m_connection.CreateCommand())

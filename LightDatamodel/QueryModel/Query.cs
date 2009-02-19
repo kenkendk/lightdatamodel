@@ -36,7 +36,7 @@ namespace System.Data.LightDatamodel
         /// <param name="query">The string to parse</param>
         /// <param name="values">Any values to insert into the query</param>
         /// <returns>A parsed object, representing the query</returns>
-        public static Operation Parse(string query, params object[] values)
+		public static OperationOrParameter Parse(string query, params object[] values)
         {
             return Parser.ParseQuery(query, values);
         }
@@ -304,7 +304,7 @@ namespace System.Data.LightDatamodel
         /// <param name="items">The list to search</param>
         /// <param name="parameters">Extra unbound parameters</param>
         /// <returns>All objects matching the criteria</returns>
-        public static ArrayList SearchLinear(Operation op, IEnumerable items, params object[] parameters)
+		public static ArrayList SearchLinear(OperationOrParameter op, IEnumerable items, params object[] parameters)
         {
             return op.EvaluateList(items, parameters);
         }
@@ -317,7 +317,7 @@ namespace System.Data.LightDatamodel
         /// <param name="items">The list to search</param>
         /// <param name="parameters">Extra unbound parameters</param>
         /// <returns>All objects matching the criteria</returns>
-        public static List<T> SearchLinear<T>(Operation op, IEnumerable items, params object[] parameters)
+		public static List<T> SearchLinear<T>(OperationOrParameter op, IEnumerable items, params object[] parameters)
         {
             return op.EvaluateList<T>(items, parameters);
         }
@@ -329,7 +329,7 @@ namespace System.Data.LightDatamodel
         /// <param name="items">The list to search</param>
         /// <param name="parameters">Extra unbound parameters</param>
         /// <returns>The object matching the criteria, or null</returns>
-        public static object FindFirst(Operation op, IEnumerable items, params object[] parameters)
+		public static object FindFirst(OperationOrParameter op, IEnumerable items, params object[] parameters)
         {
             foreach (object o in items)
                 if (Operation.ResAsBool(op.Evaluate(o, parameters)))
@@ -345,7 +345,7 @@ namespace System.Data.LightDatamodel
         /// <param name="items">The list to search</param>
         /// <param name="parameters">Extra unbound parameters</param>
         /// <returns>The object matching the criteria, or null</returns>
-        public static T FindFirst<T>(Operation op, IEnumerable items, params object[] parameters)
+		public static T FindFirst<T>(OperationOrParameter op, IEnumerable items, params object[] parameters)
         {
             return (T)FindFirst(op, items, parameters);
         }

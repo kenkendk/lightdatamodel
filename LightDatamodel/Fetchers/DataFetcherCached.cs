@@ -780,7 +780,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="type"></param>
 		/// <param name="operation"></param>
 		/// <returns></returns>
-		public override object[] GetObjects(Type type, QueryModel.Operation operation)
+		public override object[] GetObjects(Type type, QueryModel.OperationOrParameter operation)
 		{
 			if (!HasLoaded(type, operation))
 				InsertObjectsInCache(LoadObjects(type, operation));
@@ -802,7 +802,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="type"></param>
 		/// <param name="operation"></param>
 		/// <returns></returns>
-		protected bool HasLoaded(Type type, QueryModel.Operation operation)
+		protected bool HasLoaded(Type type, QueryModel.OperationOrParameter operation)
 		{
 			string eq = operation.ToString(false);
 			if (eq != null)
@@ -911,7 +911,7 @@ namespace System.Data.LightDatamodel
 		/// <typeparam name="DATACLASS"></typeparam>
 		/// <param name="query"></param>
 		/// <returns></returns>
-		public DATACLASS GetObjectFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass
+		public DATACLASS GetObjectFromCache<DATACLASS>(QueryModel.OperationOrParameter query) where DATACLASS : IDataClass
 		{
 			DATACLASS[] ret = GetObjectsFromCache<DATACLASS>(query); //this has lock
 			if (ret != null && ret.Length > 0) return ret[0];
@@ -924,7 +924,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="type"></param>
 		/// <param name="query"></param>
 		/// <returns></returns>
-		public DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.Operation query) where DATACLASS : IDataClass
+		public DATACLASS[] GetObjectsFromCache<DATACLASS>(QueryModel.OperationOrParameter query) where DATACLASS : IDataClass
 		{
 			return (DATACLASS[])(Array)GetObjectsFromCache(typeof(DATACLASS), query);
 		}
@@ -935,7 +935,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="type"></param>
 		/// <param name="query"></param>
 		/// <returns></returns>
-		public object GetObjectFromCache(Type type, QueryModel.Operation query)
+		public object GetObjectFromCache(Type type, QueryModel.OperationOrParameter query)
 		{
 			object[] ret = GetObjectsFromCache(type, query); //this has lock
 			if (ret != null && ret.Length > 0) return ret[0];
@@ -948,7 +948,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="type"></param>
 		/// <param name="query"></param>
 		/// <returns></returns>
-		public virtual object[] GetObjectsFromCache(Type type, QueryModel.Operation query)
+		public virtual object[] GetObjectsFromCache(Type type, QueryModel.OperationOrParameter query)
 		{
 			try
 			{
@@ -1381,6 +1381,70 @@ namespace System.Data.LightDatamodel
 
             if (ObjectAddRemove != null) ObjectAddRemove(this, newobj, ObjectStates.New, ObjectStates.New);
 			return newobj;
+		}
+
+		/// <summary>
+		/// This will do some calculations such as MAX, MIN etc. This one will also do some simple parsing and test agains the cache
+		/// </summary>
+		/// <typeparam name="RETURNVALUE"></typeparam>
+		/// <typeparam name="DATACLASS"></typeparam>
+		/// <param name="expression"></param>
+		/// <param name="filter"></param>
+		/// <returns></returns>
+		public override RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter, params object[] parameters)
+		{
+			RETURNVALUE val = default(RETURNVALUE);
+
+			//check if we have loaded all objects
+			bool allloaded = m_loadreducer.ContainsKey(typeof(DATACLASS)) && m_loadreducer[typeof(DATACLASS)].ContainsKey("");
+
+			//search database
+			if (!allloaded) val = base.Compute<RETURNVALUE, DATACLASS>(expression, filter, parameters);
+
+			//parse aggregate
+			QueryModel.OperationOrParameter aggre = Query.Parse(expression, null);
+			if (aggre == null || aggre.GetType() != typeof(QueryModel.Parameter)) throw new Exception("Expression (" + expression + ") not supported yet");
+			QueryModel.Parameter p = (QueryModel.Parameter)aggre;
+			if (!p.IsFunction || !(p.Value.ToString() == "MAX" || p.Value.ToString() == "MIN" || p.Value.ToString() == "AVR" || p.Value.ToString() == "SUM")) throw new Exception("Expression (" + expression + ") not supported yet");
+
+			//get from cache
+			DATACLASS[] cache = GetObjectsFromCache<DATACLASS>(filter, parameters);
+			if (cache == null || cache.Length == 0) return (RETURNVALUE)Convert.ChangeType(0, typeof(RETURNVALUE));
+
+			//evaluate
+			try
+			{
+				double tmp = 0;
+				switch (p.Value.ToString())
+				{
+					case "MAX":
+						tmp = double.MinValue;
+						foreach (DATACLASS o in cache)
+							tmp = (double)Math.Max(tmp, (double)Convert.ChangeType( p.FunctionArguments[0].Evaluate(o, null), typeof(double)));
+						break;
+					case "MIN":
+						tmp = double.MaxValue;
+						foreach (DATACLASS o in cache)
+							tmp = (double)Math.Min(tmp, (double)Convert.ChangeType(p.FunctionArguments[0].Evaluate(o, null), typeof(double)));
+						break;
+					case "AVR":
+						foreach (DATACLASS o in cache)
+							tmp += (double)Convert.ChangeType(p.FunctionArguments[0].Evaluate(o, null), typeof(double));
+						tmp /= cache.Length;
+						break;
+					case "SUM":
+						foreach (DATACLASS o in cache)
+							tmp += (double)Convert.ChangeType(p.FunctionArguments[0].Evaluate(o, null), typeof(double));
+						break;
+				}
+				val = (RETURNVALUE)Convert.ChangeType(tmp, typeof(RETURNVALUE));
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Couldn't evaluate object. Error: " + ex.Message);
+			}
+
+			return val;
 		}
 
 		/// <summary>

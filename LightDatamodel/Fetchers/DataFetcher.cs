@@ -173,7 +173,7 @@ namespace System.Data.LightDatamodel
         /// <param name="type"></param>
         /// <param name="op"></param>
         /// <returns></returns>
-        protected virtual object[] LoadObjects(Type type, QueryModel.Operation op)
+		protected virtual object[] LoadObjects(Type type, QueryModel.OperationOrParameter op)
         {
             return m_provider.SelectRows(type, op);
         }
@@ -251,7 +251,7 @@ namespace System.Data.LightDatamodel
 		/// <typeparam name="DATACLASS"></typeparam>
 		/// <param name="operation"></param>
 		/// <returns></returns>
-		public DATACLASS[] GetObjects<DATACLASS>(QueryModel.Operation operation) where DATACLASS : IDataClass
+		public DATACLASS[] GetObjects<DATACLASS>(QueryModel.OperationOrParameter operation) where DATACLASS : IDataClass
 		{
 			return (DATACLASS[])(Array)GetObjects(typeof(DATACLASS), operation);
 		}
@@ -290,7 +290,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="type"></param>
 		/// <param name="operation"></param>
 		/// <returns></returns>
-		public virtual object[] GetObjects(Type type, QueryModel.Operation operation)
+		public virtual object[] GetObjects(Type type, QueryModel.OperationOrParameter operation)
 		{
 			OnBeforeDataConnection(null, DataActions.Fetch);
 
@@ -417,10 +417,10 @@ namespace System.Data.LightDatamodel
 		/// <param name="expression"></param>
 		/// <param name="filter"></param>
 		/// <returns></returns>
-		public virtual RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter)
+		public virtual RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter, params object[] parameters) where DATACLASS : IDataClass
 		{
 			OnBeforeDataConnection(null, DataActions.Fetch);
-			object ret = m_provider.Compute(typeof(DATACLASS).Name, expression, filter);
+			object ret = m_provider.Compute(typeof(DATACLASS).Name, expression, Query.Parse(filter, parameters));
 			OnAfterDataConnection(ret, DataActions.Fetch);
 			if (ret == null || ret == DBNull.Value) return default(RETURNVALUE);
 			try

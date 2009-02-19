@@ -384,6 +384,21 @@ namespace Datamodel.UnitTest
 			{
 				throw new Exception("NAAA na na naaa NA!!! " + ex.Message);
 			}
+
+			//test compute
+			Project p = new Project();
+			p.ProjectNoteID = 6666;
+			baseFetcher.Add(p);
+			p = new Project();
+			p.ProjectNoteID = 7777;
+			fetcher.Add(p);
+			long maxid = fetcher.Compute<long, Project>("MAX(ProjectNoteID)", null);
+			if (maxid != 7777) throw new Exception("Bah");
+			p = new Project();
+			p.ProjectNoteID = 8888;
+			baseFetcher.Add(p);
+			maxid = fetcher.Compute<long, Project>("MAX(ProjectNoteID)", null);
+			if (maxid != 8888) throw new Exception("Bah");
         }
 
 		/// <summary>
@@ -553,6 +568,12 @@ namespace Datamodel.UnitTest
 			nf.CommitAll();
 			if (!fetcher.IsDirty) throw new Exception("Bah");
 
+			//test compute
+			Project p = new Project();
+			p.ProjectNoteID = 9999;
+			fetcher.Add(p);
+			long maxid = fetcher.Compute<long, Project>("MAX(ProjectNoteID)", "");
+			if (maxid < 9999) throw new Exception("Bah!");
 		}
 
 		public static void TestQueryModel(IDbConnection con)
@@ -584,15 +605,15 @@ namespace Datamodel.UnitTest
 			int listlen = f.Length;
 
             //Basic function invocation
-            Operation opy1 = Query.Parse("GetType() Is ?", typeof(string));
+            OperationOrParameter opy1 = Query.Parse("GetType() Is ?", typeof(string));
             //Function invocation and use of a property on the result
-            Operation opy2 = Query.Parse("GetType().FullName = ?", typeof(string).FullName);
+			OperationOrParameter opy2 = Query.Parse("GetType().FullName = ?", typeof(string).FullName);
             //Longer nesting of the above, the left and right hand side are equvalent
-            Operation opy3 = Query.Parse("GetType().Assembly.GetType().FullName = ?", typeof(string).Assembly.GetType().FullName);
+			OperationOrParameter opy3 = Query.Parse("GetType().Assembly.GetType().FullName = ?", typeof(string).Assembly.GetType().FullName);
             //Static function invocation, and use of the this column
-            Operation opy4 = Query.Parse("::System.Convert.ToString(this) = ?", "4");
+			OperationOrParameter opy4 = Query.Parse("::System.Convert.ToString(this) = ?", "4");
             //The left and right hand side are equvalent
-            Operation opy5 = Query.Parse("this.GetType() is GetType()");
+			OperationOrParameter opy5 = Query.Parse("this.GetType() is GetType()");
 
             object[] testitems = new object[] { "", 4, 'c' };
 
@@ -607,7 +628,7 @@ namespace Datamodel.UnitTest
             if (opy5.EvaluateList(testitems).Count != 3)
                 throw new Exception("Invalid function call");
 
-			Operation op = Query.Parse("ID = 5 AND X = \"test\" AND Y = 5.3");
+			OperationOrParameter op = Query.Parse("ID = 5 AND X = \"test\" AND Y = 5.3");
 
 			System.Data.LightDatamodel.QueryModel.Operation opx =
 				new Operation(Operators.In, new OperationOrParameter[] {
