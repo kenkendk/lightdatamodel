@@ -129,6 +129,48 @@ namespace System.Data.LightDatamodel
 			return cacheobjects;
 		}
 
+        /// <summary>
+        /// This will search through the cache for the given related objects. Indexes are used if possible
+        /// </summary>
+        /// <param name="relationkey"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
+        protected virtual IDataClass[] GetRelatedObjectsFromCache(string relationkey, IDataClass owner)
+        {
+            IDataClass[] cacheobjects = null;
+            if (owner.GetType() == m_relations[relationkey].Parent.Type)
+            {
+                    cacheobjects = (IDataClass[])GetObjectsFromCache(m_relations[relationkey].Child.Type, m_relations[relationkey].ChildField.Databasefield + " = ?", m_relations[relationkey].ParentField.Field.GetValue(owner));
+            }
+            else
+            {
+                cacheobjects = new IDataClass[] { GetRelatedObjectFromCache(relationkey, owner) };
+                if (cacheobjects[0] == null) cacheobjects = null;
+            }
+            return cacheobjects;
+        }
+
+        /// <summary>
+        /// This will search through the cache for the given related objects. Indexes are used if possible
+        /// </summary>
+        /// <param name="relationkey"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
+        protected virtual IDataClass GetRelatedObjectFromCache(string relationkey, IDataClass owner)
+        {
+            IDataClass cacheobject = null;
+            if (owner.GetType() == m_relations[relationkey].Parent.Type)
+            {
+                cacheobject = (IDataClass)GetObjectFromCache(m_relations[relationkey].Child.Type, m_relations[relationkey].ChildField.Databasefield + " = ?", m_relations[relationkey].ParentField.Field.GetValue(owner));
+            }
+            else
+            {
+                cacheobject = (IDataClass)GetObjectFromCache(m_relations[relationkey].Parent.Type, m_relations[relationkey].ParentField.Databasefield + " = ?", m_relations[relationkey].ChildField.Field.GetValue(owner));
+            }
+            return cacheobject;
+        }
+
+
 		/// <summary>
 		/// This will return the objects with explicit relations (DB not searched)
 		/// </summary>
@@ -157,6 +199,14 @@ namespace System.Data.LightDatamodel
 			m_objectrelationcache[owner][relationkey].SubObjects.Values.CopyTo(ret, 0);
 			return ret;
 		}
+
+        public virtual IList<DATACLASS> GetRelatedObjectsFromMemory<DATACLASS>(string relationkey, IDataClass owner) where DATACLASS : IDataClass
+        {
+            //fetch from cache
+            DATACLASS[] cacheobjects = (DATACLASS[])(Array)GetRelatedObjectsFromCache(relationkey, owner);
+            DATACLASS[] cesspitobjects = (DATACLASS[])(Array)GetRelatedObjectsFromCesspool(relationkey, owner);
+            return (IList<DATACLASS>)new RelatedObjectCollection<DATACLASS>(owner, relationkey, cacheobjects, cesspitobjects, this);
+        }
 
 		public virtual IList<DATACLASS> GetRelatedObjects<DATACLASS>(string relationkey, IDataClass owner) where DATACLASS : IDataClass
 		{
@@ -449,27 +499,37 @@ namespace System.Data.LightDatamodel
             if (items == null || items.Length == 0)
                 return;
 
-            List<IDataClass> updated = new List<IDataClass>();
-            List<IDataClass> deleted = new List<IDataClass>();
+            bool stillDirty;
 
-            foreach (IDataClass obj in items)
-                if (obj.ObjectState != ObjectStates.Deleted)
-                {
+            do
+            {
+                List<IDataClass> updated = new List<IDataClass>();
+                List<IDataClass> deleted = new List<IDataClass>();
+
+                foreach (IDataClass obj in items)
+                    if (obj.ObjectState != ObjectStates.Deleted)
+                    {
+                        UpdateObjectKeys(obj);
+                        updated.Add(obj);
+                    }
+                    else
+                        deleted.Add(obj);
+
+                base.Commit(items);
+
+                //Refresh keys
+                foreach (IDataClass obj in updated)
                     UpdateObjectKeys(obj);
-                    updated.Add(obj);
-                }
-                else
-                    deleted.Add(obj);
 
-            base.Commit(items);
+                //Unhook
+                foreach (IDataClass obj in deleted)
+                    UnregisterObject(obj);
 
-            //Refresh keys
-            foreach (IDataClass obj in updated)
-                UpdateObjectKeys(obj);
+                stillDirty = false;
+                foreach (IDataClass obj in items)
+                    stillDirty |= obj.IsDirty;
 
-            //Unhook
-            foreach (IDataClass obj in deleted)
-                UnregisterObject(obj);
+            } while (stillDirty);
 		}
 
 		public override void ClearCache()
@@ -503,9 +563,8 @@ namespace System.Data.LightDatamodel
         {
             TypeConfiguration.MappedClass ic = m_mappings[item.GetType()];
             foreach (TypeConfiguration.Reference r in ic.References.Values)
-                if (m_objectrelationcache.ContainsKey(item) && m_objectrelationcache[item].ContainsKey(r.Name))
-                    foreach (IDataClass ro in m_objectrelationcache[item][r.Name].SubObjects.Values)
-                        queue.Enqueue(ro);
+                foreach (IDataClass c in GetRelatedObjectsFromMemory<IDataClass>(r.Name, item))
+                    queue.Enqueue(c);
         }
 	}
 }
