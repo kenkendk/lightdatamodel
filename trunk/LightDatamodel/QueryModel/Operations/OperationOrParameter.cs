@@ -80,12 +80,16 @@ namespace System.Data.LightDatamodel.QueryModel
                     case Operators.NOP:
                         return true;
                     case QueryModel.Operators.Not:
-                        sb.Append("Not ");
+                        sb.Append(" ");
+                        sb.Append(TranslateOperator(operation.Operator, operation.ActualName));
+                        sb.Append(" ");
                         if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
                             return false;
                         break;
                     case QueryModel.Operators.IIF:
-                        sb.Append("IIF(");
+                        sb.Append(" ");
+                        sb.Append(TranslateOperator(operation.Operator, operation.ActualName));
+                        sb.Append(" (");
                         if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
                             return false;
                         sb.Append(",");
@@ -104,7 +108,9 @@ namespace System.Data.LightDatamodel.QueryModel
                         {
                             if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
                                 return false;
-                            sb.Append(" In (");
+                            sb.Append(" ");
+                            sb.Append(TranslateOperator(operation.Operator, operation.ActualName));
+                            sb.Append("(");
                             int i = 0;
                             foreach (object o in (IEnumerable)(((QueryModel.Parameter)operation.Parameters[1]).Value))
                             {
@@ -132,7 +138,7 @@ namespace System.Data.LightDatamodel.QueryModel
                             if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
                                 return false;
                             sb.Append(" ");
-                            sb.Append(TranslateOperator(Operators.Between));
+                            sb.Append(TranslateOperator(operation.Operator, operation.ActualName));
                             sb.Append(" ");
                             if (!WrapIfNeeded(operation.Parameters[1], allowNonprimitives, sb))
                                 return false;
@@ -145,7 +151,7 @@ namespace System.Data.LightDatamodel.QueryModel
                         if (!WrapIfNeeded(operation.Parameters[0], allowNonprimitives, sb))
                             return false;
                         sb.Append(" ");
-                        sb.Append(TranslateOperator(operation.Operator));
+                        sb.Append(TranslateOperator(operation.Operator, operation.ActualName));
                         sb.Append(" ");
                         if (!WrapIfNeeded(operation.Parameters[1], allowNonprimitives, sb))
                             return false;
@@ -230,7 +236,7 @@ namespace System.Data.LightDatamodel.QueryModel
         /// </summary>
         /// <param name="opr">The operator to translate</param>
         /// <returns>The translated value</returns>
-        protected virtual string TranslateOperator(QueryModel.Operators opr)
+        protected virtual string TranslateOperator(QueryModel.Operators opr, string actualname)
         {
             switch (opr)
             {

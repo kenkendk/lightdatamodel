@@ -53,6 +53,15 @@ namespace System.Data.LightDatamodel.QueryModel
         private static Dictionary<string, string> OperatorSeperators = null;
 
         /// <summary>
+        /// Special values that map to custom functions
+        /// </summary>
+        internal static Dictionary<string, GlobalFunctionDelegate> GlobalFunctions = null;
+        /// <summary>
+        /// A list of custom operators
+        /// </summary>
+        internal static Dictionary<string, CustomBinaryOperator> CustomBinaryOperators = null;
+
+        /// <summary>
         /// Initialize the global filter list
         /// </summary>
         private static void InitializeFilters()
@@ -62,6 +71,8 @@ namespace System.Data.LightDatamodel.QueryModel
             Pairwise = new Dictionary<string, string>();
             OperatorPrecedence = new Dictionary<Operators, int>();
             OperatorSeperators = new Dictionary<string, string>();
+            GlobalFunctions = new Dictionary<string, GlobalFunctionDelegate>();
+            CustomBinaryOperators = new Dictionary<string, CustomBinaryOperator>();
 
             WhiteSpace.Add(" ", null);
             WhiteSpace.Add(",", null);
@@ -116,6 +127,9 @@ namespace System.Data.LightDatamodel.QueryModel
             OperatorPrecedence.Add(Operators.Or, 8);
             OperatorPrecedence.Add(Operators.In, 8);
             OperatorPrecedence.Add(Operators.Between, 8);
+
+            //Custom operators are assigned the lowest preceedence for now
+            OperatorPrecedence.Add(Operators.Custom, 9);
         }
 
         /// <summary>
@@ -124,6 +138,81 @@ namespace System.Data.LightDatamodel.QueryModel
         static Parser()
         {
             InitializeFilters();
+        }
+
+        /// <summary>
+        /// A delegate for registering a global function
+        /// </summary>
+        /// <param name="item">The item to process</param>
+        /// <returns>The result of the operation</returns>
+        public delegate object GlobalFunctionDelegate(object item);
+
+        /// <summary>
+        /// A delegate for registering a custom operator 
+        /// </summary>
+        /// <param name="a">The left-hand side of the operator</param>
+        /// <param name="b">The right-hand side of the operator</param>
+        /// <returns>The result of evaluating the two objects</returns>
+        public delegate object CustomBinaryOperator(object a, object b);
+
+        /// <summary>
+        /// Adds a custom binary operator.
+        /// </summary>
+        /// <param name="name">The name of the function, eg. &quot;+&quot; or &quot;PLUS&quot; </param>
+        /// <param name="func">The function to invoke when the operation is evaluated</param>
+        public static void AddCustomBinaryOperator(string name, CustomBinaryOperator func)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+            if (name.Contains("."))
+                throw new ArgumentException("Function name cannot contain a period (\".\") charater", "name");
+            if (OperatorList.ContainsKey(name.Trim().ToUpper()) && OperatorList[name.Trim().ToUpper()] != Operators.Custom)
+                    throw new Exception("A built in function with called \"" + name + "\" exists, custom functions cannot replace it.");
+
+            OperatorList[name.Trim().ToUpper()] = Operators.Custom;
+            CustomBinaryOperators[name.Trim().ToUpper()] = func;
+        }
+
+        /// <summary>
+        /// Adds a custom function to the global scope.
+        /// </summary>
+        /// <param name="name">The name of the custom function, like MAX or MIN</param>
+        /// <param name="func">The function to call when the function is used</param>
+        public static void AddGlobalFunction(string name, GlobalFunctionDelegate func)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+            if (name.Contains("."))
+                throw new ArgumentException("Function name cannot contain a period (\".\") charater", "name");
+            GlobalFunctions[name.Trim().ToUpper()] = func;
+        }
+
+        /// <summary>
+        /// Returns a value indicating if a named function has been registered.
+        /// </summary>
+        /// <param name="name">The name of the function</param>
+        /// <returns>True if the function is registered, false otherwise</returns>
+        public static bool HasGlobalFunction(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+            if (name.Contains("."))
+                throw new ArgumentException("Function name cannot contain a period (\".\") charater", "name");
+            return GlobalFunctions.ContainsKey(name.Trim().ToUpper());
+        }
+
+        /// <summary>
+        /// Returns a value indicating if a given custom operator has been registered.
+        /// </summary>
+        /// <param name="name">The name of the operator</param>
+        /// <returns>True if the operator is registered, false otherwise</returns>
+        public static bool HasCustomOperator(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+            if (name.Contains("."))
+                throw new ArgumentException("Function name cannot contain a period (\".\") charater", "name");
+            return CustomBinaryOperators.ContainsKey(name.Trim().ToUpper());
         }
 
         /// <summary>
@@ -248,7 +337,7 @@ namespace System.Data.LightDatamodel.QueryModel
                 if (OperatorList.ContainsKey(opr.ToUpper()))
                 {
                     Operators op = OperatorList[opr.ToUpper()];
-                    parsed.Add(op);
+                    parsed.Add(new KeyValuePair<string, Operators>(opr, op));
                 }
                 else if (opr.ToUpper().Equals("ORDER"))
                 {
@@ -330,12 +419,12 @@ namespace System.Data.LightDatamodel.QueryModel
             SortedList<int, List<int>> operators = new SortedList<int, List<int>>();
             for(int pix = 0; pix < parsed.Count; pix++)
             {
-                if (parsed[pix] is Operators)
+                if (parsed[pix] is KeyValuePair<string, Operators>)
                 {
-                    Operators op = (Operators)parsed[pix];
+                    KeyValuePair<string, Operators> op = (KeyValuePair<string, Operators>)parsed[pix];
                     int precedence = 10;
-                    if (OperatorPrecedence.ContainsKey(op))
-                        precedence = OperatorPrecedence[op];
+                    if (OperatorPrecedence.ContainsKey(op.Value))
+                        precedence = OperatorPrecedence[op.Value];
                     if (!operators.ContainsKey(precedence))
                         operators.Add(precedence, new List<int>());
                     operators[precedence].Add(pix);
@@ -349,7 +438,7 @@ namespace System.Data.LightDatamodel.QueryModel
                 for (int i = de.Count - 1; i >= 0; i--)
                 {
                     int pos = de[i];
-                    Operators op = (Operators)parsed[pos];
+                    KeyValuePair<string, Operators> op = (KeyValuePair<string, Operators>)parsed[pos];
                     OperationOrParameter opm;
                     ArrayList lm;
 
@@ -357,12 +446,12 @@ namespace System.Data.LightDatamodel.QueryModel
                     int rm = pos - 1;
                     int rc = 3;
 
-                    switch (op)
+                    switch (op.Value)
                     {
                         case Operators.Not:
                             if (pos >= parsed.Count)
                                 throw new Exception("No parameters for the not operator");
-                            opm = new Operation(op, (OperationOrParameter)parsed[pos + 1]);
+                            opm = new Operation(op.Value, (OperationOrParameter)parsed[pos + 1]);
                             //parsed.RemoveRange(pos, 2);
                             //parsed.Insert(pos, opm);
                             rc = 2;
@@ -373,7 +462,7 @@ namespace System.Data.LightDatamodel.QueryModel
                                 throw new Exception("Not enough parameters for the IIF operator");
                             if (parsed[pos + 1] as OperationOrParameter[] == null)
                                 throw new Exception("The IIF operator must have a single list operand");
-                            opm = new Operation(op, (OperationOrParameter[])parsed[pos + 1]);
+                            opm = new Operation(op.Value, (OperationOrParameter[])parsed[pos + 1]);
                             rc = 2;
                             rm = pos;
                             break;
@@ -390,10 +479,10 @@ namespace System.Data.LightDatamodel.QueryModel
                                 lm = new ArrayList();
                                 lm.Add(parsed[pos - 1]);
                                 lm.AddRange((OperationOrParameter[])parsed[pos + 1]);
-                                opm = new Operation(op, (OperationOrParameter[])lm.ToArray(typeof(OperationOrParameter)));
+                                opm = new Operation(op.Value, (OperationOrParameter[])lm.ToArray(typeof(OperationOrParameter)));
                             }
                             else
-                                opm = new Operation(op, (OperationOrParameter)parsed[pos - 1], (OperationOrParameter)parsed[pos + 1]);
+                                opm = new Operation(op.Value, (OperationOrParameter)parsed[pos - 1], (OperationOrParameter)parsed[pos + 1]);
 
                             rc = 3;
                             break;
@@ -402,9 +491,11 @@ namespace System.Data.LightDatamodel.QueryModel
                                 throw new Exception("Must have preceeding and succeding token for the " + op.ToString() + " operator");
                             if (parsed[pos - 1] as OperationOrParameter == null || parsed[pos + 1] as OperationOrParameter == null)
                                 throw new Exception("List values can only be used with the IN or IIF operator");
-                            opm = new Operation(op, (OperationOrParameter)parsed[pos - 1], (OperationOrParameter)parsed[pos + 1]);
+                            opm = new Operation(op.Value, (OperationOrParameter)parsed[pos - 1], (OperationOrParameter)parsed[pos + 1]);
                             break;
                     }
+
+                    ((Operation)opm).ActualName = op.Key;
 
                     parsed.RemoveRange(rm, rc);
                     parsed.Insert(rm, opm);

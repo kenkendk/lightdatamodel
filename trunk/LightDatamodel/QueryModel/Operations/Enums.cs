@@ -43,6 +43,7 @@ namespace System.Data.LightDatamodel.QueryModel
         In,
         Between,
         Is,
-        NOP
+        NOP,
+        Custom
     }
 }

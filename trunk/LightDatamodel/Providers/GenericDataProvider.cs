@@ -81,9 +81,9 @@ namespace System.Data.LightDatamodel
 			//    set { m_provider = value; }
 			//}
 
-            protected override string TranslateOperator(System.Data.LightDatamodel.QueryModel.Operators opr)
+            protected override string TranslateOperator(System.Data.LightDatamodel.QueryModel.Operators opr, string actualname)
             {
-                return m_provider.TranslateOperator(opr);
+                return m_provider.TranslateOperator(opr, actualname);
             }
 
             protected override void QuoteColumnName(string columnname, System.Text.StringBuilder sb)
@@ -408,7 +408,7 @@ namespace System.Data.LightDatamodel
 		}
 
 		/// <summary>
-		/// Will get or set the connection string. All DBs I've meet is able to connect throug the use a single connection string. Even Oracle! (It can be rather huge though)
+		/// Will get or set the connection string. All DBs I've meet is able to connect through the use of a single connection string. Even Oracle! (It can be rather huge though)
 		/// </summary>
 		public virtual string ConnectionString
 		{
@@ -519,7 +519,7 @@ namespace System.Data.LightDatamodel
 			    {
 				    using(IDataReader dr = cmd.ExecuteReader())
                     {
-						object[] results = (object[])ObjectTransformer.TransformToObjects(type, dr, this);
+						object[] results = (object[])TransformToObjects(type, dr);
 						dr.Close();
                         if (results.Length == 0)
                             return null;
@@ -609,7 +609,7 @@ namespace System.Data.LightDatamodel
                 {
 					using (IDataReader dr = cmd.ExecuteReader())
 					{
-						object[] ret = (object[])ObjectTransformer.TransformToObjects(type, dr, this);
+						object[] ret = (object[])TransformToObjects(type, dr);
 						dr.Close();
 						return ret;
 					}
@@ -621,7 +621,7 @@ namespace System.Data.LightDatamodel
             }
 		}
 
-		protected virtual string TranslateOperator(QueryModel.Operators opr)
+		protected virtual string TranslateOperator(QueryModel.Operators opr, string actualname)
 		{
 			switch(opr)
 			{
@@ -655,6 +655,8 @@ namespace System.Data.LightDatamodel
                     return "BETWEEN";
                 case QueryModel.Operators.Is:
                     return "IS";
+                case QueryModel.Operators.Custom:
+                    return actualname;
 				default:
 					throw new Exception("Bad operator: " + opr.ToString());
 								   
@@ -721,7 +723,7 @@ namespace System.Data.LightDatamodel
 		        {
 		            using (IDataReader dr = cmd.ExecuteReader())
 		            {
-						object[] ret = (object[])ObjectTransformer.TransformToObjects(type, dr, this);
+						object[] ret = (object[])TransformToObjects(type, dr);
 		                dr.Close();
 		                return ret;
 		            }
@@ -885,5 +887,84 @@ namespace System.Data.LightDatamodel
 		}
 
 		#endregion
+
+
+        /// <summary>
+        /// This will insert the given data into an arbitary object (the private variables)
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="data"></param>
+        /// <returns>The item populated</returns>
+        protected object PopulateDataClass(object obj, IDataReader reader)
+        {
+            TypeConfiguration.MappedClass typeinfo = this.Parent.Mappings[obj.GetType()];
+            //This iteration model will enable the "forward only" type readers
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                try
+                {
+                    TypeConfiguration.MappedField mf = typeinfo[reader.GetName(i)];
+                    if (mf != null && !mf.IgnoreWithSelect)
+                    {
+                        object value = reader.GetValue(i);
+                        if (value != DBNull.Value) mf.Field.SetValue(obj, value);		//no events
+                        else mf.Field.SetValue(obj, this.GetNullValue(mf.Field.FieldType));		//no events
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string name = "<unknown>";
+                    try { name = reader.GetName(i); }
+                    catch { }
+                    throw new Exception("Couldn't set field \"" + name + "\"\nError: " + ex.Message);
+                }
+            }
+            return obj;
+        }
+
+
+        /// <summary>
+        /// This will transform the DB-result to objects of the given type
+        /// </summary>
+        /// <param name="type">The type of object to create</param>
+        /// <param name="reader">The reader with object data</param>
+        /// <returns>An array of objects</returns>
+        protected Array TransformToObjects(Type type, IDataReader reader)
+        {
+            LinkedList<object> items = new LinkedList<object>();
+            while (reader.Read())
+            {
+                object newobj = Activator.CreateInstance(type);
+                PopulateDataClass(newobj, reader);
+                if (newobj is DataClassBase)
+                    (newobj as DataClassBase).ObjectState = ObjectStates.Default;
+                items.AddLast(newobj);
+            }
+
+            //conver to array
+            Array ret = Array.CreateInstance(type, items.Count);
+            items.CopyTo((object[])ret, 0);
+            return ret;
+        }
+
+        /// <summary>
+        /// This will transform the DB-result to objects of the given type
+        /// </summary>
+        /// <typeparam name="DATACLASS">The type of objects to return</typeparam>
+        /// <param name="reader">The reader with the data to use</param>
+        /// <returns>An array of objects</returns>
+        protected DATACLASS[] TransformToObjects<DATACLASS>(IDataReader reader)
+        {
+            List<DATACLASS> items = new List<DATACLASS>();
+            while (reader.Read())
+            {
+                DATACLASS newobj = Activator.CreateInstance<DATACLASS>();
+                PopulateDataClass(newobj, reader);
+                items.Add(newobj);
+            }
+
+            return items.ToArray();
+        }
+
 	}
 }
