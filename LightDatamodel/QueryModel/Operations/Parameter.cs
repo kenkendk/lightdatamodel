@@ -166,6 +166,11 @@ namespace System.Data.LightDatamodel.QueryModel
                     queryType = m_cachedStaticType;
                     retval = null;
                 }
+                else if (Parser.GlobalFunctions.ContainsKey(v.Trim().ToUpper()))
+                {
+                    //Activate global function
+                    return Parser.GlobalFunctions[v.Trim().ToUpper()](item);
+                }
                 else
                 {
                     retval = item;

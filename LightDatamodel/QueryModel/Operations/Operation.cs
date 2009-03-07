@@ -31,6 +31,7 @@ namespace System.Data.LightDatamodel.QueryModel
     {
         protected OperationOrParameter[] m_parameters;
         protected Operators m_operator;
+        protected string m_customfunction = null;
         public override bool IsOperation { get { return true; } }
 
         /// <summary>
@@ -121,6 +122,8 @@ namespace System.Data.LightDatamodel.QueryModel
         public OperationOrParameter[] Parameters { get { return m_parameters; } }
         public Operators Operator { get { return m_operator; } }
 
+        public string ActualName { get { return m_customfunction; } set { m_customfunction = value; } }
+
         /// <summary>
         /// Evaluates an object with the current query
         /// </summary>
@@ -200,6 +203,8 @@ namespace System.Data.LightDatamodel.QueryModel
                         else if (Comparer.CompareTo(res[0].Result, res[i].Result) == 0)
                             return true;
                     return false;
+                case Operators.Custom:
+                    return Parser.CustomBinaryOperators[m_customfunction](res[0].Result, res[1].Result);
                 default:
                     throw new Exception("Bad operator: " + m_operator.ToString());
 
