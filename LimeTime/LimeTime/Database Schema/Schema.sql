@@ -1,0 +1,19 @@
+CREATE TABLE [Project] (
+	"ID" INTEGER PRIMARY KEY,
+	"Title" TEXT NULL,
+	"Type" TEXT NULL
+);
+
+CREATE TABLE [Registration] (
+	"ID" INTEGER PRIMARY KEY,
+	"Time" DATETIME NULL,
+	"ProjectID" INTEGER NULL,
+	"Note" TEXT NULL
+);
+
+CREATE TABLE [Version] (
+	"ID" INTEGER PRIMARY KEY,
+	"Version" INTEGER NULL
+);
+
+INSERT INTO VERSION (Version) VALUES (0);
