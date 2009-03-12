@@ -60,10 +60,24 @@ namespace LimeTime.Properties {
             }
         }
         
+        internal static System.Drawing.Icon AlternativeProjectIcon {
+            get {
+                object obj = ResourceManager.GetObject("AlternativeProjectIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap CloseMenuIcon {
             get {
                 object obj = ResourceManager.GetObject("CloseMenuIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon RegularProjectIcon {
+            get {
+                object obj = ResourceManager.GetObject("RegularProjectIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
         
@@ -84,6 +98,20 @@ namespace LimeTime.Properties {
         internal static System.Drawing.Icon TrayIcon {
             get {
                 object obj = ResourceManager.GetObject("TrayIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap WaitClock {
+            get {
+                object obj = ResourceManager.GetObject("WaitClock", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon WaitClockIcon {
+            get {
+                object obj = ResourceManager.GetObject("WaitClockIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }

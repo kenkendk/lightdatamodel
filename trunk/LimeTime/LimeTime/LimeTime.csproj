@@ -92,6 +92,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="LimeTime.ico" />
+    <None Include="Resources\RegularProjectIcon.ico" />
+    <None Include="Resources\AlternativeProjectIcon.ico" />
+    <None Include="Resources\WaitClockIcon.ico" />
+    <None Include="Resources\WaitClock.png" />
     <None Include="Resources\SearchIcon.png" />
     <None Include="Resources\SearchMenuIcon.png" />
     <None Include="Resources\CloseMenuIcon.png" />
