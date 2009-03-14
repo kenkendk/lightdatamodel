@@ -78,10 +78,16 @@ namespace LimeTime
             trayIcon.ContextMenuStrip.Items.Add("Exit", Properties.Resources.CloseMenuIcon, new EventHandler(TrayClose_Clicked));
 
             trayIcon.Click += new EventHandler(trayIcon_Click);
+            trayIcon.DoubleClick += new EventHandler(trayIcon_DoubleClick);
 
             Application.Run();
 
             trayIcon.Visible = false;
+        }
+
+        static void trayIcon_DoubleClick(object sender, EventArgs e)
+        {
+            TraySearch_Clicked(sender, e);
         }
 
         static void trayIcon_Click(object sender, EventArgs e)
@@ -117,6 +123,7 @@ namespace LimeTime
                             if (s != null && s.Trim().Length > 0)
                             {
                                 s = s.Trim();
+
                                 string type = "Project";
                                 if (s.IndexOf(":") > 0)
                                 {
@@ -137,6 +144,8 @@ namespace LimeTime
                         }
 
                     con.CommitAllComplete();
+
+                    MessageBox.Show(string.Format("Imported titles!\n\nAdded titles: {0}.\nDuplicates: {1}\nBlanks: {2}", added, duplicates, blanks), Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
@@ -155,6 +164,8 @@ namespace LimeTime
 
             if (!SearchDlg.Visible)
                 SearchDlg.Show();
+
+            SearchDlg.Focus();
         }
     }
 

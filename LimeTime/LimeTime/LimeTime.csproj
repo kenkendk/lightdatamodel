@@ -92,6 +92,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="LimeTime.ico" />
+    <None Include="Resources\SelectProject.png" />
+    <None Include="Resources\AddProject.png" />
     <None Include="Resources\ImportDocumentMenu.png" />
     <None Include="Resources\RegularProjectIcon.ico" />
     <None Include="Resources\AlternativeProjectIcon.ico" />
