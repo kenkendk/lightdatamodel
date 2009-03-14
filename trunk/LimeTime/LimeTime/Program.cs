@@ -32,6 +32,8 @@ namespace LimeTime
         /// </summary>
         public static SearchForm SearchDlg = null;
 
+        public static KeyboardHook KeyboardHook = null;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -80,9 +82,33 @@ namespace LimeTime
             trayIcon.Click += new EventHandler(trayIcon_Click);
             trayIcon.DoubleClick += new EventHandler(trayIcon_DoubleClick);
 
+            try
+            {
+                //If security or platform prevents us from using it, we don't care
+                KeyboardHook = new KeyboardHook();
+                //TODO: Make configureable...
+                KeyboardHook.RegisterHotKey(ModifierKeys.Win, Keys.P);
+                KeyboardHook.KeyPressed += new EventHandler<KeyPressedEventArgs>(KeyboardHook_KeyPressed);
+            }
+            catch 
+            { }
+
             Application.Run();
 
             trayIcon.Visible = false;
+
+            try
+            {
+                if (KeyboardHook != null)
+                    KeyboardHook.Dispose();
+            }
+            catch { }
+        }
+
+        static void KeyboardHook_KeyPressed(object sender, KeyPressedEventArgs e)
+        {
+            if (e.Key == Keys.P && e.Modifier == ModifierKeys.Win)
+                TraySearch_Clicked(sender, e);
         }
 
         static void trayIcon_DoubleClick(object sender, EventArgs e)
