@@ -60,6 +60,13 @@ namespace LimeTime.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap AddProject {
+            get {
+                object obj = ResourceManager.GetObject("AddProject", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Icon AlternativeProjectIcon {
             get {
                 object obj = ResourceManager.GetObject("AlternativeProjectIcon", resourceCulture);
@@ -98,6 +105,13 @@ namespace LimeTime.Properties {
         internal static System.Drawing.Bitmap SearchMenuIcon {
             get {
                 object obj = ResourceManager.GetObject("SearchMenuIcon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap SelectProject {
+            get {
+                object obj = ResourceManager.GetObject("SelectProject", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
