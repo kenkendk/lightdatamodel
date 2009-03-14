@@ -74,6 +74,13 @@ namespace LimeTime.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap ImportDocumentMenu {
+            get {
+                object obj = ResourceManager.GetObject("ImportDocumentMenu", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Icon RegularProjectIcon {
             get {
                 object obj = ResourceManager.GetObject("RegularProjectIcon", resourceCulture);

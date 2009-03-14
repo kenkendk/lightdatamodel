@@ -71,6 +71,8 @@ namespace LimeTime
             trayIcon.Visible = true;
 
             trayIcon.ContextMenuStrip = new ContextMenuStrip();
+            trayIcon.ContextMenuStrip.Items.Add("Import word list ...", Properties.Resources.ImportDocumentMenu, new EventHandler(TrayImport_Clicked));
+            trayIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
             trayIcon.ContextMenuStrip.Items.Add("Search ...", Properties.Resources.SearchMenuIcon, new EventHandler(TraySearch_Clicked));
             trayIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
             trayIcon.ContextMenuStrip.Items.Add("Exit", Properties.Resources.CloseMenuIcon, new EventHandler(TrayClose_Clicked));
@@ -90,6 +92,57 @@ namespace LimeTime
         public static void TrayClose_Clicked(object sender, EventArgs args)
         {
             Application.Exit();
+        }
+
+        public static void TrayImport_Clicked(object sender, EventArgs args)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Title = "Select a file with words to import";
+            dlg.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    int added = 0;
+                    int blanks = 0;
+                    int duplicates = 0;
+
+                    System.Data.LightDatamodel.DataFetcherNested con = new System.Data.LightDatamodel.DataFetcherNested(Program.DataConnection);
+                    System.Data.LightDatamodel.QueryModel.OperationOrParameter op = System.Data.LightDatamodel.Query.Parse("Title LIKE ?");
+
+                    using(System.IO.StreamReader sr = new System.IO.StreamReader(dlg.FileName))
+                        while (!sr.EndOfStream)
+                        {
+                            string s = sr.ReadLine();
+                            if (s != null && s.Trim().Length > 0)
+                            {
+                                s = s.Trim();
+                                string type = "Project";
+                                if (s.IndexOf(":") > 0)
+                                {
+                                    type = s.Substring(s.IndexOf(":") + 1);
+                                    s = s.Substring(0, s.Length - type.Length - 1);
+                                }
+
+                                if (Query.FindFirst(op, con.GetObjects<Datamodel.Project>(), s) == null)
+                                {
+                                    con.Add<Datamodel.Project>().Title = s;
+                                    added++;
+                                }
+                                else
+                                    duplicates++;
+                            }
+                            else
+                                blanks++;
+                        }
+
+                    con.CommitAllComplete();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Failed to load file: " + ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         public static void TraySearch_Clicked(object sender, EventArgs args)
