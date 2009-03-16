@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("LimeTime")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("LimeTIme - An easy to use time registrator")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("GEOGRAF A/S")]
+[assembly: AssemblyCompany("HexaD")]
 [assembly: AssemblyProduct("LimeTime")]
-[assembly: AssemblyCopyright("Copyright © GEOGRAF A/S 2009")]
+[assembly: AssemblyCopyright("Copyright © HexaD 2009")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
