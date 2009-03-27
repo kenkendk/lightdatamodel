@@ -64,6 +64,7 @@ namespace System.Data.LightDatamodel
         void ClearCache();
         void DiscardObject(IDataClass obj);
         void CommitRecursive(params IDataClass[] items);
+        void CommitAllRecursive();
         List<IDataClass> CommitRecursiveWithRelations(params IDataClass[] items);
         List<IDataClass> CommitWithRelations(params IDataClass[] items);
 

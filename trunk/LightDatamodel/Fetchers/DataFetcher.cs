@@ -311,6 +311,9 @@ namespace System.Data.LightDatamodel
         /// <param name="item"></param>
         public virtual void DeleteObject(object item)
         {
+            if ((item as DataClassBase).DataParent != this)
+                throw new Exception("An item was passed to delete, but belongs to another DataParent");
+
             (item as DataClassBase).m_state = ObjectStates.Deleted;
             Commit((IDataClass)item);
         }
@@ -478,6 +481,8 @@ namespace System.Data.LightDatamodel
                 {
                     //new object?
                     if (((DataClassBase)obj).m_dataparent == null) Add(obj);
+                    if (((DataClassBase)obj).m_dataparent != this) 
+                        throw new Exception("An item was passed to commit, but belongs to another DataParent");
 
                     //save
                     if (obj.ObjectState == ObjectStates.Default)

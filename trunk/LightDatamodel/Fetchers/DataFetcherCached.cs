@@ -580,6 +580,37 @@ namespace System.Data.LightDatamodel
             return lst;
         }
 
+        public virtual void CommitAllRecursive()
+        {
+            List<IDataClass> items = CommitAll();
+            if (this is DataFetcherNested)
+            {
+                DataFetcherNested n = this as DataFetcherNested;
+                List<IDataClass> newitems = new List<IDataClass>();
+                foreach (IDataClass obj in items)
+                {
+                    IDataClass nestedObj = (IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
+                    if (obj.ObjectState == ObjectStates.Deleted)
+                        n.BaseFetcher.DeleteObject(nestedObj);
+                    newitems.Add(nestedObj);
+                }
+
+                if (((DataFetcherNested)this).BaseFetcher is IDataFetcherCached)
+                    ((IDataFetcherCached)n.BaseFetcher).CommitRecursive(newitems.ToArray());
+                else
+                    n.BaseFetcher.Commit(newitems.ToArray());
+
+                for (int i = 0; i < items.Count; i++)
+                {
+                    TypeConfiguration.MappedField fi = m_mappings[items[i].GetType()].PrimaryKey;
+                    fi.Field.SetValue((DataClassBase)items[i], fi.Field.GetValue(newitems[i]));
+                }
+
+                foreach (IDataClass obj in items)
+                    RefreshObject(obj);
+            }
+        }
+
         public virtual void CommitRecursive(params IDataClass[] items)
         {
             Commit(items);
@@ -588,7 +619,12 @@ namespace System.Data.LightDatamodel
                 DataFetcherNested n = this as DataFetcherNested;
                 List<IDataClass> newitems = new List<IDataClass>();
                 foreach (IDataClass obj in items)
-                    newitems.Add((IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)));
+                {
+                    IDataClass nestedObj = (IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
+                    if (obj.ObjectState == ObjectStates.Deleted)
+                        n.BaseFetcher.DeleteObject(nestedObj);
+                    newitems.Add(nestedObj);
+                }
 
                 if (((DataFetcherNested)this).BaseFetcher is IDataFetcherCached)
                     ((IDataFetcherCached)n.BaseFetcher).CommitRecursive(newitems.ToArray());
@@ -613,8 +649,13 @@ namespace System.Data.LightDatamodel
             {
                 DataFetcherNested n = this as DataFetcherNested;
                 List<IDataClass> newitems = new List<IDataClass>();
-                foreach (IDataClass obj in modified)
-                    newitems.Add((IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj)));
+                foreach (IDataClass obj in items)
+                {
+                    IDataClass nestedObj = (IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
+                    if (obj.ObjectState == ObjectStates.Deleted)
+                        n.BaseFetcher.DeleteObject(nestedObj);
+                    newitems.Add(nestedObj);
+                }
 
                 if (n.BaseFetcher is IDataFetcherCached)
                     ((IDataFetcherCached)n.BaseFetcher).CommitRecursiveWithRelations(newitems.ToArray());
@@ -703,7 +744,7 @@ namespace System.Data.LightDatamodel
 					inTransaction = true;
 					int i = 0;
 
-					//delete (First we delete. In case we've delete a primary key, that also will be inserted)
+					//delete (First we delete. In case we've delete an object with a primary key, that also will be inserted)
 					foreach (IDataClass c in deletedobjects)
 					{
 						Commit(c); //no lock
