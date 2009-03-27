@@ -507,6 +507,10 @@ namespace System.Data.LightDatamodel
                 List<IDataClass> deleted = new List<IDataClass>();
 
                 foreach (IDataClass obj in items)
+                {
+                    if (obj.DataParent != this)
+                        throw new Exception("An item was passed to commit, but belongs to another DataParent");
+
                     if (obj.ObjectState != ObjectStates.Deleted)
                     {
                         UpdateObjectKeys(obj);
@@ -514,6 +518,8 @@ namespace System.Data.LightDatamodel
                     }
                     else
                         deleted.Add(obj);
+                }
+
 
                 base.Commit(items);
 
