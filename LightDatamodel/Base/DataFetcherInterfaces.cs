@@ -67,6 +67,7 @@ namespace System.Data.LightDatamodel
         void CommitAllRecursive();
         List<IDataClass> CommitRecursiveWithRelations(params IDataClass[] items);
         List<IDataClass> CommitWithRelations(params IDataClass[] items);
+        List<IDataClass> FindObjectRelations(IDataClass item);
 
         DATACLASS GetObjectByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
         object GetObjectByIndex(Type type, string indexname, object indexvalue);
