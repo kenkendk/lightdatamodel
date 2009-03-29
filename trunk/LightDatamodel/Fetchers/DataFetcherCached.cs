@@ -602,12 +602,16 @@ namespace System.Data.LightDatamodel
 
                 for (int i = 0; i < items.Count; i++)
                 {
-                    TypeConfiguration.MappedField fi = m_mappings[items[i].GetType()].PrimaryKey;
-                    fi.Field.SetValue((DataClassBase)items[i], fi.Field.GetValue(newitems[i]));
+                    if (items[i].ObjectState != ObjectStates.Deleted)
+                    {
+                        TypeConfiguration.MappedField fi = m_mappings[items[i].GetType()].PrimaryKey;
+                        fi.Field.SetValue((DataClassBase)items[i], fi.Field.GetValue(newitems[i]));
+                    }
                 }
 
                 foreach (IDataClass obj in items)
-                    RefreshObject(obj);
+                    if (obj.ObjectState != ObjectStates.Deleted)
+                        RefreshObject(obj);
             }
         }
 

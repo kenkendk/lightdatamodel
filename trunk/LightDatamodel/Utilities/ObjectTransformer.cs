@@ -120,7 +120,7 @@ namespace System.Data.LightDatamodel
 			if (source == null || target == null) throw new ArgumentNullException("source and target can't be null");
             if (target.GetType() != source.GetType()) throw new Exception("Objects must be of same type");
 
-			FieldInfo[] fields = source.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly); ;
+			FieldInfo[] fields = source.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 			object s, t;
 			DataClassBase targetbase = target as DataClassBase;
 			if(targetbase != null)
@@ -135,6 +135,8 @@ namespace System.Data.LightDatamodel
 						DatabaseField dbf = TypeConfiguration.MappedClass.GetAttribute<DatabaseField>(fi);
 						if(dbf == null)
 						{
+                            //TODO: This is probably not good because we just copy all private members,
+                            //including cache's and connections for the object..
 							fi.SetValue(target, s);
 						}
 						else
