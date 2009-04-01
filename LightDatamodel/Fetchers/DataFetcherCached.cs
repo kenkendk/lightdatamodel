@@ -580,32 +580,36 @@ namespace System.Data.LightDatamodel
             return lst;
         }
 
-        public virtual void CommitAllRecursive()
+        protected virtual IDataClass[] RecursiveComitter(string function, IDataClass[] items)
         {
-            List<IDataClass> items = CommitAll();
             if (this is DataFetcherNested)
             {
                 DataFetcherNested n = this as DataFetcherNested;
                 List<IDataClass> newitems = new List<IDataClass>();
+                Dictionary<IDataClass, IDataClass> reverseTable = new Dictionary<IDataClass, IDataClass>();
                 foreach (IDataClass obj in items)
                 {
                     IDataClass nestedObj = (IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
                     if (obj.ObjectState == ObjectStates.Deleted)
                         n.BaseFetcher.DeleteObject(nestedObj);
                     newitems.Add(nestedObj);
+                    reverseTable[nestedObj] = obj;
                 }
 
-                if (((DataFetcherNested)this).BaseFetcher is IDataFetcherCached)
-                    ((IDataFetcherCached)n.BaseFetcher).CommitRecursive(newitems.ToArray());
+                if (n.BaseFetcher is IDataFetcherCached)
+                {
+                    MethodInfo mi = typeof(IDataFetcherCached).GetMethod(function);
+                    mi.Invoke(n.BaseFetcher, new object[] { newitems.ToArray() });
+                }
                 else
                     n.BaseFetcher.Commit(newitems.ToArray());
 
-                for (int i = 0; i < items.Count; i++)
+                for (int i = 0; i < newitems.Count; i++)
                 {
-                    if (items[i].ObjectState != ObjectStates.Deleted)
+                    if (newitems[i].ObjectState != ObjectStates.Deleted)
                     {
-                        TypeConfiguration.MappedField fi = m_mappings[items[i].GetType()].PrimaryKey;
-                        fi.Field.SetValue((DataClassBase)items[i], fi.Field.GetValue(newitems[i]));
+                        TypeConfiguration.MappedField fi = m_mappings[newitems[i].GetType()].PrimaryKey;
+                        fi.Field.SetValue(reverseTable[newitems[i]], fi.Field.GetValue(newitems[i]));
                     }
                 }
 
@@ -613,69 +617,25 @@ namespace System.Data.LightDatamodel
                     if (obj.ObjectState != ObjectStates.Deleted)
                         RefreshObject(obj);
             }
+
+            return items;
+        }
+
+        public virtual void CommitAllRecursive()
+        {
+            RecursiveComitter("CommitRecursive", CommitAll().ToArray());
         }
 
         public virtual void CommitRecursive(params IDataClass[] items)
         {
             Commit(items);
-            if (this is DataFetcherNested)
-            {
-                DataFetcherNested n = this as DataFetcherNested;
-                List<IDataClass> newitems = new List<IDataClass>();
-                foreach (IDataClass obj in items)
-                {
-                    IDataClass nestedObj = (IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
-                    if (obj.ObjectState == ObjectStates.Deleted)
-                        n.BaseFetcher.DeleteObject(nestedObj);
-                    newitems.Add(nestedObj);
-                }
-
-                if (((DataFetcherNested)this).BaseFetcher is IDataFetcherCached)
-                    ((IDataFetcherCached)n.BaseFetcher).CommitRecursive(newitems.ToArray());
-                else
-                    n.BaseFetcher.Commit(newitems.ToArray());
-
-                for (int i = 0; i < items.Length; i++)
-                {
-                    TypeConfiguration.MappedField fi = m_mappings[items[i].GetType()].PrimaryKey;
-                    fi.Field.SetValue((DataClassBase)items[i], fi.Field.GetValue(newitems[i]));
-                }
-
-                foreach (IDataClass obj in items)
-                    RefreshObject(obj);
-            }
+            RecursiveComitter("CommitRecursive", items);
         }
 
         public virtual List<IDataClass> CommitRecursiveWithRelations(params IDataClass[] items)
         {
             List<IDataClass> modified = CommitWithRelations(items);
-            if (this is DataFetcherNested)
-            {
-                DataFetcherNested n = this as DataFetcherNested;
-                List<IDataClass> newitems = new List<IDataClass>();
-                foreach (IDataClass obj in items)
-                {
-                    IDataClass nestedObj = (IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
-                    if (obj.ObjectState == ObjectStates.Deleted)
-                        n.BaseFetcher.DeleteObject(nestedObj);
-                    newitems.Add(nestedObj);
-                }
-
-                if (n.BaseFetcher is IDataFetcherCached)
-                    ((IDataFetcherCached)n.BaseFetcher).CommitRecursiveWithRelations(newitems.ToArray());
-                else
-                    n.BaseFetcher.Commit(newitems.ToArray());
-
-                for (int i = 0; i < modified.Count; i++)
-                {
-                    TypeConfiguration.MappedField fi = m_mappings[modified[i].GetType()].PrimaryKey;
-                    fi.Field.SetValue((DataClassBase)modified[i], fi.Field.GetValue(newitems[i]));
-                }
-
-                foreach (IDataClass obj in modified)
-                    RefreshObject(obj);
-            }
-
+            RecursiveComitter("CommitRecursiveWithRelations", modified.ToArray());
             return modified;
 
         }
