@@ -580,7 +580,7 @@ namespace System.Data.LightDatamodel
             return lst;
         }
 
-        protected virtual IDataClass[] RecursiveComitter(string function, IDataClass[] items)
+        protected virtual IDataClass[] RecursiveComitter(bool withRelations, IDataClass[] items)
         {
             if (this is DataFetcherNested)
             {
@@ -598,8 +598,10 @@ namespace System.Data.LightDatamodel
 
                 if (n.BaseFetcher is IDataFetcherCached)
                 {
-                    MethodInfo mi = typeof(IDataFetcherCached).GetMethod(function);
-                    mi.Invoke(n.BaseFetcher, new object[] { newitems.ToArray() });
+                    if (withRelations)
+                        ((IDataFetcherCached)n.BaseFetcher).CommitRecursiveWithRelations(newitems.ToArray());
+                    else
+                        ((IDataFetcherCached)n.BaseFetcher).CommitRecursive(newitems.ToArray());
                 }
                 else
                     n.BaseFetcher.Commit(newitems.ToArray());
@@ -623,19 +625,19 @@ namespace System.Data.LightDatamodel
 
         public virtual void CommitAllRecursive()
         {
-            RecursiveComitter("CommitRecursive", CommitAll().ToArray());
+            RecursiveComitter(false, CommitAll().ToArray());
         }
 
         public virtual void CommitRecursive(params IDataClass[] items)
         {
             Commit(items);
-            RecursiveComitter("CommitRecursive", items);
+            RecursiveComitter(false, items);
         }
 
         public virtual List<IDataClass> CommitRecursiveWithRelations(params IDataClass[] items)
         {
             List<IDataClass> modified = CommitWithRelations(items);
-            RecursiveComitter("CommitRecursiveWithRelations", modified.ToArray());
+            RecursiveComitter(true, modified.ToArray());
             return modified;
 
         }
