@@ -191,6 +191,9 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		protected virtual IDataClass[] GetRelatedObjectsFromCesspool(string relationkey, IDataClass owner)
 		{
+            if (owner.DataParent != this)
+                throw new Exception("Item was on wrong path");
+
 			IDataClass[] ret = null;
 			if (owner.GetType() == m_relations[relationkey].Parent.Type)
 				ret = (IDataClass[])Array.CreateInstance(m_relations[relationkey].Child.Type, m_objectrelationcache[owner][relationkey].SubObjects.Count);
