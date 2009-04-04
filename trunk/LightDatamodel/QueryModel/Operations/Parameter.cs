@@ -194,19 +194,36 @@ namespace System.Data.LightDatamodel.QueryModel
                     pi = queryType.GetProperty(parts[i], System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.FlattenHierarchy);
                 if (pi == null && i == parts.Length - 1)
                 {
+                    object[] args = UnwrapFunctionArguments(item, parameters);
+                    if ((args == null && m_functionArgs.Length != 0) || (args != null && args.Length != m_functionArgs.Length))
+                        throw new Exception("The function " + parts[i] + " takes " + m_functionArgs.Length.ToString() + " parameters, but was given " + args.Length.ToString());
+
                     System.Reflection.MemberInfo[] mis = queryType.GetMethods();
                     System.Reflection.MethodInfo mi = null;
                     foreach(System.Reflection.MethodInfo mix in mis)
                         if (mix.Name == parts[i] && mix.GetParameters().Length == m_functionArgs.Length)
                         {
-                            mi = mix;
-                            break;
+                            bool paramMatch = true;
+                            if (m_functionArgs != null)
+                            {
+                                System.Reflection.ParameterInfo[] pmi = mix.GetParameters();
+                                for (int j = 0; j < m_functionArgs.Length; j++)
+                                    if (args[j] == null || !pmi[j].ParameterType.IsAssignableFrom(args[j].GetType()))
+                                        paramMatch = false;
+                            }
+
+                            if (paramMatch)
+                            {
+                                mi = mix;
+                                break;
+                            }
                         }
 
                     if (mi == null)
                         throw new Exception("Invalid parameter: " + parts[i] + " no such public property or method found\nWas looking for method with path '" + (string)m_value + "' on type: " + queryType.FullName + ", which takes " + m_functionArgs.Length.ToString() + " argument(s)");
 
-                    retval = mi.Invoke(retval, UnwrapFunctionArguments(item, parameters));
+                    //Console.WriteLine("Invoking " + mi.Name + " on type " + (retval == null ? "<null>" : retval.GetType().FullName) + ", params: " + (args == null ? "<null>" : "object[" + args.Length.ToString() + "]"));
+                    retval = mi.Invoke(retval, args);
                     queryType = retval == null ? null : retval.GetType();
 
                 }
