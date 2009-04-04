@@ -162,6 +162,7 @@ namespace System.Collections.Generic
 				private Dictionary<TKey, LinkedList<TValue>> m_parent;
 				private Dictionary<TKey, LinkedList<TValue>>.Enumerator m_keyenumerator;
 				private LinkedList<TValue>.Enumerator m_valueenumerator;
+                private bool m_isDefaultValueEnumerator;
 
 				public Enumerator(Dictionary<TKey, LinkedList<TValue>> parent)
 				{
@@ -173,15 +174,19 @@ namespace System.Collections.Generic
 				{
 					get
 					{
-						return m_valueenumerator.Current;
+                        return m_parent == null || m_isDefaultValueEnumerator ? default(TValue) : m_valueenumerator.Current;
 					}
 				}
 
 				public void Dispose()
 				{
-					m_parent = null;
-					m_keyenumerator.Dispose();
-					m_valueenumerator.Dispose();
+                    if (m_parent != null)
+                    {
+                        m_parent = null;
+                        m_keyenumerator.Dispose();
+                        if (!m_isDefaultValueEnumerator)
+                            m_valueenumerator.Dispose();
+                    }
 					GC.SuppressFinalize(this);
 				}
 
@@ -195,16 +200,25 @@ namespace System.Collections.Generic
 
 				public bool MoveNext()
 				{
-					if (m_valueenumerator.Equals(default(LinkedList<TValue>.Enumerator)) || !m_valueenumerator.MoveNext())
+                    if (m_parent == null)
+                        return false;
+
+                    if (m_isDefaultValueEnumerator || !m_valueenumerator.MoveNext())
 					{
 						do
 						{
-							if (m_keyenumerator.Equals(default(Dictionary<TKey, LinkedList<TValue>>.Enumerator)) || !m_keyenumerator.MoveNext()) return false;
-							LinkedList<TValue> tmp = m_keyenumerator.Current.Value;
-							m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<TValue>.Enumerator);
-							if (!m_valueenumerator.Equals(default(LinkedList<TValue>.Enumerator))) m_valueenumerator.MoveNext();
-						} while (m_valueenumerator.Equals(default(LinkedList<TValue>.Enumerator)) || m_valueenumerator.Current == null);
-						return true;
+                            if (!m_isDefaultValueEnumerator)
+                                m_valueenumerator.Dispose();
+                            m_isDefaultValueEnumerator = true;
+
+                            if (!m_keyenumerator.MoveNext()) return false;
+                            if (m_keyenumerator.Current.Value != null)
+                            {
+                                m_valueenumerator = m_keyenumerator.Current.Value.GetEnumerator();
+                                m_isDefaultValueEnumerator = false;
+                            }
+						} while (m_isDefaultValueEnumerator || !m_valueenumerator.MoveNext());
+                        return true;
 					}
 					else return true;
 				}
@@ -214,8 +228,7 @@ namespace System.Collections.Generic
 					if (m_parent != null)
 					{
 						m_keyenumerator = m_parent.GetEnumerator();
-						LinkedList<TValue> tmp = m_keyenumerator.Current.Value;
-						m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<TValue>.Enumerator);
+                        m_isDefaultValueEnumerator = true;
 					}
 				}
 			}
@@ -334,6 +347,7 @@ namespace System.Collections.Generic
 			private Dictionary<TKey, LinkedList<TValue>> m_parent;
 			private Dictionary<TKey, LinkedList<TValue>>.Enumerator m_keyenumerator;
 			private LinkedList<TValue>.Enumerator m_valueenumerator;
+            private bool m_isDefaultValueEnumerator;
 
 			public Enumerator(Dictionary<TKey, LinkedList<TValue>> parent)
 			{
@@ -351,10 +365,15 @@ namespace System.Collections.Generic
 
 			public void Dispose()
 			{
-				m_parent = null;
-				m_keyenumerator.Dispose();
-				m_valueenumerator.Dispose();
-				GC.SuppressFinalize(this);
+                if (m_parent != null)
+                {
+                    m_parent = null;
+                    m_keyenumerator.Dispose();
+
+                    if (!m_isDefaultValueEnumerator)
+                        m_valueenumerator.Dispose();
+                }
+                GC.SuppressFinalize(this);
 			}
 
 			object IEnumerator.Current
@@ -367,16 +386,25 @@ namespace System.Collections.Generic
 
 			public bool MoveNext()
 			{
-				if (m_valueenumerator.Equals(default(LinkedList<TValue>.Enumerator)) || !m_valueenumerator.MoveNext())
+                if (m_parent == null)
+                    return false;
+
+                if (m_isDefaultValueEnumerator || !m_valueenumerator.MoveNext())
 				{
 					do
 					{
-						if (!m_keyenumerator.MoveNext()) return false;
-						LinkedList<TValue> tmp = m_keyenumerator.Current.Value;
-						m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<TValue>.Enumerator);
-						m_valueenumerator.MoveNext();
-					} while (m_valueenumerator.Current == null);
-					return true;
+                        if (!m_isDefaultValueEnumerator)
+                            m_valueenumerator.Dispose();
+                        m_isDefaultValueEnumerator = true;
+
+                        if (!m_keyenumerator.MoveNext()) return false;
+                        if (m_keyenumerator.Current.Value != null)
+                        {
+                            m_isDefaultValueEnumerator = false;
+                            m_valueenumerator = m_keyenumerator.Current.Value.GetEnumerator();
+                        }
+                    } while (m_isDefaultValueEnumerator || !m_valueenumerator.MoveNext());
+                    return true;
 				}
 				else return true;
 			}
@@ -384,8 +412,7 @@ namespace System.Collections.Generic
 			public void Reset()
 			{
 				m_keyenumerator = m_parent.GetEnumerator();
-				LinkedList<TValue> tmp = m_keyenumerator.Current.Value;
-				m_valueenumerator = tmp != null ? tmp.GetEnumerator() : default(LinkedList<TValue>.Enumerator);
+                m_isDefaultValueEnumerator = true;
 			}
 		}
 	}

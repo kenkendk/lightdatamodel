@@ -385,7 +385,7 @@ namespace System.Data.LightDatamodel
 			{
 				private Dictionary<Type, Dictionary<string, MultiDictionary<object, IDataClass>>> m_parent;
 				private Dictionary<Type, Dictionary<string, MultiDictionary<object, IDataClass>>>.Enumerator m_typeenumerator;
-				private IEnumerator<KeyValuePair<object, IDataClass>> m_objectenumerator;
+				private IEnumerator<KeyValuePair<object, IDataClass>> m_objectenumerator = null;
 
 				public Enumerator(Dictionary<Type, Dictionary<string, MultiDictionary<object, IDataClass>>> parent)
 				{
@@ -400,7 +400,7 @@ namespace System.Data.LightDatamodel
 
 				public void Dispose()
 				{
-					m_parent = null;
+                    m_parent = null;
 					m_typeenumerator.Dispose();
 					if (m_objectenumerator != null) m_objectenumerator.Dispose();
 					m_objectenumerator = null;
@@ -414,17 +414,16 @@ namespace System.Data.LightDatamodel
 
 				public bool MoveNext()
 				{
-					if (m_objectenumerator == null || !m_objectenumerator.MoveNext())
+                    if (m_objectenumerator == null || !m_objectenumerator.MoveNext())
 					{
 						do
 						{
-							if (!m_typeenumerator.MoveNext()) return false;
+                            if (!m_typeenumerator.MoveNext()) return false;
 							Dictionary<string, MultiDictionary<object, IDataClass>>.Enumerator e = m_typeenumerator.Current.Value.GetEnumerator();
 							if (!e.MoveNext()) return false;
 							m_objectenumerator = e.Current.Value.GetEnumerator();
-							m_objectenumerator.MoveNext();
-						} while (m_objectenumerator == null || m_objectenumerator.Current.Equals(default(KeyValuePair<object, IDataClass>)));
-					}
+						} while (!m_objectenumerator.MoveNext());
+                    }
 					return true;
 				}
 
