@@ -461,7 +461,10 @@ namespace System.Data.LightDatamodel
 			try
 			{
 				int r = cmd.ExecuteNonQuery();
-				if (r != 1) throw new NoSuchObjectException("Delete was expected to delete 1 rows (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + "), but deleted: " + r.ToString(), item);
+                if (r != 1)
+                {
+                    throw new NoSuchObjectException("Delete was expected to delete 1 rows (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + "), but deleted: " + r.ToString(), item);
+                }
 			}
 			catch (NoSuchObjectException)
 			{
@@ -798,7 +801,22 @@ namespace System.Data.LightDatamodel
                 try
                 {
                     int r = cmd.ExecuteNonQuery();
-					if (r != 1) throw new NoSuchObjectException("Row update was expected to update 1 row, but updated: " + r.ToString(), item);
+                    if (r != 1)
+                    {
+                        string msg = "Command was: " + cmd.CommandText + "\r\n";
+                        msg += "Primary key ";
+
+                        if (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(typeinfo.PrimaryKey.Databasefield))
+                        {
+                            msg += "(dirty key) ";
+                            msg += string.Format("{0}, ", orgitem.m_originalvalues[typeinfo.PrimaryKey.Databasefield]);
+                        }
+
+                        msg += "(new key) ";
+                        msg += string.Format("{0}", typeinfo.PrimaryKey.Field.GetValue(item));
+
+                        throw new NoSuchObjectException("Row update was expected to update 1 row, but updated: " + r.ToString() + ".\r\n" + msg, item);
+                    }
                 }
 				catch (NoSuchObjectException)
 				{
