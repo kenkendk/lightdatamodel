@@ -1,6 +1,6 @@
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
-/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\Dokumenter\LightDatamodel\LimeTime\LimeTime\Datamodel\LimeTime.sqlite;" />
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\workspace\LightDatamodel\LimeTime\LimeTime\bin\Debug\LimeTime.sqlite;" />
 /// <type>Table</type>
 /// <namespace>LimeTime.Datamodel</namespace>
 /// <name>Registration</name>

@@ -30,18 +30,24 @@ namespace LimeTime
                 ActionImage.Image = null;
                 HelperText.Text = "";
                 GOButton.Enabled = false;
+				m_displayAnnouClockCheck.Checked = true;
+				return;
             }
-            else if (System.Data.LightDatamodel.Query.FindFirst(System.Data.LightDatamodel.Query.Parse("Title LIKE ?"), Program.DataConnection.GetObjects<Datamodel.Project>(), textBox1.Text) != null)
+
+			Datamodel.Project p = System.Data.LightDatamodel.Query.FindFirst<Datamodel.Project>(System.Data.LightDatamodel.Query.Parse("Title LIKE ?"), Program.DataConnection.GetObjects<Datamodel.Project>(), textBox1.Text);
+            if (p != null)
             {
                 ActionImage.Image = Properties.Resources.SelectProject;
                 HelperText.Text = "Select the current project as active";
                 GOButton.Enabled = true;
+				m_displayAnnouClockCheck.Checked = p.UseAnnoyClock;
             }
             else
             {
                 ActionImage.Image = Properties.Resources.AddProject;
                 HelperText.Text = "Add a new project";
                 GOButton.Enabled = true;
+				m_displayAnnouClockCheck.Checked = true;
             }
         }
 
@@ -53,6 +59,7 @@ namespace LimeTime
                 p = Program.DataConnection.Add<Datamodel.Project>();
                 p.Title = textBox1.Text;
                 p.Type = "Project";
+				p.UseAnnoyClock = m_displayAnnouClockCheck.Checked;
                 Program.DataConnection.Commit(p);
             }
 
@@ -65,5 +72,10 @@ namespace LimeTime
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
+
+		private void m_cancelbutton_Click(object sender, EventArgs e)
+		{
+			this.Close();
+		}
     }
 }

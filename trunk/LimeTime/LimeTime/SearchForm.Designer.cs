@@ -34,6 +34,8 @@ namespace LimeTime
 			this.GOButton = new System.Windows.Forms.Button();
 			this.ActionImage = new System.Windows.Forms.PictureBox();
 			this.HelperText = new System.Windows.Forms.Label();
+			this.m_cancelbutton = new System.Windows.Forms.Button();
+			this.m_displayAnnouClockCheck = new System.Windows.Forms.CheckBox();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.ActionImage)).BeginInit();
 			this.SuspendLayout();
@@ -59,7 +61,8 @@ namespace LimeTime
 			// 
 			// GOButton
 			// 
-			this.GOButton.Location = new System.Drawing.Point(176, 64);
+			this.GOButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.GOButton.Location = new System.Drawing.Point(213, 80);
 			this.GOButton.Name = "GOButton";
 			this.GOButton.Size = new System.Drawing.Size(75, 23);
 			this.GOButton.TabIndex = 3;
@@ -84,19 +87,46 @@ namespace LimeTime
 			this.HelperText.Size = new System.Drawing.Size(0, 13);
 			this.HelperText.TabIndex = 5;
 			// 
+			// m_cancelbutton
+			// 
+			this.m_cancelbutton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.m_cancelbutton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+			this.m_cancelbutton.Location = new System.Drawing.Point(133, 80);
+			this.m_cancelbutton.Name = "m_cancelbutton";
+			this.m_cancelbutton.Size = new System.Drawing.Size(75, 24);
+			this.m_cancelbutton.TabIndex = 4;
+			this.m_cancelbutton.Text = "Cancel";
+			this.m_cancelbutton.UseVisualStyleBackColor = true;
+			this.m_cancelbutton.Click += new System.EventHandler(this.m_cancelbutton_Click);
+			// 
+			// m_displayAnnouClockCheck
+			// 
+			this.m_displayAnnouClockCheck.AutoSize = true;
+			this.m_displayAnnouClockCheck.Checked = true;
+			this.m_displayAnnouClockCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.m_displayAnnouClockCheck.Location = new System.Drawing.Point(144, 56);
+			this.m_displayAnnouClockCheck.Name = "m_displayAnnouClockCheck";
+			this.m_displayAnnouClockCheck.Size = new System.Drawing.Size(133, 17);
+			this.m_displayAnnouClockCheck.TabIndex = 2;
+			this.m_displayAnnouClockCheck.Text = "Display \"Annoy Clock\"";
+			this.m_displayAnnouClockCheck.UseVisualStyleBackColor = true;
+			// 
 			// SearchForm
 			// 
 			this.AcceptButton = this.GOButton;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(421, 102);
+			this.CancelButton = this.m_cancelbutton;
+			this.ClientSize = new System.Drawing.Size(421, 118);
+			this.Controls.Add(this.m_displayAnnouClockCheck);
+			this.Controls.Add(this.m_cancelbutton);
 			this.Controls.Add(this.HelperText);
 			this.Controls.Add(this.ActionImage);
 			this.Controls.Add(this.GOButton);
 			this.Controls.Add(this.pictureBox1);
 			this.Controls.Add(this.textBox1);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.KeyPreview = true;
 			this.MaximizeBox = false;
 			this.Name = "SearchForm";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -116,6 +146,8 @@ namespace LimeTime
         private System.Windows.Forms.Button GOButton;
         private System.Windows.Forms.PictureBox ActionImage;
         private System.Windows.Forms.Label HelperText;
+		private System.Windows.Forms.Button m_cancelbutton;
+		private System.Windows.Forms.CheckBox m_displayAnnouClockCheck;
     }
 }
 

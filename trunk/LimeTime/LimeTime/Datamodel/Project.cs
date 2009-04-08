@@ -1,6 +1,6 @@
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
-/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\Dokumenter\LightDatamodel\LimeTime\LimeTime\Datamodel\LimeTime.sqlite;" />
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\workspace\LightDatamodel\LimeTime\LimeTime\bin\Debug\LimeTime.sqlite;" />
 /// <type>Table</type>
 /// <namespace>LimeTime.Datamodel</namespace>
 /// <name>Project</name>
@@ -25,6 +25,8 @@ namespace LimeTime.Datamodel
 		private System.String m_Title = "";
 		[DatabaseField("Type")]
 		private System.String m_Type = "";
+		[DatabaseField("UseAnnoyClock")]
+		private System.Boolean m_UseAnnoyClock = false;
 #endregion
 
 #region " properties "
@@ -45,6 +47,12 @@ namespace LimeTime.Datamodel
 		{
 			get{return m_Type;}
 			set{object oldvalue = m_Type;OnBeforeDataChange(this, "Type", oldvalue, value);m_Type = value;OnAfterDataChange(this, "Type", oldvalue, value);}
+		}
+
+		public System.Boolean UseAnnoyClock
+		{
+			get{return m_UseAnnoyClock;}
+			set{object oldvalue = m_UseAnnoyClock;OnBeforeDataChange(this, "UseAnnoyClock", oldvalue, value);m_UseAnnoyClock = value;OnAfterDataChange(this, "UseAnnoyClock", oldvalue, value);}
 		}
 
 #endregion

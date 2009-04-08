@@ -1,7 +1,8 @@
 CREATE TABLE [Project] (
 	"ID" INTEGER PRIMARY KEY,
 	"Title" TEXT NULL,
-	"Type" TEXT NULL
+	"Type" TEXT NULL,
+	"UseAnnoyClock" BOOLEAN NULL
 );
 
 CREATE TABLE [Registration] (
@@ -16,4 +17,4 @@ CREATE TABLE [Version] (
 	"Version" INTEGER NULL
 );
 
-INSERT INTO VERSION (Version) VALUES (0);
+INSERT INTO VERSION (Version) VALUES (1);
