@@ -92,6 +92,7 @@
     <EmbeddedResource Include="Database Schema\Schema.sql" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Database Schema\1. Add AnnoyClock Column.sql" />
     <Content Include="LimeTime.ico" />
     <None Include="Resources\SelectProject.png" />
     <None Include="Resources\AddProject.png" />
