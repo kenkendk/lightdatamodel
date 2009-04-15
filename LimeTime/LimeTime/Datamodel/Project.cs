@@ -1,6 +1,6 @@
 /// <metadata>
 /// <creator>This class was created by DataClassFileBuilder (LightDatamodel)</creator>
-/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\workspace\LightDatamodel\LimeTime\LimeTime\bin\Debug\LimeTime.sqlite;" />
+/// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\Dokumenter\LightDatamodel\LimeTime\LimeTime\Datamodel\LimeTime.sqlite;" />
 /// <type>Table</type>
 /// <namespace>LimeTime.Datamodel</namespace>
 /// <name>Project</name>
@@ -19,7 +19,7 @@ namespace LimeTime.Datamodel
 
 #region " private members "
 
-		[AutoIncrement, PrimaryKey, Relation("RegistrationProject", typeof(Registration), "ProjectID", false), DatabaseField("ID")]
+		[AutoIncrement, PrimaryKey, Relation("RegistrationProject", typeof(Registration), "ProjectID", false), Relation("RecentEntryProject", typeof(RecentEntry), "ProjectID", false), DatabaseField("ID")]
 		private System.Int64 m_ID = long.MinValue;
 		[DatabaseField("Title")]
 		private System.String m_Title = "";
@@ -65,6 +65,15 @@ namespace LimeTime.Datamodel
 			get
 			{
 				return ((DataFetcherWithRelations)m_dataparent).GetRelatedObjects<Registration>("RegistrationProject", this);
+			}
+		}
+
+		[Affects(typeof(RecentEntry))]
+		public System.Collections.Generic.IList<RecentEntry> RecentEntries
+		{
+			get
+			{
+				return ((DataFetcherWithRelations)m_dataparent).GetRelatedObjects<RecentEntry>("RecentEntryProject", this);
 			}
 		}
 

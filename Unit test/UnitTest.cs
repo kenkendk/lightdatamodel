@@ -646,7 +646,7 @@ namespace Datamodel.UnitTest
 
             op = Query.Parse("ORDER BY ID DESC");
             if (op.EvaluateList(f).Count != listlen)
-				throw new Exception("Missing elements af sorting");
+				throw new Exception("Missing elements after sorting");
             op = Query.Parse("ID BETWEEN ? AND ?", 3, 2);
             if (op.EvaluateList(f).Count != 2)
 				throw new Exception("Bad result from the BETWEEN operator");
@@ -681,6 +681,26 @@ namespace Datamodel.UnitTest
             op = Query.Parse("(ID IN (?)) OR ID = ?", ids);
             if (op.EvaluateList(f, 2).Count != 2)
 				throw new Exception("Bad result from the IN operator with a parameter and a list, plus a bind argument");
+
+            op = Query.Parse("ORDER BY ID.ToString() DESC");
+            if (op.EvaluateList(f).Count != listlen || ((Project)op.EvaluateList(f)[0]).ID != 3)
+                throw new Exception("Sorting failed on function with DESC");
+            op = Query.Parse("ORDER BY ID.ToString() ASC");
+            if (op.EvaluateList(f).Count != listlen || ((Project)op.EvaluateList(f)[0]).ID != 1)
+                throw new Exception("Sorting failed on function with DESC");
+            op = Query.Parse("ORDER BY ID.ToString()");
+            if (op.EvaluateList(f).Count != listlen || ((Project)op.EvaluateList(f)[0]).ID != 1)
+                throw new Exception("Sorting failed on function with DESC");
+
+            op = Query.Parse("ORDER BY ::System.Convert.ToString(ID) DESC");
+            if (op.EvaluateList(f).Count != listlen || ((Project)op.EvaluateList(f)[0]).ID != 3)
+                throw new Exception("Sorting failed on function with DESC");
+            op = Query.Parse("ORDER BY ::System.Convert.ToString(ID) ASC");
+            if (op.EvaluateList(f).Count != listlen || ((Project)op.EvaluateList(f)[0]).ID != 1)
+                throw new Exception("Sorting failed on function with DESC");
+            op = Query.Parse("ORDER BY ::System.Convert.ToString(ID)");
+            if (op.EvaluateList(f).Count != listlen || ((Project)op.EvaluateList(f)[0]).ID != 1)
+                throw new Exception("Sorting failed on function with DESC");
 
 		}
 
