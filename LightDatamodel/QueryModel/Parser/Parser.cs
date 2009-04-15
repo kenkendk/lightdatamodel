@@ -329,7 +329,7 @@ namespace System.Data.LightDatamodel.QueryModel
 
             //Covert all string tokens to operands
             ArrayList parsed = new ArrayList();
-            List<SortableParameter> sortorders = null;
+            ArrayList sorttokens = null;
 
             while (tokens.Count > 0)
             {
@@ -344,76 +344,66 @@ namespace System.Data.LightDatamodel.QueryModel
                     if (!((string)tokens.Dequeue()).ToUpper().Equals("BY"))
                         throw new Exception("The keyword ORDER must be followed by the keyword BY");
 
-                    sortorders = new List<SortableParameter>();
+                    sorttokens = new ArrayList();
+
                     //Rest of the items are sort expressions
                     while (tokens.Count > 0)
                     {
+                        //Store all remaining tokens
                         string col = (string)tokens.Dequeue();
                         OperationOrParameter[] p = TokenAsParameter(col, parameters, ref bindIndex);
-                        if (p == null || p.Length != 1)
-                            throw new Exception("Bad sort operand: " + col);
-                        bool asc = true;
-                        if (tokens.Count > 0)
-                        {
-                            string next = (string)tokens.Peek();
-                            if (next != null || (next.ToUpper().Equals("ASC") || next.ToUpper().Equals("DESC")))
-                            {
-                                tokens.Dequeue();
-                                if (next.ToUpper().Equals("DESC"))
-                                    asc = false;
-                            }
-                        }
-
-                        sortorders.Add(new SortableParameter(p[0], asc));
+                        if (p != null && p.Length == 1 && !col.Trim().StartsWith("("))
+                            sorttokens.Add(p[0]);
+                        else
+                            sorttokens.Add(p);
                     }
                 }
                 else
                 {
                     OperationOrParameter[] opm = TokenAsParameter(opr, parameters, ref bindIndex);
-                    parsed.Add(opm);
+                    if (opm != null && opm.Length == 1 && !opr.Trim().StartsWith("("))
+                        parsed.Add(opm[0]);
+                    else
+                        parsed.Add(opm);
                 }
             }
 
+            //Bind functions and arguments
+            MatchFunctionOperands(parsed);
+            List<SortableParameter> sortorders = null;
 
-            //Combine function calls into a single operand
-            for (int i = 0; i < parsed.Count - 1; i++)
-                if (
-                    parsed[i] as OperationOrParameter[] != null && 
-                    (parsed[i] as OperationOrParameter[]).Length == 1 &&
-                    (parsed[i] as OperationOrParameter[])[0] as Parameter != null &&
-                    ((parsed[i] as OperationOrParameter[])[0] as Parameter).IsColumn && 
-                    parsed[i + 1] as OperationOrParameter[] != null)
+            //Build the sort fragment, if any
+            if (sorttokens != null)
+            {
+                //Bind sort functions
+                MatchFunctionOperands(sorttokens);
+                sortorders = new List<SortableParameter>();
+
+                for (int i = 0; i < sorttokens.Count; i++)
                 {
-                    Parameter func = (parsed[i] as OperationOrParameter[])[0] as Parameter;
-                    parsed[i] = new Parameter(func.Value, parsed[i + 1] as OperationOrParameter[]);
-                    parsed.RemoveAt(i + 1);
-                    i--;
+                    if (sorttokens[i] as OperationOrParameter[] != null && (sorttokens[i] as OperationOrParameter[]).Length != 1)
+                        throw new Exception("Bad sort operand at position " + i.ToString());
+                    bool asc = true;
+                    if (i < sorttokens.Count - 1)
+                    {
+                        if (sorttokens[i + 1] is Parameter && ((Parameter)sorttokens[i + 1]).IsColumn)
+                        {
+                            string next = (string)((Parameter)sorttokens[i + 1]).Value;
+                            if (next != null && ((next.ToUpper().Equals("ASC") || next.ToUpper().Equals("DESC"))))
+                            {
+                                sorttokens.RemoveAt(i + 1);
+                                if (next.ToUpper().Equals("DESC"))
+                                    asc = false;
+                            }
+                        }
+                    }
+
+                    if (sorttokens[i] as OperationOrParameter[] == null)
+                        sortorders.Add(new SortableParameter((OperationOrParameter)sorttokens[i], asc));
+                    else
+                        sortorders.Add(new SortableParameter((sorttokens[i] as OperationOrParameter[])[0], asc));
                 }
-
-            for (int i = 0; i < parsed.Count; i++)
-                if (parsed[i] as OperationOrParameter[] != null && (parsed[i] as OperationOrParameter[]).Length == 1)
-                    parsed[i] = (parsed[i] as OperationOrParameter[])[0];
-
-            //Check for sequences like "GetType().FullName"
-            for (int i = 1; i < parsed.Count; i++)
-                if (
-                    parsed[i-1] as Parameter != null && 
-                    (parsed[i-1] as Parameter).IsFunction &&
-                    parsed[i] as Parameter != null &&
-                    (parsed[i] as Parameter).IsColumn && 
-                    (parsed[i] as Parameter).Value as String != null &&
-                    ((parsed[i] as Parameter).Value as String).StartsWith(".")
-                )
-                {
-                    (parsed[i] as Parameter).BindContext = parsed[i-1] as Parameter;
-                    parsed[i - 1] = parsed[i];
-                    parsed.RemoveAt(i);
-                    i--;
-                }
-
-
-
-
+            }
 
             //Sort out operator precedence
             SortedList<int, List<int>> operators = new SortedList<int, List<int>>();
@@ -534,6 +524,48 @@ namespace System.Data.LightDatamodel.QueryModel
                 else
                     return (OperationOrParameter[])parsed.ToArray(typeof(OperationOrParameter));
             }
+        }
+
+        /// <summary>
+        /// Assigns parameters to functions in the parsed list
+        /// </summary>
+        /// <param name="parsed">The list of operands to combine</param>
+        private static void MatchFunctionOperands(ArrayList parsed)
+        {
+            //Combine function calls into a single operand
+            for (int i = 0; i < parsed.Count - 1; i++)
+                if (
+                    parsed[i] as Parameter != null &&
+                    (parsed[i] as Parameter).IsColumn &&
+                    parsed[i + 1] as OperationOrParameter[] != null)
+                {
+                    Parameter func = parsed[i] as Parameter;
+                    parsed[i] = new Parameter(func.Value, parsed[i + 1] as OperationOrParameter[]);
+                    parsed.RemoveAt(i + 1);
+                    i--;
+                }
+
+            //Extract single arguments
+            for (int i = 0; i < parsed.Count; i++)
+                if (parsed[i] as OperationOrParameter[] != null && (parsed[i] as OperationOrParameter[]).Length == 1)
+                    parsed[i] = (parsed[i] as OperationOrParameter[])[0];
+
+            //Check for sequences like "GetType().FullName"
+            for (int i = 1; i < parsed.Count; i++)
+                if (
+                    parsed[i - 1] as Parameter != null &&
+                    (parsed[i - 1] as Parameter).IsFunction &&
+                    parsed[i] as Parameter != null &&
+                    (parsed[i] as Parameter).IsColumn &&
+                    (parsed[i] as Parameter).Value as String != null &&
+                    ((parsed[i] as Parameter).Value as String).StartsWith(".")
+                )
+                {
+                    (parsed[i] as Parameter).BindContext = parsed[i - 1] as Parameter;
+                    parsed[i - 1] = parsed[i];
+                    parsed.RemoveAt(i);
+                    i--;
+                }
         }
 
         /// <summary>
