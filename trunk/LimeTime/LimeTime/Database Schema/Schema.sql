@@ -17,4 +17,12 @@ CREATE TABLE [Version] (
 	"Version" INTEGER NULL
 );
 
-INSERT INTO VERSION (Version) VALUES (1);
+CREATE TABLE [RecentEntry] (
+	"ID" INTEGER PRIMARY KEY,
+	"Time" DATETIME NULL,
+	"ProjectID" INTEGER NULL,
+	"TypedText" TEXT NULL
+);
+
+
+INSERT INTO VERSION (Version) VALUES (2);

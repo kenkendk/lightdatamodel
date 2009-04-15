@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DatabaseUpgrader.cs" />
+    <Compile Include="IntelligentSearch.cs" />
     <Compile Include="KeyboardHook.cs" />
     <Compile Include="SearchForm.cs">
       <SubType>Form</SubType>
@@ -93,6 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Database Schema\1. Add AnnoyClock Column.sql" />
+    <EmbeddedResource Include="Database Schema\2. Add RecentEntry table.sql" />
     <Content Include="LimeTime.ico" />
     <None Include="Resources\SelectProject.png" />
     <None Include="Resources\AddProject.png" />

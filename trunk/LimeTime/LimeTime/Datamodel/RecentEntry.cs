@@ -3,7 +3,7 @@
 /// <provider name="System.Data.LightDatamodel.SQLiteDataProvider" connectionstring="Version=3;Data Source=D:\Dokumenter\LightDatamodel\LimeTime\LimeTime\Datamodel\LimeTime.sqlite;" />
 /// <type>Table</type>
 /// <namespace>LimeTime.Datamodel</namespace>
-/// <name>Registration</name>
+/// <name>RecentEntry</name>
 /// <sql></sql>
 /// </metadata>
 
@@ -13,8 +13,8 @@ using System.Data.LightDatamodel.DataClassAttributes;
 namespace LimeTime.Datamodel
 {
 
-	[DatabaseTable("Registration")]
-	public partial class Registration : DataClassBase
+	[DatabaseTable("RecentEntry")]
+	public partial class RecentEntry : DataClassBase
 	{
 
 #region " private members "
@@ -23,10 +23,10 @@ namespace LimeTime.Datamodel
 		private System.Int64 m_ID = long.MinValue;
 		[DatabaseField("Time")]
 		private System.DateTime m_Time = new System.DateTime(1, 1, 1);
-		[Relation("RegistrationProject", typeof(Project), "ID"), DatabaseField("ProjectID")]
+		[Relation("RecentEntryProject", typeof(Project), "ID"), DatabaseField("ProjectID")]
 		private System.Int64 m_ProjectID = long.MinValue;
-		[DatabaseField("Note")]
-		private System.String m_Note = "";
+		[DatabaseField("TypedText")]
+		private System.String m_TypedText = "";
 #endregion
 
 #region " properties "
@@ -49,10 +49,10 @@ namespace LimeTime.Datamodel
 			set{object oldvalue = m_ProjectID;OnBeforeDataChange(this, "ProjectID", oldvalue, value);m_ProjectID = value;OnAfterDataChange(this, "ProjectID", oldvalue, value);}
 		}
 
-		public System.String Note
+		public System.String TypedText
 		{
-			get{return m_Note;}
-			set{object oldvalue = m_Note;OnBeforeDataChange(this, "Note", oldvalue, value);m_Note = value;OnAfterDataChange(this, "Note", oldvalue, value);}
+			get{return m_TypedText;}
+			set{object oldvalue = m_TypedText;OnBeforeDataChange(this, "TypedText", oldvalue, value);m_TypedText = value;OnAfterDataChange(this, "TypedText", oldvalue, value);}
 		}
 
 #endregion
@@ -62,8 +62,8 @@ namespace LimeTime.Datamodel
 		[Affects(typeof(Project))]
 		public Project Project
 		{
-			get{ return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<Project>("RegistrationProject", this); }
-			set{ ((DataFetcherWithRelations)m_dataparent).SetRelatedObject("RegistrationProject", this, value); }
+			get{ return ((DataFetcherWithRelations)m_dataparent).GetRelatedObject<Project>("RecentEntryProject", this); }
+			set{ ((DataFetcherWithRelations)m_dataparent).SetRelatedObject("RecentEntryProject", this, value); }
 		}
 
 #endregion
