@@ -1424,12 +1424,12 @@ namespace System.Data.LightDatamodel
 				switch (p.Value.ToString())
 				{
 					case "MAX":
-						tmp = double.MinValue;
+						tmp = (double)Convert.ChangeType(val, typeof(double));
 						foreach (DATACLASS o in cache)
 							tmp = (double)Math.Max(tmp, (double)Convert.ChangeType( p.FunctionArguments[0].Evaluate(o, null), typeof(double)));
 						break;
 					case "MIN":
-						tmp = double.MaxValue;
+						tmp = (double)Convert.ChangeType(val, typeof(double)); ;
 						foreach (DATACLASS o in cache)
 							tmp = (double)Math.Min(tmp, (double)Convert.ChangeType(p.FunctionArguments[0].Evaluate(o, null), typeof(double)));
 						break;
