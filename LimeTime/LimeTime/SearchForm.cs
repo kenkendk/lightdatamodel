@@ -11,25 +11,46 @@ namespace LimeTime
     public partial class SearchForm : Form
     {
         private string m_lastSearch = "";
-        private object m_lock = new object();
 
         public SearchForm()
         {
             InitializeComponent();
 
             this.Icon = Properties.Resources.TrayIcon;
+			textBoxWithFancyAutoComplete1.SearchItems = new TextBoxWithFancyAutoComplete.GetItemsHandler(SearchItems);
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
+		private List<TextBoxWithFancyAutoComplete.ListEntry> SearchItems(string searchtext)
+		{
+			//get items
+			List<TextBoxWithFancyAutoComplete.ListEntry> list = new List<TextBoxWithFancyAutoComplete.ListEntry>();
+			m_lastSearch = searchtext;
+
+			if (!string.IsNullOrEmpty(searchtext))
+			{
+				List<Datamodel.Project> res = new List<LimeTime.Datamodel.Project>(Program.DataConnection.GetObjects<Datamodel.Project>("ORDER BY ::LimeTime.Search.IntelligentSearch.Evaluate(Title, ?) DESC", searchtext));
+				foreach (Datamodel.RecentEntry r in Program.DataConnection.GetObjects<Datamodel.RecentEntry>("TypedText LIKE ? ORDER BY Time DESC", searchtext))
+				{
+					res.Remove(r.Project);
+					res.Insert(0, r.Project);
+				}
+				foreach (Datamodel.Project p in res)
+					list.Add(new TextBoxWithFancyAutoComplete.ListEntry(Properties.Resources.SearchIcon, p.Title, string.IsNullOrEmpty(p.Type) ? "No type" : p.Type));
+				return list;
+			}
+			return null;
+		}
+
+		private void textBoxWithFancyAutoComplete1_TextChanged(object sender, EventArgs e)
         {
             /*if (backgroundWorker.IsBusy)
                 backgroundWorker.CancelAsync();*/
 
-            HelperText.Text = textBox1.Text;
+			HelperText.Text = textBoxWithFancyAutoComplete1.Text;
             listBox.Items.Clear();
             listBox.Visible = false;
 
-            if (textBox1.Text.Trim().Length == 0)
+			if (textBoxWithFancyAutoComplete1.Text.Trim().Length == 0)
             {
                 GOButton.Enabled = false;
 				return;
@@ -37,8 +58,8 @@ namespace LimeTime
             else
                 GOButton.Enabled = true;
 
-            if (!backgroundWorker.IsBusy)
-                backgroundWorker.RunWorkerAsync(textBox1.Text);
+			//if (!backgroundWorker.IsBusy)
+			//    backgroundWorker.RunWorkerAsync(textBox1.Text);
         }
 
         private void GOButton_Click(object sender, EventArgs e)
@@ -58,13 +79,13 @@ namespace LimeTime
             r.Project = p;
             p.UseAnnoyClock = m_displayAnnouClockCheck.Checked;
 
-            if (p.Title.ToLower().Trim() != textBox1.Text.Trim().ToLower())
+			if (p.Title.ToLower().Trim() != textBoxWithFancyAutoComplete1.Text.Trim().ToLower())
             {
-                Datamodel.RecentEntry ent = System.Data.LightDatamodel.Query.FindFirst<Datamodel.RecentEntry>(System.Data.LightDatamodel.Query.Parse("TypedText LIKE ? AND Project.Title LIKE ?"), Program.DataConnection.GetObjects<Datamodel.RecentEntry>(), textBox1.Text, HelperText.Text);
+				Datamodel.RecentEntry ent = System.Data.LightDatamodel.Query.FindFirst<Datamodel.RecentEntry>(System.Data.LightDatamodel.Query.Parse("TypedText LIKE ? AND Project.Title LIKE ?"), Program.DataConnection.GetObjects<Datamodel.RecentEntry>(), textBoxWithFancyAutoComplete1.Text, HelperText.Text);
                 if (ent == null)
                     ent =  Program.DataConnection.Add<Datamodel.RecentEntry>();
                 ent.Time = DateTime.Now;
-                ent.TypedText = textBox1.Text;
+				ent.TypedText = textBoxWithFancyAutoComplete1.Text;
                 ent.Project = p;
 
                 Datamodel.RecentEntry[] existing = Program.DataConnection.GetObjects<Datamodel.RecentEntry>("ORDER BY Time ASC");
@@ -90,57 +111,52 @@ namespace LimeTime
 			this.Close();
 		}
 
-        private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            lock(m_lock)
-                m_lastSearch = (string)e.Argument;
+		//private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+		//{
+		//    m_lastSearch = (string)e.Argument;
+		//    e.Result = null;
 
-            e.Result = null;
+		//    if (!string.IsNullOrEmpty((string)e.Argument))
+		//    {
+		//        List<Datamodel.Project> res = new List<LimeTime.Datamodel.Project>(Program.DataConnection.GetObjects<Datamodel.Project>("ORDER BY ::LimeTime.Search.IntelligentSearch.Evaluate(Title, ?) DESC", (string)e.Argument));
+		//        foreach (Datamodel.RecentEntry r in Program.DataConnection.GetObjects<Datamodel.RecentEntry>("TypedText LIKE ? ORDER BY Time DESC", (string)e.Argument))
+		//        {
+		//            res.Remove(r.Project);
+		//            res.Insert(0, r.Project);
+		//        }
+		//        e.Result = res;
+		//    }
+		//}
 
-            if (!string.IsNullOrEmpty((string)e.Argument))
-            {
-                List<Datamodel.Project> res = new List<LimeTime.Datamodel.Project>(Program.DataConnection.GetObjects<Datamodel.Project>("ORDER BY ::LimeTime.Search.IntelligentSearch.Evaluate(Title, ?) DESC", (string)e.Argument));
-                foreach (Datamodel.RecentEntry r in Program.DataConnection.GetObjects<Datamodel.RecentEntry>("TypedText LIKE ? ORDER BY Time DESC", (string)e.Argument))
-                {
-                    res.Remove(r.Project);
-                    res.Insert(0, r.Project);
-                }
-                e.Result = res;
-            }
-        }
+		//private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+		//{
+		//    listBox.Items.Clear();
+		//    listBox.Visible = false;
 
-        private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            listBox.Items.Clear();
-            listBox.Visible = false;
+		//    if (e.Cancelled || e.Error != null || e.Result == null)
+		//    {
+		//        //Report it?
+		//    }
+		//    else
+		//    {
 
-            if (e.Cancelled || e.Error != null || e.Result == null)
-            {
-                //Report it?
-            }
-            else
-            {
+		//        foreach (Datamodel.Project p in (List<Datamodel.Project>)e.Result)
+		//        {
+		//            listBox.Items.Add(p.Title);
+		//            if (listBox.Items.Count > 10)
+		//                break;
+		//        }
 
-                foreach (Datamodel.Project p in (List<Datamodel.Project>)e.Result)
-                {
-                    listBox.Items.Add(p.Title);
-                    if (listBox.Items.Count > 10)
-                        break;
-                }
+		//        if (listBox.Items.Count > 0)
+		//        {
+		//            listBox.Tag = e.Result;
+		//            listBox.Visible = true;
+		//        }
+		//    }
 
-                if (listBox.Items.Count > 0)
-                {
-                    listBox.Tag = e.Result;
-                    listBox.Visible = true;
-                }
-            }
-
-            lock(m_lock)
-                if (m_lastSearch != textBox1.Text)
-                    backgroundWorker.RunWorkerAsync(textBox1.Text);
-
-
-        }
+		//    if (m_lastSearch != textBox1.Text)
+		//        backgroundWorker.RunWorkerAsync(textBox1.Text);
+		//}
 
         private void listBox_SelectedIndexChanged(object sender, EventArgs e)
         {
