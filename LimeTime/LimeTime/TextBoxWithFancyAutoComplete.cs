@@ -27,6 +27,22 @@ namespace System.Windows.Forms
 			}
 		}
 
+		protected override void OnParentChanged(EventArgs e)
+		{
+			base.OnParentChanged(e);
+			this.Parent.Move += new EventHandler(Parent_Move);
+		}
+
+		void Parent_Move(object sender, EventArgs e)
+		{
+			if (m_dropdownlist != null && m_dropdownlist.Visible)
+			{
+				Point p = new Point(this.Location.X, this.Location.Y + this.Height);
+				p = this.Parent.PointToScreen(p);
+				m_dropdownlist.Location = p;
+			}
+		}
+
 		void m_backgroundWorker_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
 		{
 			if (e.Result == null || ((List<ListEntry>)e.Result).Count == 0)
