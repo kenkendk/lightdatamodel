@@ -34,8 +34,12 @@ namespace LimeTime
 					res.Remove(r.Project);
 					res.Insert(0, r.Project);
 				}
+				int i = 0;
 				foreach (Datamodel.Project p in res)
+				{
 					list.Add(new TextBoxWithFancyAutoComplete.ListEntry(Properties.Resources.SearchIcon, p.Title, string.IsNullOrEmpty(p.Type) ? "No type" : p.Type));
+					if (i++ > 10) break;
+				}
 				return list;
 			}
 			return null;
