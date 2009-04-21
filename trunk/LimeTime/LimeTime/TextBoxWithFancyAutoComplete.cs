@@ -69,6 +69,11 @@ namespace System.Windows.Forms
 		/// </summary>
 		private class FormUnfocused : Form
 		{
+			public FormUnfocused()
+			{
+				this.DoubleBuffered = true;
+			}
+
 			protected override bool ShowWithoutActivation
 			{
 				get { return true; }
@@ -137,7 +142,6 @@ namespace System.Windows.Forms
 		private void FillList(Form frm, List<ListEntry> list)
 		{
 			frm.SuspendLayout();
-			frm.Controls.Clear();
 
 			//fill in controls
 			Control[] cons = new Control[list.Count * 3];
@@ -174,6 +178,7 @@ namespace System.Windows.Forms
 			}
 			frm.Height = Math.Min( cury, 100);
 
+			frm.Controls.Clear();
 			frm.Controls.AddRange(cons);
 			frm.ResumeLayout(true);
 		}
