@@ -31,6 +31,12 @@ namespace System.Data.LightDatamodel
 		private Dictionary<IDataClass, IDataClass> m_originalobjects = new Dictionary<IDataClass, IDataClass>();
 		private Dictionary<IDataClass, IDataClass> m_tempobjects = new Dictionary<IDataClass, IDataClass>();
 
+        public override System.Data.LightDatamodel.Log.ILog Log
+        {
+            get { return m_baseFetcher.Log; }
+            set { m_baseFetcher.Log = value; }
+        }
+
 		public IDataFetcher BaseFetcher
 		{
 			get { return m_baseFetcher; }

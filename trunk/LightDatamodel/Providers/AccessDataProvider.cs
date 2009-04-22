@@ -83,7 +83,8 @@ namespace System.Data.LightDatamodel
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Couldn't create OleDb connection\nError: " + ex.Message);
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't create OleDb connection\nError: " + ex.Message);
+				throw new Exception();
 			}
 		}
 
@@ -140,6 +141,7 @@ namespace System.Data.LightDatamodel
 			}
 			catch (Exception ex)
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't load IsIndexed from table \"" + tablename + "\"\nError: " + ex.Message);
 				throw new Exception("Couldn't load IsIndexed from table \"" + tablename + "\"\nError: " + ex.Message);
 			}
 		}
@@ -162,6 +164,7 @@ namespace System.Data.LightDatamodel
 			}
 			catch (Exception ex)
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't load IsAutoIncrement from table \"" + tablename + "\"\nError: " + ex.Message);
 				throw new Exception("Couldn't load IsAutoIncrement from table \"" + tablename + "\"\nError: " + ex.Message);
 			}
         }

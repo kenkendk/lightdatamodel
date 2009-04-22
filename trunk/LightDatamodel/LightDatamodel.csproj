@@ -108,6 +108,9 @@
     <Compile Include="Fetchers\DataFetcherCached.cs" />
     <Compile Include="Fetchers\DataFetcherNested.cs" />
     <Compile Include="Fetchers\DataFetcherWithRelations.cs" />
+    <Compile Include="Log\FileLog.cs" />
+    <Compile Include="Log\ILog.cs" />
+    <Compile Include="Log\NullLog.cs" />
     <Compile Include="QueryModel\Compare and Sort\Compare.cs" />
     <Compile Include="QueryModel\Compare and Sort\Sorting.cs" />
     <Compile Include="QueryModel\Operations\Enums.cs" />

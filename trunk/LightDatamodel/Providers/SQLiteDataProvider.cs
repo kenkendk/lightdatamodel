@@ -109,39 +109,34 @@ namespace System.Data.LightDatamodel
                 return false;
 
             if (m_connection.State != ConnectionState.Open) m_connection.Open();
-            IDbCommand cmd = m_connection.CreateCommand();
-            cmd.CommandText = "SELECT SQL FROM SQLITE_MASTER WHERE name=" + AddParameter(cmd, "name", tablename) + " AND type='table'";
-            IDataReader rd = null;
-            try
+            using (IDbCommand cmd = m_connection.CreateCommand())
             {
-                rd = cmd.ExecuteReader();
-                if (!rd.Read())
-                    throw new Exception("Failed to read SQL from SQLITE_MASTER for table " + tablename);
-                string sql = rd.GetValue(0).ToString();
-
-                //TODO: use a regexp for this, it will not get any uglier than this :D
-                //Basically we look for "[column name] datatype primary key," and extract "datatype" and check if it is integer
-                int p = sql.ToLower().IndexOf(" primary");
-
-                if (p > 0)
+                cmd.CommandText = "SELECT SQL FROM SQLITE_MASTER WHERE name=" + AddParameter(cmd, "name", tablename) + " AND type='table'";
+                using (IDataReader rd = cmd.ExecuteReader())
                 {
-                    sql = sql.Substring(0, p + 1).Trim();
-                    p = sql.LastIndexOfAny(new char[] { ',', '(' });
-                    if (p >= 0)
-                        sql = sql.Substring(p + 1).Trim();
-                    p = sql.LastIndexOf(" ");
+                    if (!rd.Read())
+                        throw new Exception("Failed to read SQL from SQLITE_MASTER for table " + tablename);
+                    string sql = rd.GetValue(0).ToString();
+
+                    //TODO: use a regexp for this, it will not get any uglier than this :D
+                    //Basically we look for "[column name] datatype primary key," and extract "datatype" and check if it is integer
+                    int p = sql.ToLower().IndexOf(" primary");
+
                     if (p > 0)
-                        sql = sql.Substring(p).Trim();
+                    {
+                        sql = sql.Substring(0, p + 1).Trim();
+                        p = sql.LastIndexOfAny(new char[] { ',', '(' });
+                        if (p >= 0)
+                            sql = sql.Substring(p + 1).Trim();
+                        p = sql.LastIndexOf(" ");
+                        if (p > 0)
+                            sql = sql.Substring(p).Trim();
 
-                    if (sql.ToLower().Trim() == "integer")
-                        return true;
+                        if (sql.ToLower().Trim() == "integer")
+                            return true;
+                    }
+
                 }
-
-            }
-            finally
-            {
-                try { if (rd != null) rd.Close(); }
-                catch { }
             }
 
             return false;
@@ -151,75 +146,63 @@ namespace System.Data.LightDatamodel
 		public override string GetPrimaryKey(string tablename)
 		{
 			if(m_connection.State != ConnectionState.Open) m_connection.Open();
-			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "SELECT SQL FROM SQLITE_MASTER WHERE name=" + AddParameter(cmd, "name", tablename) + " AND type='table'";
-			IDataReader rd = null; 
-			try
-			{
-				rd = cmd.ExecuteReader();
-				if (!rd.Read())
-					throw new Exception("Failed to read SQL from SQLITE_MASTER for table " + tablename);
-				string sql = rd.GetValue(0).ToString();
+            using (IDbCommand cmd = m_connection.CreateCommand())
+            {
+                cmd.CommandText = "SELECT SQL FROM SQLITE_MASTER WHERE name=" + AddParameter(cmd, "name", tablename) + " AND type='table'";
+                using (IDataReader rd = cmd.ExecuteReader())
+                {
+                    if (!rd.Read())
+                        throw new Exception("Failed to read SQL from SQLITE_MASTER for table " + tablename);
+                    string sql = rd.GetValue(0).ToString();
 
-				//TODO: use a regexp for this, it will not get any uglier than this :D
-				//Basically we look for "[column name] datatype primary key," and extract "column name"
-				int p = sql.ToLower().IndexOf(" primary");
+                    //TODO: use a regexp for this, it will not get any uglier than this :D
+                    //Basically we look for "[column name] datatype primary key," and extract "column name"
+                    int p = sql.ToLower().IndexOf(" primary");
 
-				if (p > 0)
-				{
-					sql = sql.Substring(0, p + 1).Trim();
-					p = sql.LastIndexOfAny(new char[] {',', '('});
-					if (p >= 0)
-						sql = sql.Substring(p + 1).Trim();
-					p = sql.LastIndexOf(" ");
-					p = sql.LastIndexOfAny(new char[] {'"', '\'', ']' });
-					if (p > 0)
-						sql = sql.Substring(0, p + 1);
-					else
-					{
-						p = sql.IndexOf(" ");
-						if (p > 0)
-							sql = sql.Substring(0, p);
-					}
-						
+                    if (p > 0)
+                    {
+                        sql = sql.Substring(0, p + 1).Trim();
+                        p = sql.LastIndexOfAny(new char[] { ',', '(' });
+                        if (p >= 0)
+                            sql = sql.Substring(p + 1).Trim();
+                        p = sql.LastIndexOf(" ");
+                        p = sql.LastIndexOfAny(new char[] { '"', '\'', ']' });
+                        if (p > 0)
+                            sql = sql.Substring(0, p + 1);
+                        else
+                        {
+                            p = sql.IndexOf(" ");
+                            if (p > 0)
+                                sql = sql.Substring(0, p);
+                        }
 
 
 
-					if (sql.IndexOfAny(new char[] {'"', '\'', '[' }) == 0)
-						return sql.Substring(1, sql.Length - 2);
-					else
-						return sql;
-				}
-	
-			} 
-			finally 
-			{
-				try { if (rd != null) rd.Close(); }
-				catch {}
-			}
+
+                        if (sql.IndexOfAny(new char[] { '"', '\'', '[' }) == 0)
+                            return sql.Substring(1, sql.Length - 2);
+                        else
+                            return sql;
+                    }
+
+                }
+            }
 
 			return "";
 		}
 
 		public override string[] GetTablenames()
 		{
-			if(m_connection.State != ConnectionState.Open) m_connection.Open();
-			IDbCommand cmd = m_connection.CreateCommand();
-			cmd.CommandText = "SELECT Name FROM SQLITE_MASTER WHERE type='table' AND name NOT LIKE 'sqlite_%'";
-			IDataReader rd = null;
-			ArrayList tb = new ArrayList();
-			try
-			{
-				rd = cmd.ExecuteReader();
-				while(rd.Read())
-					tb.Add(rd.GetValue(0).ToString());
-				rd.Close();
-			}
-			finally
-			{
-				try { if (rd != null) rd.Close(); }
-				catch {}
-			}
+            ArrayList tb = new ArrayList();
+            if (m_connection.State != ConnectionState.Open) m_connection.Open();
+            using (IDbCommand cmd = m_connection.CreateCommand())
+            {
+                cmd.CommandText = "SELECT Name FROM SQLITE_MASTER WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+                using (IDataReader rd = cmd.ExecuteReader())
+                    while (rd.Read())
+                        tb.Add(rd.GetValue(0).ToString());
+            }
+
 			return (string[])tb.ToArray(typeof(string));
 		}
 

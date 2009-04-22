@@ -31,6 +31,7 @@ namespace System.Data.LightDatamodel
 	{
 		protected IDataProvider m_provider;
 		protected TypeConfiguration m_mappings = new TypeConfiguration();
+        protected Log.ILog m_log = new Log.NullLog();
 		private object m_insertlock = new object();
 
 		public event DataChangeEventHandler BeforeDataChange;
@@ -38,8 +39,30 @@ namespace System.Data.LightDatamodel
 		public event DataConnectionEventHandler BeforeDataConnection;
 		public event DataConnectionEventHandler AfterDataConnection;
 
+
 		public IDataProvider Provider { get { return m_provider; } }
 		public TypeConfiguration Mappings { get { return m_mappings; } set { m_mappings = value; } }
+        public virtual Log.ILog Log
+        {
+            get 
+            {
+                if (m_log.GetType() == typeof(Log.NullLog))
+                    return null;
+                else
+                    return m_log; 
+            }
+            set 
+            {
+                if (m_log != null)
+                    m_log.Dispose();
+
+                if (value == null)
+                    m_log = new Log.NullLog();
+                else
+                    m_log = value; 
+            }
+        }
+
 
         /// <summary>
         /// A delegate for creating unique temporary ID's
