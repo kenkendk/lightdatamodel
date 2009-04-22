@@ -44,6 +44,18 @@ namespace System.Data.LightDatamodel
 			set { m_parent = value; }
 		}
 
+        protected Log.ILog Log
+        {
+            get
+            {
+                if (m_parent == null || m_parent.Log == null)
+                    return new Log.NullLog();
+                else
+                    return m_parent.Log;
+            }
+        }
+
+
 		/// <summary>
 		/// The connectionstring will be obscured when opened by eg. SQL Server
 		/// </summary>
@@ -362,11 +374,13 @@ namespace System.Data.LightDatamodel
 
 			try
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
 				return cmd.ExecuteScalar();
 			}
 			catch(Exception ex)
 			{
-				throw new Exception("Couldn't load expression (" + expression.ToString() + ") from table \"" + tablename + "\"\nError: " + ex.Message);
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, ex.Message);
+                throw new Exception("Couldn't load expression (" + expression.ToString() + ") from table \"" + tablename + "\"\nError: " + ex.Message);
 			}
 		}
 
@@ -386,7 +400,8 @@ namespace System.Data.LightDatamodel
 			IDataReader r = null;
 			try
 			{
-				r = cmd.ExecuteReader(CommandBehavior.KeyInfo);
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
+                r = cmd.ExecuteReader(CommandBehavior.KeyInfo);
 				DataTable tbl = r.GetSchemaTable();
 				if (tbl != null && tbl.Rows.Count > 0)
 				{
@@ -396,7 +411,8 @@ namespace System.Data.LightDatamodel
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Couldn't get column string length\nError: " + ex.Message);
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't get column string length\nError: " + ex.Message);
+                throw new Exception("Couldn't get column string length\nError: " + ex.Message);
 			}
 			finally
 			{
@@ -460,19 +476,22 @@ namespace System.Data.LightDatamodel
 
 			try
 			{
-				int r = cmd.ExecuteNonQuery();
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
+                int r = cmd.ExecuteNonQuery();
                 if (r != 1)
                 {
                     throw new NoSuchObjectException("Delete was expected to delete 1 rows (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + "), but deleted: " + r.ToString(), item);
                 }
 			}
-			catch (NoSuchObjectException)
+			catch (NoSuchObjectException nex)
 			{
-				throw;
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, nex.Message);
+                throw;
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Couldn't delete row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't delete row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
+                throw new Exception("Couldn't delete row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
 			}
 		}
 
@@ -481,7 +500,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="cmd"></param>
 		/// <returns></returns>
-		private static string FullCommandText(IDbCommand cmd)
+		protected virtual string FullCommandText(IDbCommand cmd)
 		{
 			try
 			{
@@ -520,7 +539,8 @@ namespace System.Data.LightDatamodel
 
 			    try
 			    {
-				    using(IDataReader dr = cmd.ExecuteReader())
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
+                    using (IDataReader dr = cmd.ExecuteReader())
                     {
 						object[] results = (object[])TransformToObjects(type, dr);
 						dr.Close();
@@ -534,6 +554,7 @@ namespace System.Data.LightDatamodel
 			    }
 			    catch(Exception ex)
 			    {
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't load row (" + primarykey.ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message);
                     throw new Exception("Couldn't load row (" + primarykey.ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message);
 			    }
             }
@@ -583,10 +604,15 @@ namespace System.Data.LightDatamodel
 		{
 			try
 			{
-				if (m_connection.State != ConnectionState.Open) m_connection.Open();
+                if (m_connection.State != ConnectionState.Open)
+                {
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, "Opening connection: " + m_connection.ConnectionString);
+                    m_connection.Open();
+                }
 			}
 			catch (Exception ex)
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't open the connection to the database\nError: " + ex.Message);
 				throw new Exception("Couldn't open the connection to the database\nError: " + ex.Message);
 			}
 		}
@@ -610,7 +636,8 @@ namespace System.Data.LightDatamodel
 
                 try
                 {
-					using (IDataReader dr = cmd.ExecuteReader())
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
+                    using (IDataReader dr = cmd.ExecuteReader())
 					{
 						object[] ret = (object[])TransformToObjects(type, dr);
 						dr.Close();
@@ -619,6 +646,7 @@ namespace System.Data.LightDatamodel
                 }
                 catch (Exception ex)
                 {
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't load rows (" + filter + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message);
                     throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message);
                 }
             }
@@ -724,7 +752,8 @@ namespace System.Data.LightDatamodel
 
 		        try
 		        {
-		            using (IDataReader dr = cmd.ExecuteReader())
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
+                    using (IDataReader dr = cmd.ExecuteReader())
 		            {
 						object[] ret = (object[])TransformToObjects(type, dr);
 		                dr.Close();
@@ -733,6 +762,7 @@ namespace System.Data.LightDatamodel
 		        }
 		        catch (Exception ex)
 		        {
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't load rows (" + filter + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message);
 		            throw new Exception("Couldn't load rows (" + filter + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message);
 		        }
 		    }
@@ -800,6 +830,7 @@ namespace System.Data.LightDatamodel
 
                 try
                 {
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
                     int r = cmd.ExecuteNonQuery();
                     if (r != 1)
                     {
@@ -818,12 +849,14 @@ namespace System.Data.LightDatamodel
                         throw new NoSuchObjectException("Row update was expected to update 1 row, but updated: " + r.ToString() + ".\r\n" + msg, item);
                     }
                 }
-				catch (NoSuchObjectException)
+				catch (NoSuchObjectException nex)
 				{
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, nex.Message);
 					throw;
 				}
                 catch (Exception ex)
                 {
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't update row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
 					throw new Exception("Couldn't update row (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + ") from table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
                 }
             }
@@ -850,16 +883,19 @@ namespace System.Data.LightDatamodel
 
                 try
                 {
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
                     int r = cmd.ExecuteNonQuery();
 					if (r != 1) throw new NoSuchObjectException("The insert was expected to update 1 row, but updated: " + r.ToString(), item);
                 }
-				catch (NoSuchObjectException)
+				catch (NoSuchObjectException nex)
 				{
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, nex.Message);
 					throw;
 				}
                 catch (Exception ex)
                 {
-					throw new Exception("Couldn't insert row in table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't insert row in table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
+					throw new Exception();
                 }
             }
 		}
@@ -873,6 +909,7 @@ namespace System.Data.LightDatamodel
                 cmd.CommandText = sql;
                 try
                 {
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
                     using (IDataReader dr = cmd.ExecuteReader())
                     {
                         for (int i = 0; i < dr.FieldCount; i++)
@@ -883,6 +920,7 @@ namespace System.Data.LightDatamodel
                 }
                 catch (Exception ex)
                 {
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't get structure from sql (" + sql + ")\nError: " + ex.Message);
                     throw new Exception("Couldn't get structure from sql (" + sql + ")\nError: " + ex.Message);
                 }
             }
@@ -897,10 +935,12 @@ namespace System.Data.LightDatamodel
 		{
 			try
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, "Closing connection");
 				m_connection.Close();
 			}
-			catch
+			catch(Exception ex)
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Warning, ex.Message);
 			}
 		}
 

@@ -85,6 +85,7 @@ namespace System.Data.LightDatamodel
 					}
 					catch (Exception ex)
 					{
+                        Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't convert the ODBC connectionstring (" + connectionstring + ") to the SQL-variant\nError: " + ex.Message);
 						throw new Exception("Couldn't convert the ODBC connectionstring (" + connectionstring + ") to the SQL-variant\nError: " + ex.Message);
 					}
 				}
@@ -123,6 +124,7 @@ namespace System.Data.LightDatamodel
 			}
 			catch (Exception ex)
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't load IsIndexed from table \"" + tablename + "\"\nError: " + ex.Message);
 				throw new Exception("Couldn't load IsIndexed from table \"" + tablename + "\"\nError: " + ex.Message);
 			}
 		}
@@ -145,6 +147,7 @@ namespace System.Data.LightDatamodel
 			}
 			catch (Exception ex)
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't load IsAutoIncrement from table \"" + tablename + "\"\nError: " + ex.Message);
 				throw new Exception("Couldn't load IsAutoIncrement from table \"" + tablename + "\"\nError: " + ex.Message);
 			}
         }
@@ -173,8 +176,9 @@ namespace System.Data.LightDatamodel
 					if (columntype == typeof(DateTime) && def.ToString().ToLower() == "date()" || def.ToString().ToLower() == "curdate()" || def.ToString().ToLower() == "now()") return DateTime.Now;
 					return Convert.ChangeType(def, columntype, System.Globalization.CultureInfo.InvariantCulture);
 				}
-				catch
+				catch (Exception ex)
 				{
+                    Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Warning, ex.Message);
 					//don't do anything really. If it sucks, it sucks
 				}
 			}
@@ -212,6 +216,7 @@ namespace System.Data.LightDatamodel
 			}
 			catch (Exception ex)
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't load primary key schema\nError: " + ex.Message);
 				throw new Exception("Couldn't load primary key schema\nError: " + ex.Message);
 			}
 		}
@@ -229,6 +234,7 @@ namespace System.Data.LightDatamodel
 			}
 			catch (Exception ex)
 			{
+                Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't load table schema\nError: " + ex.Message);
 				throw new Exception("Couldn't load table schema\nError: " + ex.Message);
 			}
 		}
@@ -295,6 +301,15 @@ namespace System.Data.LightDatamodel
 			}
 		}
 
+
+        protected override string FullCommandText(IDbCommand cmd)
+        {
+            string cmdText = cmd.CommandText;
+            foreach(IDataParameter p in cmd.Parameters)
+                cmdText = cmdText.Replace("@" + p.ParameterName, p.Value.ToString());
+
+            return cmdText;
+        }
 
 		/// <summary>
 		/// The MSSQL param is very different from the Access-version

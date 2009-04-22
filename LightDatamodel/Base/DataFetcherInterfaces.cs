@@ -54,6 +54,7 @@ namespace System.Data.LightDatamodel
         void DeleteObject(object item);
 		void RefreshObject(IDataClass obj);
 		TypeConfiguration Mappings { get; }
+        Log.ILog Log { get; set; }
 	}
 
     public interface IDataFetcherCached : IDataFetcher
