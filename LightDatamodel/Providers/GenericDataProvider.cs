@@ -834,7 +834,7 @@ namespace System.Data.LightDatamodel
                     int r = cmd.ExecuteNonQuery();
                     if (r != 1)
                     {
-                        string msg = "Command was: " + cmd.CommandText + "\r\n";
+                        string msg = "Command was: " + FullCommandText(cmd) + "\r\n";
                         msg += "Primary key ";
 
                         if (orgitem.m_originalvalues != null && orgitem.m_originalvalues.ContainsKey(typeinfo.PrimaryKey.Databasefield))
@@ -885,7 +885,7 @@ namespace System.Data.LightDatamodel
                 {
                     Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, FullCommandText(cmd));
                     int r = cmd.ExecuteNonQuery();
-					if (r != 1) throw new NoSuchObjectException("The insert was expected to update 1 row, but updated: " + r.ToString(), item);
+					if (r != 1) throw new NoSuchObjectException("The insert was expected to update 1 row, but updated: " + r.ToString() + "\nTable: \"" + typeinfo.Tablename + "\"\nSQL: " + FullCommandText(cmd), item);
                 }
 				catch (NoSuchObjectException nex)
 				{
@@ -895,7 +895,7 @@ namespace System.Data.LightDatamodel
                 catch (Exception ex)
                 {
                     Log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Error, "Couldn't insert row in table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
-					throw new Exception();
+					throw new Exception("Couldn't insert row in table \"" + typeinfo.Tablename + "\"\nError: " + ex.Message + "\nSQL: " + FullCommandText(cmd));
                 }
             }
 		}
