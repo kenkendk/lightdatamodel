@@ -77,25 +77,48 @@ namespace System.Data.LightDatamodel
 		/// <param name="targetarray"></param>
 		public static void CopyArray<DATACLASS>(IEnumerable<DATACLASS> sourcearray, IEnumerable<DATACLASS> targetarray)
 		{
-			if (sourcearray == null) return;
-			if (targetarray == null) throw new Exception("The target array is null. Don't be foolish!");
-
-			IEnumerator<DATACLASS> s = sourcearray.GetEnumerator();
-			IEnumerator<DATACLASS> t = targetarray.GetEnumerator();
-
-			while (s.MoveNext())
-			{
-				if(!t.MoveNext()) throw new Exception("Target array are not as long as source");
-				CopyObject(s.Current, t.Current);
-			}
+            CopyArray<DATACLASS>(sourcearray, targetarray, null);
 		}
+
+        /// <summary>
+        /// This will copy one array onto another. Make sure that the size is right
+        /// </summary>
+        /// <typeparam name="DATACLASS"></typeparam>
+        /// <param name="sourcearray"></param>
+        /// <param name="targetarray"></param>
+        /// <param name="fields"></param>
+        public static void CopyArray<DATACLASS>(IEnumerable<DATACLASS> sourcearray, IEnumerable<DATACLASS> targetarray, FieldInfo[] fields)
+        {
+            if (sourcearray == null) return;
+            if (targetarray == null) throw new Exception("The target array is null. Don't be foolish!");
+
+            IEnumerator<DATACLASS> s = sourcearray.GetEnumerator();
+            IEnumerator<DATACLASS> t = targetarray.GetEnumerator();
+
+            while (s.MoveNext())
+            {
+                if (!t.MoveNext()) throw new Exception("Target array are not as long as source");
+                CopyObject(s.Current, t.Current, fields);
+            }
+        }
+
+        /// <summary>
+		/// This will copy one array onto another. Make sure that the size is right
+		/// </summary>
+		/// <param name="sourcearray"></param>
+		/// <param name="targetarray"></param>
+        public static void CopyArray(IEnumerable sourcearray, IEnumerable targetarray)
+        {
+            CopyArray(sourcearray, targetarray, null);
+        }
 
 		/// <summary>
 		/// This will copy one array onto another. Make sure that the size is right
 		/// </summary>
 		/// <param name="sourcearray"></param>
 		/// <param name="targetarray"></param>
-		public static void CopyArray(IEnumerable sourcearray, IEnumerable targetarray)
+        /// <param name="fields"></param>
+        public static void CopyArray(IEnumerable sourcearray, IEnumerable targetarray, FieldInfo[] fields)
 		{
 			if (sourcearray == null) return;
 			if (targetarray == null) throw new Exception("The target array is null. Don't be foolish!");
@@ -106,7 +129,7 @@ namespace System.Data.LightDatamodel
 			while (s.MoveNext())
 			{
 				if (!t.MoveNext()) throw new Exception("Target array are not as long as source");
-				CopyObject(s.Current, t.Current);
+				CopyObject(s.Current, t.Current, fields);
 			}
 		}
 
@@ -117,10 +140,22 @@ namespace System.Data.LightDatamodel
         /// <param name="target">The object to copy to</param>
         public static void CopyObject(object source, object target)
         {
+            CopyObject(source, target, null);
+        }
+
+        /// <summary>
+        /// Copies all data variables from one object into another
+        /// </summary>
+        /// <param name="source">The object to copy from</param>
+        /// <param name="target">The object to copy to</param>
+        public static void CopyObject(object source, object target, FieldInfo[] fields)
+        {
 			if (source == null || target == null) throw new ArgumentNullException("source and target can't be null");
             if (target.GetType() != source.GetType()) throw new Exception("Objects must be of same type");
 
-			FieldInfo[] fields = source.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            if (fields == null)
+			    fields = source.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
 			object s, t;
 			DataClassBase targetbase = target as DataClassBase;
 			if(targetbase != null)

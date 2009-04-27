@@ -689,10 +689,23 @@ namespace System.Data.LightDatamodel
 			int maxposts = deletedobjects.Count + newobjects.Count + updatedobjects.Count;
 			if (updatefunction != null) updatefunction(0, maxposts);
 
-			//create copies for rollback
+
+            //The internal state of the objects is contained in these variables
+            FieldInfo[] fields = new FieldInfo[] {
+                typeof(DataClassBase).GetField("m_isdirty", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                typeof(DataClassBase).GetField("m_originalvalues", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                typeof(DataClassBase).GetField("m_state", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+            };
+
+			//Create copies for rollback
 			LinkedList<IDataClass> copydeletedobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(deletedobjects) ;
 			LinkedList<IDataClass> copynewobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(newobjects);
 			LinkedList<IDataClass> copyupdatedobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(updatedobjects);
+
+            //Copy internal information
+            ObjectTransformer.CopyArray<IDataClass>(deletedobjects, copydeletedobjects, fields);
+            ObjectTransformer.CopyArray<IDataClass>(newobjects, copynewobjects, fields);
+            ObjectTransformer.CopyArray<IDataClass>(updatedobjects, copyupdatedobjects, fields);
 
 			try
 			{
@@ -739,11 +752,16 @@ namespace System.Data.LightDatamodel
 					{
 						m_provider.RollbackTransaction(transactionID);
 
-						//copy back objects
+						//copy back object data
 						ObjectTransformer.CopyArray<IDataClass>(copydeletedobjects, deletedobjects);
 						ObjectTransformer.CopyArray<IDataClass>(copynewobjects, newobjects);
 						ObjectTransformer.CopyArray<IDataClass>(copyupdatedobjects, updatedobjects);
-					}
+
+                        //copy back state information
+                        ObjectTransformer.CopyArray<IDataClass>(copydeletedobjects, deletedobjects, fields);
+                        ObjectTransformer.CopyArray<IDataClass>(copynewobjects, newobjects, fields);
+                        ObjectTransformer.CopyArray<IDataClass>(copyupdatedobjects, updatedobjects, fields);
+                    }
 				}
 
 			}
