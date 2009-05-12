@@ -574,6 +574,23 @@ namespace Datamodel.UnitTest
 			fetcher.Add(p);
 			long maxid = fetcher.Compute<long, Project>("MAX(ProjectNoteID)", "");
 			if (maxid < 9999) throw new Exception("Bah!");
+
+            //test add/delete with object that does not go to DB
+            Note nd = fetcher.Add<Note>();
+            nd.NoteText = "UniqueIndexText1";
+            fetcher.DeleteObject(nd);
+            fetcher.CommitAll();
+
+            nd = fetcher.Add<Note>();
+            nd.NoteText = "UniqueIndexText2";
+            fetcher.DeleteObject(nd);
+            fetcher.Commit(nd);
+
+            fetcher.ClearCache();
+            ns = fetcher.GetObjects<Note>("NoteText = ? OR NoteText = ?", "UniqueIndexText1", "UniqueIndexText2" );
+            if (ns.Length != 0)
+                throw new Exception("Commited item that was supposed to be deleted");
+            
 		}
 
 		public static void TestQueryModel(IDbConnection con)

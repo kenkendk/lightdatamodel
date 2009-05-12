@@ -480,7 +480,7 @@ namespace System.Data.LightDatamodel
                 int r = cmd.ExecuteNonQuery();
                 if (r != 1)
                 {
-                    throw new NoSuchObjectException("Delete was expected to delete 1 rows (" + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + "), but deleted: " + r.ToString(), item);
+                    throw new NoSuchObjectException("Delete was expected to delete 1 row (" + typeinfo.Tablename + ", " + typeinfo.PrimaryKey.Field.GetValue(item).ToString() + "), but deleted: " + r.ToString(), item);
                 }
 			}
 			catch (NoSuchObjectException nex)

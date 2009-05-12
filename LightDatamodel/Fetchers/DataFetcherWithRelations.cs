@@ -428,8 +428,11 @@ namespace System.Data.LightDatamodel
 			{
 				foreach (ObjectConnection rel in m_objectrelationcache[obj].Values)
 				{
-					foreach (IDataClass child in rel.SubObjects.Values)
-						m_objectrelationcache[child][rel.Relation.Name].SubObjects.Remove(obj.GetHashCode());
+                    foreach (IDataClass child in rel.SubObjects.Values)
+                        if (m_objectrelationcache.ContainsKey(child) && m_objectrelationcache[child].ContainsKey(rel.Relation.Name))
+                            m_objectrelationcache[child][rel.Relation.Name].SubObjects.Remove(obj.GetHashCode());
+                        else
+                            throw new Exception("GOTCHA! (hard to find bug :))");
 				}
 				m_objectrelationcache.Remove(obj);
 			}
