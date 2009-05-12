@@ -1092,6 +1092,10 @@ namespace System.Data.LightDatamodel
 		{
 			IDataClass obj = (IDataClass)item;
 			ObjectStates oldstate = obj.ObjectState;
+
+            if (obj.ObjectState == ObjectStates.Deleted)
+                return; //Can't delete more than once
+
 			try
 			{
 				m_cache.Lock.AcquireWriterLock(-1);
@@ -1120,8 +1124,9 @@ namespace System.Data.LightDatamodel
 					//we assume pks to be not null and unique
 					string deletekey = obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString();
 					if (!m_cache.DeletedObjects.ContainsKey(deletekey)) m_cache.DeletedObjects.Add(deletekey, obj);
-				}
-				(obj as DataClassBase).m_state = ObjectStates.Deleted;
+                }
+
+                (obj as DataClassBase).m_state = ObjectStates.Deleted;
 			}
 			finally
 			{
@@ -1497,13 +1502,25 @@ namespace System.Data.LightDatamodel
                 //TODO: Should be in DataFetcher (base class)?
                 m_transactionlock.AcquireWriterLock(-1); //we can run this function (Commit) in multiple threads. Hence the readerlock
 
+                List<IDataClass> actualList = new List<IDataClass>();
                 List<string> delkeys = new List<string>();
                 if (items != null && items.Length > 0)
                     foreach (IDataClass obj in items)
                         if (obj.ObjectState == ObjectStates.Deleted)
-                            delkeys.Add(obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString());
+                        {
+                            string deletekey = obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString();
+                            
+                            //If the object is not in cache, it has not been comitted to the database, and can be discarded
+                            if (m_cache.DeletedObjects.ContainsKey(deletekey))
+                            {
+                                delkeys.Add(obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString());
+                                actualList.Add(obj);
+                            }
+                        }
+                        else
+                            actualList.Add(obj);
 
-                base.Commit(items);
+                base.Commit(actualList.ToArray());
 
                 foreach (string k in delkeys)
                     m_cache.DeletedObjects.Remove(k);
