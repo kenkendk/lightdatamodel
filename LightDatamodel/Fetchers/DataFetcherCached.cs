@@ -30,6 +30,8 @@ namespace System.Data.LightDatamodel
 	public class DataFetcherCached : DataFetcher, System.Data.LightDatamodel.IDataFetcherCached
 	{
 		protected Cache m_cache = new Cache();
+
+        //TODO: the loadreducer needs to either never be locked, or locked on all access
 		protected Dictionary<Type, Dictionary<string, string>> m_loadreducer = new Dictionary<Type, Dictionary<string, string>>();
 		private System.Threading.ReaderWriterLock m_transactionlock = new System.Threading.ReaderWriterLock();
 #if DEBUG
@@ -1141,12 +1143,28 @@ namespace System.Data.LightDatamodel
 			//load if needed
 			if (m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id] == null)		//will these need locks?
 			{
+                string deletekey = type.FullName + (char)1 + id.ToString();
+                if (m_cache.DeletedObjects.ContainsKey(deletekey))
+                    return null;
+
 				QueryModel.Operation op = Query.Equal(Query.Property(m_mappings[type].PrimaryKey.Databasefield), Query.Value(id));
-				if (!HasLoaded(type, op))
-				{
-					object[] items = LoadObjects(type, op);
-					if (items != null && items.Length != 0) InsertObjectsInCache(items);
-				}
+				
+                //Check if the loadreducer thinks that all entries are loaded
+                bool allLoaded = (m_loadreducer.ContainsKey(type) && m_loadreducer[type].ContainsKey(""));
+
+                //Do not check the load reducer here, because the ID is indexed, but mark the query as loaded
+                HasLoaded(type, op);
+
+                object[] items = LoadObjects(type, op);
+                if (items != null && items.Length != 0)
+                {
+                    InsertObjectsInCache(items);
+                    if (allLoaded) //We have a new object, but the loadreducer thinks all objects are loaded
+                    {
+                        m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, "Detected updated database, balancing loadreducer");
+                        m_loadreducer.Remove(type);
+                    }
+                }
 			}
 
 			if (m_cache[type, m_mappings[type].PrimaryKey.Databasefield, id] != null)		//will these need locks?
@@ -1419,11 +1437,8 @@ namespace System.Data.LightDatamodel
 		{
 			RETURNVALUE val = default(RETURNVALUE);
 
-			//check if we have loaded all objects
-			bool allloaded = m_loadreducer.ContainsKey(typeof(DATACLASS)) && m_loadreducer[typeof(DATACLASS)].ContainsKey("");
-
 			//search database
-			if (!allloaded) val = base.Compute<RETURNVALUE, DATACLASS>(expression, filter, parameters);
+			val = base.Compute<RETURNVALUE, DATACLASS>(expression, filter, parameters);
 
 			//parse aggregate
 			QueryModel.OperationOrParameter aggre = Query.Parse(expression, null);
