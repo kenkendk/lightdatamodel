@@ -590,9 +590,21 @@ namespace System.Data.LightDatamodel
                 Dictionary<IDataClass, IDataClass> reverseTable = new Dictionary<IDataClass, IDataClass>();
                 foreach (IDataClass obj in items)
                 {
+                    //Find the same object, but in the underlying fetcher
                     IDataClass nestedObj = (IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
-                    if (obj.ObjectState == ObjectStates.Deleted)
-                        n.BaseFetcher.DeleteObject(nestedObj);
+
+                    //If the item is deleted we can't get it normally
+                    if (nestedObj == null)
+                    {
+                        //Verify that the object is actually deleted, and not just missing
+                        string deletekey = obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString();
+                        if (obj.ObjectState != ObjectStates.Deleted || !(n.BaseFetcher is IDataFetcherCached) || !((IDataFetcherCached)n.BaseFetcher).LocalCache.DeletedObjects.ContainsKey(deletekey))
+                            throw new Exception("Unable to find item: " + deletekey);
+
+                        //Extract the nested object
+                        nestedObj = ((IDataFetcherCached)n.BaseFetcher).LocalCache.DeletedObjects[deletekey];
+                    }
+
                     newitems.Add(nestedObj);
                     reverseTable[nestedObj] = obj;
                 }
@@ -1508,6 +1520,8 @@ namespace System.Data.LightDatamodel
                     foreach (IDataClass obj in items)
                         if (obj.ObjectState == ObjectStates.Deleted)
                         {
+                            //HACK: Object may be marked as deleted, but not exist in the database.
+                            //This check ensures that the item existed in the database when the delete was requested
                             string deletekey = obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString();
                             
                             //If the object is not in cache, it has not been comitted to the database, and can be discarded
