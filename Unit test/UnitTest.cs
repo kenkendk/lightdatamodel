@@ -719,6 +719,9 @@ namespace Datamodel.UnitTest
             if (op.EvaluateList(f).Count != listlen || ((Project)op.EvaluateList(f)[0]).ID != 1)
                 throw new Exception("Sorting failed on function with DESC");
 
+			op = Query.Parse("Title = ? AND ID IN ?", "Fisk", ids);
+			op.EvaluateList(f);		//fail?
+
 		}
 
 		public static void TestRelations(IDbConnection con)
