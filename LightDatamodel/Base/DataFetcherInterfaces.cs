@@ -64,11 +64,6 @@ namespace System.Data.LightDatamodel
 
         void ClearCache();
         void DiscardObject(IDataClass obj);
-        void CommitRecursive(params IDataClass[] items);
-        void CommitAllRecursive();
-        List<IDataClass> CommitRecursiveWithRelations(params IDataClass[] items);
-        List<IDataClass> CommitWithRelations(params IDataClass[] items);
-        List<IDataClass> FindObjectRelations(IDataClass item);
 
         DATACLASS GetObjectByIndex<DATACLASS>(string indexname, object indexvalue) where DATACLASS : IDataClass;
         object GetObjectByIndex(Type type, string indexname, object indexvalue);

@@ -571,12 +571,165 @@ namespace System.Data.LightDatamodel
 
 		#endregion
 
-        protected override void GetReferencedItems(IDataClass item, Queue<IDataClass> queue)
-        {
-            TypeConfiguration.MappedClass ic = m_mappings[item.GetType()];
-            foreach (TypeConfiguration.Reference r in ic.References.Values)
-                foreach (IDataClass c in GetRelatedObjectsFromMemory<IDataClass>(r.Name, item))
-                    queue.Enqueue(c);
-        }
+		//This was the original function
+		//protected override void GetReferencedItems(IDataClass item, Queue<IDataClass> queue)
+		//{
+		//    TypeConfiguration.MappedClass ic = m_mappings[item.GetType()];
+		//    foreach (TypeConfiguration.Reference r in ic.References.Values)
+		//        foreach (IDataClass c in GetRelatedObjectsFromMemory<IDataClass>(r.Name, item))
+		//            queue.Enqueue(c);
+		//}
+
+		/// <summary>
+		/// Traverses an objects references to find related objects
+		/// </summary>
+		/// <param name="item">The item to list relations for</param>
+		/// <returns>A list of related objects</returns>
+		public virtual List<IDataClass> FindObjectRelations(IDataClass item)
+		{
+			Dictionary<IDataClass, object> visited = new Dictionary<IDataClass, object>();
+			Queue<IDataClass> unexplored = new Queue<IDataClass>();
+			List<IDataClass> results = new List<IDataClass>();
+			unexplored.Enqueue(item);
+
+			while (unexplored.Count > 0)
+			{
+				IDataClass current = unexplored.Dequeue();
+				if (visited.ContainsKey(current))
+					continue;
+				else
+					visited.Add(current, null);
+
+				results.Add(current);
+
+				GetReferencedItems(current, unexplored);
+			}
+
+			return results;
+		}
+
+		/// <summary>
+		/// Puts all items that are referenced into the supplied queue
+		/// </summary>
+		/// <param name="item">The item to examine</param>
+		/// <param name="queue">The queue to place related items into</param>
+		protected virtual void GetReferencedItems(IDataClass item, Queue<IDataClass> queue)
+		{
+			TypeConfiguration.MappedClass itemtype = m_mappings[item.GetType()];
+			foreach (TypeConfiguration.Reference r in itemtype.References.Values)
+			{
+				object rel;
+				if (r.Child == itemtype)
+					rel = r.ChildField.Field.GetValue(item);
+				else
+					rel = r.ParentField.Field.GetValue(item);
+
+				if (rel == null)
+					continue;
+
+				if (rel is System.Collections.IEnumerable)
+				{
+					foreach (object o in (System.Collections.IEnumerable)rel)
+						if (o is IDataClass)
+							queue.Enqueue((IDataClass)o);
+				}
+				else if (rel is IDataClass)
+					queue.Enqueue((IDataClass)rel);
+			}
+		}
+
+		/// <summary>
+		/// Commits the objects and any relations they have that are modified
+		/// </summary>
+		/// <param name="items">The objects to add</param>
+		/// <returns>The items that were committed</returns>
+		public virtual List<IDataClass> CommitWithRelations(params IDataClass[] items)
+		{
+			Dictionary<IDataClass, object> dirty = new Dictionary<IDataClass, object>();
+			if (items != null)
+				foreach (IDataClass item in items)
+					foreach (IDataClass i in FindObjectRelations(item))
+						if (i.IsDirty || i.ObjectState != ObjectStates.Default)
+							dirty[i] = null;
+
+			List<IDataClass> lst = new List<IDataClass>(dirty.Keys);
+			Commit(lst.ToArray());
+
+			return lst;
+		}
+
+		protected virtual IDataClass[] RecursiveComitter(bool withRelations, IDataClass[] items)
+		{
+			if (this is DataFetcherNested)
+			{
+				DataFetcherNested n = this as DataFetcherNested;
+				List<IDataClass> newitems = new List<IDataClass>();
+				Dictionary<IDataClass, IDataClass> reverseTable = new Dictionary<IDataClass, IDataClass>();
+				foreach (IDataClass obj in items)
+				{
+					//Find the same object, but in the underlying fetcher
+					IDataClass nestedObj = (IDataClass)n.BaseFetcher.GetObjectById(obj.GetType(), m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj));
+
+					//If the item is deleted we can't get it normally
+					if (nestedObj == null)
+					{
+						//Verify that the object is actually deleted, and not just missing
+						string deletekey = obj.GetType().FullName + (char)1 + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString();
+						if (obj.ObjectState != ObjectStates.Deleted || !(n.BaseFetcher is IDataFetcherCached) || !((IDataFetcherCached)n.BaseFetcher).LocalCache.DeletedObjects.ContainsKey(deletekey))
+							throw new Exception("Unable to find item: " + deletekey);
+
+						//Extract the nested object
+						nestedObj = ((IDataFetcherCached)n.BaseFetcher).LocalCache.DeletedObjects[deletekey];
+					}
+
+					newitems.Add(nestedObj);
+					reverseTable[nestedObj] = obj;
+				}
+
+				if (n.BaseFetcher is DataFetcherWithRelations)
+				{
+					if (withRelations)
+						((DataFetcherWithRelations)n.BaseFetcher).CommitRecursiveWithRelations(newitems.ToArray());
+					else
+						((DataFetcherWithRelations)n.BaseFetcher).CommitRecursive(newitems.ToArray());
+				}
+				else
+					n.BaseFetcher.Commit(newitems.ToArray());
+
+				for (int i = 0; i < newitems.Count; i++)
+				{
+					if (newitems[i].ObjectState != ObjectStates.Deleted)
+					{
+						TypeConfiguration.MappedField fi = m_mappings[newitems[i].GetType()].PrimaryKey;
+						fi.Field.SetValue(reverseTable[newitems[i]], fi.Field.GetValue(newitems[i]));
+					}
+				}
+
+				foreach (IDataClass obj in items)
+					if (obj.ObjectState != ObjectStates.Deleted)
+						RefreshObject(obj);
+			}
+
+			return items;
+		}
+
+		public virtual void CommitAllRecursive()
+		{
+			RecursiveComitter(false, CommitAll().ToArray());
+		}
+
+		public virtual void CommitRecursive(params IDataClass[] items)
+		{
+			Commit(items);
+			RecursiveComitter(false, items);
+		}
+
+		public virtual List<IDataClass> CommitRecursiveWithRelations(params IDataClass[] items)
+		{
+			List<IDataClass> modified = CommitWithRelations(items);
+			RecursiveComitter(true, modified.ToArray());
+			return modified;
+
+		}
 	}
 }

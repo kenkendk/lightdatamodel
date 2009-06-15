@@ -500,6 +500,8 @@ namespace System.Data.LightDatamodel
                     copyobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(items);
                 }
 
+				m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Information, "Committing " + items.Length + " items");
+
                 foreach (IDataClass obj in items)
                 {
                     //new object?
