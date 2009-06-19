@@ -75,6 +75,19 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Taskmanager\CalendarObject.cs" />
+    <Compile Include="Taskmanager\CalendarRender.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Taskmanager\CalendarRender.Designer.cs">
+      <DependentUpon>CalendarRender.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Taskmanager\Taskmanager.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Taskmanager\Taskmanager.Designer.cs">
+      <DependentUpon>Taskmanager.cs</DependentUpon>
+    </Compile>
     <Compile Include="TextBoxWithFancyAutoComplete.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -98,6 +111,15 @@
   <ItemGroup>
     <EmbeddedResource Include="Database Schema\1. Add AnnoyClock Column.sql" />
     <EmbeddedResource Include="Database Schema\2. Add RecentEntry table.sql" />
+    <EmbeddedResource Include="Database Schema\3. Add Task table.sql" />
+    <EmbeddedResource Include="Taskmanager\CalendarRender.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>CalendarRender.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Taskmanager\Taskmanager.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>Taskmanager.cs</DependentUpon>
+    </EmbeddedResource>
     <Content Include="LimeTime.ico" />
     <None Include="Resources\SelectProject.png" />
     <None Include="Resources\AddProject.png" />
