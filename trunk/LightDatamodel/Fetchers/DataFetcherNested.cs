@@ -53,6 +53,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		public void CommitAllComplete()
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested CommitAllComplete");
 			CommitAll();
 			if (m_baseFetcher != typeof(DataFetcher))
 			{
@@ -63,6 +64,8 @@ namespace System.Data.LightDatamodel
 
 		protected override object[] LoadObjects(Type type, QueryModel.OperationOrParameter op)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested Load");
+
 			object[] tmp = m_baseFetcher.GetObjects(type, op);
 			for (int i = 0; i < tmp.Length; i++)
 			    tmp[i] = ConvertBaseObject(tmp[i] as IDataClass);
@@ -85,6 +88,8 @@ namespace System.Data.LightDatamodel
 
 		public override RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter, params object[] parameters)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested Compute");
+
 			//first load cache from base fetcher
 			IDataFetcherCached basecache = m_baseFetcher as IDataFetcherCached;
 			if (basecache != null)
@@ -108,6 +113,8 @@ namespace System.Data.LightDatamodel
 
 		public override void LoadAndCacheObjects(params Type[] types)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested LoadAndCache");
+
 			DataFetcherCached conn = m_baseFetcher as DataFetcherCached;
 			if (conn == null) throw new Exception("The current base-fecther doesn't support the LoadAndCacheObjects");
 
@@ -135,6 +142,8 @@ namespace System.Data.LightDatamodel
 
 		protected override void InsertObject(object obj)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested InsertObject");
+
 			IDataClass item = (IDataClass)Activator.CreateInstance(obj.GetType());
 			m_originalobjects.Add(item, (IDataClass)obj);
 			m_tempobjects.Add((IDataClass)obj, item);
@@ -151,6 +160,8 @@ namespace System.Data.LightDatamodel
 
         public override void RefreshObject(IDataClass obj)
         {
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested Refresh");
+
             //We do nothing, because the copy is purely in-memory, so there is no chance the properties have changed
             UpdateObjectKeys(obj);
             ((DataClassBase)obj).m_isdirty = false;
@@ -158,6 +169,8 @@ namespace System.Data.LightDatamodel
 
 		protected override void UpdateObject(object obj)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested Update");
+
 			IDataClass localcopy = (IDataClass)obj;
 			IDataClass originalobject = m_tempobjects[localcopy];
 			ObjectTransformer.CopyObject(localcopy, originalobject);
@@ -167,6 +180,8 @@ namespace System.Data.LightDatamodel
 
 		protected override void RemoveObject(object obj)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested Remove");
+
 			m_baseFetcher.DeleteObject(m_tempobjects[obj as IDataClass]);
 		}
 
@@ -177,6 +192,8 @@ namespace System.Data.LightDatamodel
 		/// <param name="target"></param>
 		private void CopyRelationsFromSourceFetcher(IDataClass source, IDataClass target)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested CopyRelationsFromSourceFetcher");
+
 			//take care of relations (we have to copy loosely attatched objects along)
 			DataFetcherWithRelations sourceManager = source.DataParent as DataFetcherWithRelations;
 			DataFetcherWithRelations targetManager = target.DataParent as DataFetcherWithRelations;
@@ -207,6 +224,8 @@ namespace System.Data.LightDatamodel
 		/// <param name="target">This is the base fetcher object</param>
 		private void CopyRelationsToSourceFetcher(IDataClass source, IDataClass target)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Nested CopyRelationsToSourceFetcher");
+
 			DataFetcherWithRelations sourceManager = source.DataParent as DataFetcherWithRelations;
 			DataFetcherWithRelations targetManager = target.DataParent as DataFetcherWithRelations;
 			if (sourceManager != null && targetManager != null)

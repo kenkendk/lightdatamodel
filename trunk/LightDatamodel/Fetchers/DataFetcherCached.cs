@@ -490,7 +490,9 @@ namespace System.Data.LightDatamodel
 		{
 			try
 			{
-			m_cache.Lock.AcquireWriterLock(-1);
+				m_cache.Lock.AcquireWriterLock(-1);
+
+				m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Initializing Indexes");
 
 				//pre-add indexes (gives a slight startup performance boost)
 				foreach (TypeConfiguration.MappedClass type in m_mappings)
@@ -517,6 +519,8 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		public virtual List<IDataClass> CommitAll(UpdateProgressHandler updatefunction)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Commiting all");
+
 			Guid transactionID = Guid.NewGuid();
 			bool inTransaction = false;
 
@@ -547,7 +551,11 @@ namespace System.Data.LightDatamodel
 				m_cache.Lock.ReleaseReaderLock();
 			}
 
-			if (deletedobjects.Count == 0 && newobjects.Count == 0 && updatedobjects.Count == 0) return new List<IDataClass>();
+			if (deletedobjects.Count == 0 && newobjects.Count == 0 && updatedobjects.Count == 0)
+			{
+				m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Warning, "Nothing to commit");
+				return new List<IDataClass>();
+			}
 			int maxposts = deletedobjects.Count + newobjects.Count + updatedobjects.Count;
 			if (updatefunction != null) updatefunction(0, maxposts);
 
@@ -612,6 +620,7 @@ namespace System.Data.LightDatamodel
 				{
 					if (inTransaction)
 					{
+						m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Warning, "Rolling back transaction");
 						m_provider.RollbackTransaction(transactionID);
 
 						//copy back object data
@@ -706,6 +715,7 @@ namespace System.Data.LightDatamodel
 				else
 				{
 					//will this need lock? Nah
+					m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Load reduced " + eq);
 					m_loadreducer[type][eq] = eq;
 					return false;
 				}
@@ -720,6 +730,8 @@ namespace System.Data.LightDatamodel
 		/// <param name="obj">The object to discard</param>
 		public virtual void DiscardObject(IDataClass obj)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Discarding object " + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString());
+
 			lock (m_loadreducer)
 			{
 				m_loadreducer.Clear();
@@ -880,6 +892,8 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		protected virtual IDataClass[] InsertObjectsInCache(params object[] data)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Inserting " + (data != null ? data.Length : 0).ToString() + " objects in cache");
+
 			List<IDataClass> res = new List<IDataClass>();
 
 			try
@@ -915,8 +929,12 @@ namespace System.Data.LightDatamodel
                                         Query.Value(m_mappings[dbitem.GetType()].PrimaryKey.Field.GetValue(dbitem))
                                     )
                                 );
-                                
-							if (Query.FindFirst(opdeleted, m_cache.DeletedObjects) != null) continue;
+
+							if (Query.FindFirst(opdeleted, m_cache.DeletedObjects) != null)
+							{
+								m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Warning, "Inserting object is marked for deleting");
+								continue;
+							}
 
 							dbitem.m_state = ObjectStates.Default;
 							dbitem.m_isdirty = false;
@@ -950,6 +968,7 @@ namespace System.Data.LightDatamodel
 		/// <param name="item"></param>
 		public override void DeleteObject(object item)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Deleting object " + m_mappings[item.GetType()].PrimaryKey.Field.GetValue(item).ToString());
 			IDataClass obj = (IDataClass)item;
 			ObjectStates oldstate = obj.ObjectState;
 
@@ -1044,6 +1063,8 @@ namespace System.Data.LightDatamodel
 		/// <param name="types"></param>
 		public virtual void LoadAndCacheObjects(params Type[] types)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Loading " + (types != null ? types.Length : 0).ToString() + " by assyncron");
+
 			if (types == null || types.Length == 0) return;
 
 			//investigate types
@@ -1203,6 +1224,8 @@ namespace System.Data.LightDatamodel
 		/// <param name="indexname"></param>
 		public void AddIndex(Type type, string indexname)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Adding index " + type.Name + " " + indexname);
+
 			if (m_cache.HasIndex(type, indexname)) return;		//meh
 
 			//add to model
@@ -1241,6 +1264,8 @@ namespace System.Data.LightDatamodel
 		/// <param name="indexname"></param>
 		public void RemoveIndex(Type type, string indexname)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Removing index " + type.Name + " " + indexname);
+
 			if (!m_cache.HasIndex(type, indexname)) return;		//meh
 
 			//remove from model
@@ -1300,6 +1325,8 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		public override RETURNVALUE Compute<RETURNVALUE, DATACLASS>(string expression, string filter, params object[] parameters)
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Computing " + expression);
+
 			RETURNVALUE val = default(RETURNVALUE);
 
 			//search database
@@ -1339,6 +1366,9 @@ namespace System.Data.LightDatamodel
 					case "SUM":
 						foreach (DATACLASS o in cache)
 							tmp += (double)Convert.ChangeType(p.FunctionArguments[0].Evaluate(o, null), typeof(double));
+						break;
+					default:
+						m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Warning, "Parameter is not known " + p.ToString());
 						break;
 				}
 				val = (RETURNVALUE)Convert.ChangeType(tmp, typeof(RETURNVALUE));
@@ -1399,6 +1429,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		public virtual void ClearCache()
 		{
+			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Clearing cache");
 			lock (m_loadreducer)
 			{
 				m_loadreducer.Clear();
@@ -1426,6 +1457,7 @@ namespace System.Data.LightDatamodel
 			//check if it's an index changing	(Will this be a performance killer I wonder?)
 			if (m_mappings[sender.GetType()][propertyname].Index)
 			{
+				m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Reindexing " + sender.GetType().Name);
 				try
 				{
 					m_cache.Lock.AcquireWriterLock(-1);
@@ -1448,7 +1480,11 @@ namespace System.Data.LightDatamodel
 		public override void RefreshObject(IDataClass obj)
 		{
 			base.RefreshObject(obj);
-			if (!m_cache.Contains(obj)) InsertObjectsInCache(obj);	//this can accour after a ClearCache
+			if (!m_cache.Contains(obj))
+			{
+				m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Warning, "Refresh object not in cache " + m_mappings[obj.GetType()].PrimaryKey.Field.GetValue(obj).ToString());
+				InsertObjectsInCache(obj);	//this can accour after a ClearCache
+			}
 		}
 
 		public override void Dispose()
