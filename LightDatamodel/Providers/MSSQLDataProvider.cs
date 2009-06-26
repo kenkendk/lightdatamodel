@@ -74,14 +74,23 @@ namespace System.Data.LightDatamodel
 						i2 = connectionstring.IndexOf(";", i1);
 						string catalog = connectionstring.Substring(i1 + 9, i2 - i1 - 9);
 						i1 = connectionstring.IndexOf("Uid=", StringComparison.InvariantCultureIgnoreCase);
-						i2 = connectionstring.IndexOf(";", i1);
-						string user = connectionstring.Substring(i1 + 4, i2 - i1 - 4);
-						i1 = connectionstring.IndexOf("Pwd=", StringComparison.InvariantCultureIgnoreCase);
-						i2 = connectionstring.IndexOf(";", i1);
-						string password = connectionstring.Substring(i1 + 4, i2 - i1 - 4);
+						if (i1 >= 0)
+						{
+							i2 = connectionstring.IndexOf(";", i1);
+							string user = connectionstring.Substring(i1 + 4, i2 - i1 - 4);
+							i1 = connectionstring.IndexOf("Pwd=", StringComparison.InvariantCultureIgnoreCase);
+							i2 = connectionstring.IndexOf(";", i1);
+							string password = connectionstring.Substring(i1 + 4, i2 - i1 - 4);
 
-						//the SQL way
-						connectionstring = "Data Source=" + server + ";Initial Catalog=" + catalog + ";User Id=" + user + ";Password=" + password + ";";
+							//the SQL way
+							connectionstring = "Data Source=" + server + ";Initial Catalog=" + catalog + ";User Id=" + user + ";Password=" + password + ";";
+						}
+						else if (connectionstring.IndexOf("Trusted_Connection", StringComparison.InvariantCultureIgnoreCase) >= 0) //assume Trusted_Connection=True
+						{
+							connectionstring = "Data Source=" + server + ";Initial Catalog=" + catalog + ";Trusted_Connection=True;";
+						}
+						else
+							throw new Exception("Couldn't locate login info");
 					}
 					catch (Exception ex)
 					{
