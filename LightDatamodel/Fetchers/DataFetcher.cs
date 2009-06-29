@@ -496,7 +496,7 @@ namespace System.Data.LightDatamodel
                 if (items.Length != 1)
                 {
                     inTransaction = true;
-                    m_provider.BeginTransaction(transactionId);
+                    m_provider.BeginTransaction();
                     copyobjects = (LinkedList<IDataClass>)ObjectTransformer.CreateArrayCopy<IDataClass>(items);
                 }
 
@@ -541,7 +541,7 @@ namespace System.Data.LightDatamodel
 
                 if (inTransaction)
                 {
-                    m_provider.CommitTransaction(transactionId);
+                    m_provider.CommitTransaction();
                     inTransaction = false;
                 }
             }
@@ -549,7 +549,7 @@ namespace System.Data.LightDatamodel
             {
                 if (inTransaction)
                 {
-                    m_provider.RollbackTransaction(transactionId);
+                    m_provider.RollbackTransaction();
                     ObjectTransformer.CopyArray<IDataClass>(copyobjects, items);
                 }
             }

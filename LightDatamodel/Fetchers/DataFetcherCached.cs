@@ -588,7 +588,7 @@ namespace System.Data.LightDatamodel
 				//start commiting
 				try
 				{
-					m_provider.BeginTransaction(transactionID); //SQLite can only handle 1 transaction ... and not writing from multiple threads isn't that bad, is it?
+					m_provider.BeginTransaction(); //SQLite can only handle 1 transaction ... and not writing from multiple threads isn't that bad, is it?
 					inTransaction = true;
 					int i = 0;
 
@@ -613,7 +613,7 @@ namespace System.Data.LightDatamodel
 						if (updatefunction != null) updatefunction(++i, maxposts);
 					}
 
-					m_provider.CommitTransaction(transactionID);
+					m_provider.CommitTransaction();
 					inTransaction = false;
 				}
 				finally
@@ -621,7 +621,7 @@ namespace System.Data.LightDatamodel
 					if (inTransaction)
 					{
 						m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Warning, "Rolling back transaction");
-						m_provider.RollbackTransaction(transactionID);
+						m_provider.RollbackTransaction();
 
 						//copy back object data
 						ObjectTransformer.CopyArray<IDataClass>(copydeletedobjects, deletedobjects);
