@@ -51,9 +51,9 @@ namespace System.Data.LightDatamodel
 		string ConnectionString { get;set;}
 		string OriginalConnectionString { get; }
 		IDbConnection Connection { get;set; }
-		void BeginTransaction(Guid id);
-		void CommitTransaction(Guid id);
-		void RollbackTransaction(Guid id);
+		void BeginTransaction();
+		void CommitTransaction();
+		void RollbackTransaction();
 		void Close();
 		IDataFetcher Parent { get; set;}
 	}
