@@ -30,6 +30,7 @@ namespace System.Data.LightDatamodel
 	public class DataFetcherCached : DataFetcher, IDataFetcherCached
 	{
 		protected Cache m_cache = new Cache();
+		public event EventHandler AfterCacheCleared;
 
         //TODO: the loadreducer needs to either never be locked, or locked on all access
 		protected Dictionary<Type, Dictionary<string, string>> m_loadreducer = new Dictionary<Type, Dictionary<string, string>>();
@@ -890,7 +891,7 @@ namespace System.Data.LightDatamodel
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		protected virtual IDataClass[] InsertObjectsInCache(params object[] data)
+		public virtual IDataClass[] InsertObjectsInCache(params object[] data)
 		{
 			m_log.WriteEntry(System.Data.LightDatamodel.Log.LogLevel.Profiling, "Inserting " + (data != null ? data.Length : 0).ToString() + " objects in cache");
 
@@ -1438,6 +1439,7 @@ namespace System.Data.LightDatamodel
 			{
 				m_cache.Lock.AcquireWriterLock(-1);
 				m_cache.ClearAllUnchanged();
+				if (AfterCacheCleared != null) AfterCacheCleared(this, null);
 			}
 			finally
 			{
