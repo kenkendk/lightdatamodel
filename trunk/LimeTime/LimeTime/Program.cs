@@ -43,6 +43,9 @@ namespace LimeTime
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            Taskmanager.Taskmanager mg = new LimeTime.Taskmanager.Taskmanager();
+            mg.ShowDialog();
+
 #if DEBUG
             DatabasePath = System.IO.Path.Combine(Application.StartupPath, DATABASE_NAME);
 #else
