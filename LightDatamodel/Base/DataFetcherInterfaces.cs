@@ -84,6 +84,15 @@ namespace System.Data.LightDatamodel
         DataFetcherCached.Cache LocalCache { get; }
     }
 
+    public interface IDataFetcherWithRelations : IDataFetcherCached
+    {
+        void CommitRecursive(params IDataClass[] items);
+        void CommitAllRecursive();
+        List<IDataClass> CommitRecursiveWithRelations(params IDataClass[] items);
+        List<IDataClass> CommitWithRelations(params IDataClass[] items);
+        List<IDataClass> FindObjectRelations(IDataClass item);
+    }
+
 	public interface IDataClass
 	{
 		IDataFetcher DataParent { get; set;}
