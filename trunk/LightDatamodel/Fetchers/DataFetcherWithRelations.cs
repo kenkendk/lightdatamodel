@@ -23,7 +23,7 @@ using System.Text;
 
 namespace System.Data.LightDatamodel
 {
-	public class DataFetcherWithRelations : DataFetcherCached
+	public class DataFetcherWithRelations : DataFetcherCached, IDataFetcherWithRelations
 	{
 		/// <summary>
 		/// This is a lookuptable for the relations
