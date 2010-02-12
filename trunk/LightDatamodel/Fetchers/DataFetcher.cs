@@ -536,6 +536,9 @@ namespace System.Data.LightDatamodel
                         RemoveObject(obj);
                         OnAfterDataConnection(obj, DataActions.Delete);
                         ((DataClassBase)obj).OnAfterDataCommit(obj, DataActions.Delete);
+
+                        ((DataClassBase)obj).m_isdirty = false;
+                        ((DataClassBase)obj).m_originalvalues = null;
                     }
                 }
 
