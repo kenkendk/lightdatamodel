@@ -263,6 +263,10 @@ namespace System.Data.LightDatamodel
 				p.Add(owner.GetHashCode(), owner);
 				m_objectrelationcache[target][relationkey].SubObjects = p;
 
+                //update the key
+                if (owner.GetType() == m_relations[relationkey].Child.Type)
+                    m_relations[relationkey].ChildField.SetValueWithEvents(owner as DataClassBase, m_relations[relationkey].Parent.PrimaryKey.Field.GetValue(target));
+
 			}
 
 			//change value from child
@@ -429,10 +433,13 @@ namespace System.Data.LightDatamodel
 				foreach (ObjectConnection rel in m_objectrelationcache[obj].Values)
 				{
                     foreach (IDataClass child in rel.SubObjects.Values)
-                        if (m_objectrelationcache.ContainsKey(child) && m_objectrelationcache[child].ContainsKey(rel.Relation.Name))
-                            m_objectrelationcache[child][rel.Relation.Name].SubObjects.Remove(obj.GetHashCode());
-                        else
-                            throw new Exception("GOTCHA! (hard to find bug :))");
+                        if (m_objectrelationcache.ContainsKey(child))
+                        {
+                            if (m_objectrelationcache[child].ContainsKey(rel.Relation.Name))
+                                m_objectrelationcache[child][rel.Relation.Name].SubObjects.Remove(obj.GetHashCode());
+                            else
+                                throw new Exception("GOTCHA! (hard to find bug :))");
+                        }
 				}
 				m_objectrelationcache.Remove(obj);
 			}
@@ -619,10 +626,16 @@ namespace System.Data.LightDatamodel
 			foreach (TypeConfiguration.Reference r in itemtype.References.Values)
 			{
 				object rel;
-				if (r.Child == itemtype)
-					rel = r.ChildField.Field.GetValue(item);
-				else
-					rel = r.ParentField.Field.GetValue(item);
+                if (r.Child == itemtype)
+                {
+                    object key = r.ChildField.Field.GetValue(item);
+                    rel = GetObjectById(r.Parent.Type, key);
+                }
+                else
+                {
+                    object key = r.ParentField.Field.GetValue(item);
+                    rel = GetObjectById(r.Child.Type, key);
+                }
 
 				if (rel == null)
 					continue;
@@ -635,6 +648,7 @@ namespace System.Data.LightDatamodel
 				}
 				else if (rel is IDataClass)
 					queue.Enqueue((IDataClass)rel);
+                
 			}
 		}
 
