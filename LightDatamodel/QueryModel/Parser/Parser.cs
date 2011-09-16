@@ -67,12 +67,12 @@ namespace System.Data.LightDatamodel.QueryModel
         private static void InitializeFilters()
         {
             WhiteSpace = new Dictionary<string, string>();
-            OperatorList = new Dictionary<string, Operators>();
+            OperatorList = new Dictionary<string, Operators>(StringComparer.InvariantCultureIgnoreCase);
             Pairwise = new Dictionary<string, string>();
             OperatorPrecedence = new Dictionary<Operators, int>();
             OperatorSeperators = new Dictionary<string, string>();
-            GlobalFunctions = new Dictionary<string, GlobalFunctionDelegate>();
-            CustomBinaryOperators = new Dictionary<string, CustomBinaryOperator>();
+            GlobalFunctions = new Dictionary<string, GlobalFunctionDelegate>(StringComparer.InvariantCultureIgnoreCase);
+            CustomBinaryOperators = new Dictionary<string, CustomBinaryOperator>(StringComparer.InvariantCultureIgnoreCase);
 
             WhiteSpace.Add(" ", null);
             WhiteSpace.Add(",", null);
@@ -162,15 +162,17 @@ namespace System.Data.LightDatamodel.QueryModel
         /// <param name="func">The function to invoke when the operation is evaluated</param>
         public static void AddCustomBinaryOperator(string name, CustomBinaryOperator func)
         {
+            if (name != null)
+                name = name.Trim();
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
             if (name.Contains("."))
                 throw new ArgumentException("Function name cannot contain a period (\".\") charater", "name");
-            if (OperatorList.ContainsKey(name.Trim().ToUpper()) && OperatorList[name.Trim().ToUpper()] != Operators.Custom)
+            if (OperatorList.ContainsKey(name) && OperatorList[name] != Operators.Custom)
                     throw new Exception("A built in function with called \"" + name + "\" exists, custom functions cannot replace it.");
 
-            OperatorList[name.Trim().ToUpper()] = Operators.Custom;
-            CustomBinaryOperators[name.Trim().ToUpper()] = func;
+            OperatorList[name] = Operators.Custom;
+            CustomBinaryOperators[name] = func;
         }
 
         /// <summary>
@@ -180,11 +182,13 @@ namespace System.Data.LightDatamodel.QueryModel
         /// <param name="func">The function to call when the function is used</param>
         public static void AddGlobalFunction(string name, GlobalFunctionDelegate func)
         {
+            if (name != null)
+                name = name.Trim();
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
             if (name.Contains("."))
                 throw new ArgumentException("Function name cannot contain a period (\".\") charater", "name");
-            GlobalFunctions[name.Trim().ToUpper()] = func;
+            GlobalFunctions[name] = func;
         }
 
         /// <summary>
@@ -194,11 +198,13 @@ namespace System.Data.LightDatamodel.QueryModel
         /// <returns>True if the function is registered, false otherwise</returns>
         public static bool HasGlobalFunction(string name)
         {
+            if (name != null)
+                name = name.Trim();
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
             if (name.Contains("."))
                 throw new ArgumentException("Function name cannot contain a period (\".\") charater", "name");
-            return GlobalFunctions.ContainsKey(name.Trim().ToUpper());
+            return GlobalFunctions.ContainsKey(name);
         }
 
         /// <summary>
@@ -208,11 +214,13 @@ namespace System.Data.LightDatamodel.QueryModel
         /// <returns>True if the operator is registered, false otherwise</returns>
         public static bool HasCustomOperator(string name)
         {
+            if (name != null)
+                name = name.Trim();
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
             if (name.Contains("."))
                 throw new ArgumentException("Function name cannot contain a period (\".\") charater", "name");
-            return CustomBinaryOperators.ContainsKey(name.Trim().ToUpper());
+            return CustomBinaryOperators.ContainsKey(name);
         }
 
         /// <summary>
@@ -334,14 +342,14 @@ namespace System.Data.LightDatamodel.QueryModel
             while (tokens.Count > 0)
             {
                 string opr = tokens.Dequeue();
-                if (OperatorList.ContainsKey(opr.ToUpper()))
+                if (OperatorList.ContainsKey(opr))
                 {
-                    Operators op = OperatorList[opr.ToUpper()];
+                    Operators op = OperatorList[opr];
                     parsed.Add(new KeyValuePair<string, Operators>(opr, op));
                 }
-                else if (opr.ToUpper().Equals("ORDER"))
+                else if (opr.Equals("ORDER", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    if (!((string)tokens.Dequeue()).ToUpper().Equals("BY"))
+                    if (!((string)tokens.Dequeue()).Equals("BY", StringComparison.InvariantCultureIgnoreCase))
                         throw new Exception("The keyword ORDER must be followed by the keyword BY");
 
                     sorttokens = new ArrayList();
@@ -389,10 +397,10 @@ namespace System.Data.LightDatamodel.QueryModel
                         if (sorttokens[i + 1] is Parameter && ((Parameter)sorttokens[i + 1]).IsColumn)
                         {
                             string next = (string)((Parameter)sorttokens[i + 1]).Value;
-                            if (next != null && ((next.ToUpper().Equals("ASC") || next.ToUpper().Equals("DESC"))))
+                            if (next != null && ((next.Equals("ASC", StringComparison.InvariantCultureIgnoreCase) || next.Equals("DESC", StringComparison.InvariantCultureIgnoreCase))))
                             {
                                 sorttokens.RemoveAt(i + 1);
-                                if (next.ToUpper().Equals("DESC"))
+                                if (next.Equals("DESC", StringComparison.InvariantCultureIgnoreCase))
                                     asc = false;
                             }
                         }
@@ -584,7 +592,7 @@ namespace System.Data.LightDatamodel.QueryModel
 
             if (query.Trim() == "?")
                 return new OperationOrParameter[] { new Parameter(parameters, bindIndex++) };
-            else if (query.Trim().ToUpper() == "NULL")
+            else if (query.Trim().Equals("NULL", StringComparison.InvariantCultureIgnoreCase))
                 return new OperationOrParameter[] { new Parameter(null, false) };
             else if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Integer, CI, out v))
                 return new OperationOrParameter[] { new Parameter((long)v, false) };

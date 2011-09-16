@@ -739,6 +739,13 @@ namespace Datamodel.UnitTest
             op.EvaluateList(f);
 
 
+            //Queries that are known to break under other locale:
+            op = Query.Parse("Name LIKE ? AND Path Like ?");
+            op = Query.Parse("TaskID = ? and SubAction like ? order by EndTime desc");
+            op = Query.Parse("TaskID = ? AND SubAction LIKE ? ORDER BY EndTime DESC");
+            op = Query.Parse("EndTime > ? AND SubAction LIKE ? ORDER BY EndTime DESC");
+
+
 		}
 
 		public static void TestRelations(IDbConnection con)
