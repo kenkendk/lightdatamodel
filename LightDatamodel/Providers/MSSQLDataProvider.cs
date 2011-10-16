@@ -184,7 +184,7 @@ namespace System.Data.LightDatamodel
 				{
 					Type columntype = GetTableStructure(tablename)[columname];
 					def = def.ToString().Trim('\"', '\'');
-					if (columntype == typeof(DateTime) && def.ToString().ToLower() == "date()" || def.ToString().ToLower() == "curdate()" || def.ToString().ToLower() == "now()") return DateTime.Now;
+					if (columntype == typeof(DateTime) && def.ToString().Equals("date()", StringComparison.InvariantCultureIgnoreCase) || def.ToString().Equals("curdate()", StringComparison.InvariantCultureIgnoreCase) || def.ToString().Equals("now()", StringComparison.InvariantCultureIgnoreCase)) return DateTime.Now;
 					return Convert.ChangeType(def, columntype, System.Globalization.CultureInfo.InvariantCulture);
 				}
 				catch (Exception ex)
@@ -333,7 +333,7 @@ namespace System.Data.LightDatamodel
 		/// <returns></returns>
 		protected override string AddParameter(IDbCommand cmd, string paramname, object value)
 		{
-			if ((value == null || value == DBNull.Value) && !cmd.CommandText.ToLower().StartsWith("insert into") && !cmd.CommandText.ToLower().StartsWith("update"))
+			if ((value == null || value == DBNull.Value) && !cmd.CommandText.StartsWith("insert into", StringComparison.InvariantCultureIgnoreCase) && !cmd.CommandText.StartsWith("update", StringComparison.InvariantCultureIgnoreCase))
 				return "NULL";
             
             IDataParameter p = cmd.CreateParameter();

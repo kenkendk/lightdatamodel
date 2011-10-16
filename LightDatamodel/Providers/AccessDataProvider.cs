@@ -53,7 +53,7 @@ namespace System.Data.LightDatamodel
 
 		public ConfigureProperties AutoConfigure(string[] args)
 		{
-			if (args.Length > 0 && File.Exists(args[0]) && (Path.GetExtension(args[0]).ToLower() == ".mdb" || Path.GetExtension(args[0]).ToLower() == ".mde"))
+			if (args.Length > 0 && File.Exists(args[0]) && (Path.GetExtension(args[0]).Equals(".mdb", StringComparison.InvariantCultureIgnoreCase) || Path.GetExtension(args[0]).Equals(".mde", StringComparison.InvariantCultureIgnoreCase)))
 			{
 				ConfigureProperties prop = new ConfigureProperties();
 				prop.Connectionstring = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + args[0] + ";";
@@ -100,7 +100,7 @@ namespace System.Data.LightDatamodel
 		/// <returns>A placeholder for the value, to be used in the SQL command</returns>
 		protected override string AddParameter(IDbCommand cmd, string paramname, object value)
 		{
-			if ((value == null || value == DBNull.Value) && !cmd.CommandText.ToLower().StartsWith("insert into") && !cmd.CommandText.ToLower().StartsWith("update"))
+			if ((value == null || value == DBNull.Value) && !cmd.CommandText.StartsWith("insert into", StringComparison.InvariantCultureIgnoreCase) && !cmd.CommandText.StartsWith("update", StringComparison.InvariantCultureIgnoreCase))
 				return "NULL";
 
 			IDataParameter p = cmd.CreateParameter();

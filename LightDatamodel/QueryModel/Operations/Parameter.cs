@@ -182,7 +182,7 @@ namespace System.Data.LightDatamodel.QueryModel
             string[] parts = v.Split('.');
             for (int i = 0; i < parts.Length; i++)
             {
-                if (m_bindContext == null && i == 0 && parts.Length > 0 && parts[0].Trim().ToLower() == "this")
+                if (m_bindContext == null && i == 0 && parts.Length > 0 && parts[0].Trim().Equals("this", StringComparison.InvariantCultureIgnoreCase))
                 {
                     retval = item;
                     queryType = retval == null ? null : retval.GetType();

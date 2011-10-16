@@ -53,7 +53,7 @@ namespace System.Data.LightDatamodel
 
 		public ConfigureProperties AutoConfigure(string[] args)
 		{
-			if (args.Length > 0 && File.Exists(args[0]) && (Path.GetExtension(args[0]).ToLower() == ".sqlite" || Path.GetExtension(args[0]).ToLower() == ".sqlite3"))
+			if (args.Length > 0 && File.Exists(args[0]) && (Path.GetExtension(args[0]).Equals(".sqlite", StringComparison.InvariantCultureIgnoreCase) || Path.GetExtension(args[0]).Equals(".sqlite3", StringComparison.InvariantCultureIgnoreCase)))
 			{
 				ConfigureProperties prop = new ConfigureProperties();
 				prop.Connectionstring = "Version=3;Data Source=" + args[0] + ";";
@@ -105,7 +105,7 @@ namespace System.Data.LightDatamodel
 
         public override bool IsAutoIncrement(string tablename, string column)
         {
-            if (!column.ToLower().Trim().Equals(GetPrimaryKey(tablename).Trim().ToLower()))
+            if (!column.Trim().Equals(GetPrimaryKey(tablename).Trim(), StringComparison.InvariantCultureIgnoreCase))
                 return false;
 
             if (m_connection.State != ConnectionState.Open) m_connection.Open();
@@ -121,7 +121,7 @@ namespace System.Data.LightDatamodel
 
                     //TODO: use a regexp for this, it will not get any uglier than this :D
                     //Basically we look for "[column name] datatype primary key," and extract "datatype" and check if it is integer
-                    int p = sql.ToLower().IndexOf(" primary");
+                    int p = sql.IndexOf(" primary", StringComparison.InvariantCultureIgnoreCase);
 
                     if (p > 0)
                     {
@@ -133,7 +133,7 @@ namespace System.Data.LightDatamodel
                         if (p > 0)
                             sql = sql.Substring(p).Trim();
 
-                        if (sql.ToLower().Trim() == "integer")
+                        if (sql.Trim().Equals("integer", StringComparison.InvariantCultureIgnoreCase))
                             return true;
                     }
 
@@ -159,7 +159,7 @@ namespace System.Data.LightDatamodel
 
                     //TODO: use a regexp for this, it will not get any uglier than this :D
                     //Basically we look for "[column name] datatype primary key," and extract "column name"
-                    int p = sql.ToLower().IndexOf(" primary");
+                    int p = sql.IndexOf(" primary", StringComparison.InvariantCultureIgnoreCase);
 
                     if (p > 0)
                     {
@@ -221,7 +221,7 @@ namespace System.Data.LightDatamodel
             // SQLite correctly handles dates, times, and empty strings!
 
             //TODO: update/insert has pre-cached strings, so we cannot return "NULL", but must insert the parameter
-            if ((value == null || value == DBNull.Value) && !cmd.CommandText.ToLower().StartsWith("insert into") && !cmd.CommandText.ToLower().StartsWith("update"))
+            if ((value == null || value == DBNull.Value) && !cmd.CommandText.StartsWith("insert into", StringComparison.InvariantCultureIgnoreCase) && !cmd.CommandText.StartsWith("update", StringComparison.InvariantCultureIgnoreCase))
             {
                 //Unfortunately the "x is null" cannot accept a "x is ?" where ? is a DBNull parameter
                 return "NULL";

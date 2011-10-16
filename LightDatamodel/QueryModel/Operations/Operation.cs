@@ -168,7 +168,7 @@ namespace System.Data.LightDatamodel.QueryModel
                     else if (res[0].Result == null || res[1].Result == null)
                         return false;
                     else
-                        return res[0].Result.ToString().ToLower().Trim().Equals(res[1].Result.ToString().ToLower());
+                        return res[0].Result.ToString().Trim().Equals(res[1].Result.ToString(), StringComparison.CurrentCultureIgnoreCase);
                 case Operators.Or:
                     return ResAsBool(res[0].Result) || ResAsBool(res[1].Result);
                 case Operators.And:
