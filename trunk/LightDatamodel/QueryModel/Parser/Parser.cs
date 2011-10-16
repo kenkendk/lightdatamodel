@@ -598,7 +598,7 @@ namespace System.Data.LightDatamodel.QueryModel
                 return new OperationOrParameter[] { new Parameter((long)v, false) };
             else if (double.TryParse(query.Trim(), System.Globalization.NumberStyles.Float, CI, out v))
                 return new OperationOrParameter[] { new Parameter(v, false) };
-            else if (query.Trim().ToLower().Equals("true") || query.Trim().ToLower().Equals("false"))
+            else if (query.Trim().Equals("true", StringComparison.InvariantCultureIgnoreCase) || query.Trim().Equals("false", StringComparison.InvariantCultureIgnoreCase))
                 return new OperationOrParameter[] { new Parameter(bool.Parse(query.Trim()), false) };
             else if (query.Trim().StartsWith("\"") || query.Trim().StartsWith("'"))
             {
