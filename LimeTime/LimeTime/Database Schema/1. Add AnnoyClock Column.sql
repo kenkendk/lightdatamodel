@@ -1,1 +1,0 @@
-ALTER TABLE [Project] ADD "UseAnnoyClock" BOOLEAN NULL;
